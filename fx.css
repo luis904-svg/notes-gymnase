@@ -120,7 +120,7 @@ body.ob-open .tabbar { display: none; }
 }
 
 /* Interrupteur invisible placé sous le doigt (vibration iPhone) */
-.hx-catch { position: fixed; z-index: 2147483647; pointer-events: auto; width: 64px; height: 64px; display: none; margin: 0; padding: 0; opacity: 0.011; overflow: hidden; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.hx-catch { position: fixed; left: 0; top: 0; z-index: 2147483647; pointer-events: none; width: 64px; height: 64px; display: block; margin: 0; padding: 0; opacity: 0.011; overflow: hidden; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 .hx-catch input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; }
 /* Effet d'appui conservé quand le doigt est sur l'interrupteur */
 button.is-pressed { transform: scale(.94); transition: transform 90ms ease-out; }

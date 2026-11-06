@@ -60,7 +60,7 @@
     if (t.matches("select, input[type=date], input[type=number], input[type=text]")) haptic("select");
   }, true);
   // Feuille de détail relâchée : petit tic quand elle revient en place.
-  document.addEventListener("pointerup", function (e) { if (e.target.closest(".grab")) haptic("tap"); }, true);
+  document.addEventListener("pointerup", function (e) { if (e.target.closest && e.target.closest(".grab")) haptic("tap"); }, true);
 
   /* ---------- iPhone : interrupteur sous le doigt ----------
      Safari ne fait vibrer qu'un vrai interrupteur touché par l'utilisateur (un clic par script ne
@@ -68,11 +68,19 @@
      invisible exactement sous le doigt : c'est lui que le doigt touche (vraie vibration iOS), puis
      on transmet l'appui au bouton. Si le doigt glisse (défilement), on retire l'interrupteur. */
   var HXTEST = /[?&]hxtest=1/.test(location.search);
-  var catcher = null, catchTarget = null, catchTimer = null, forwarded = false;
+  /* L'interrupteur reste toujours affiché (coin haut gauche, inerte). Le faire apparaître au moment
+     de l'appui faisait croire à iOS que la page changeait sous le doigt : il prenait le 1er appui pour
+     un survol et il fallait toucher deux fois. On ne fait donc que le déplacer et le rendre touchable. */
+  var catcher = null, catchTarget = null, catchTimer = null, upTimer = null, forwarded = true, x0 = 0, y0 = 0;
+  function park() {
+    if (!catcher) return;
+    catcher.style.pointerEvents = "none";
+    catcher.style.left = "0px"; catcher.style.top = "0px";
+  }
   function release() {
-    if (catcher) catcher.style.display = "none";
+    park();
     if (catchTarget) catchTarget.classList.remove("is-pressed");
-    catchTarget = null; clearTimeout(catchTimer);
+    catchTarget = null; clearTimeout(catchTimer); clearTimeout(upTimer);
   }
   function forward() {
     if (forwarded || !catchTarget) return;
@@ -92,18 +100,25 @@
     return l;
   }
   if (IOS || HXTEST) {
+    catcher = makeCatcher(); park();
     document.addEventListener("pointerdown", function (e) {
       if (!hapticsOn || (e.pointerType !== "touch" && !HXTEST)) return;
       if (e.target.closest(".hx, .hx-catch")) return;
       var t = e.target.closest(TAPPABLE);
       if (!t || t.disabled || t.matches("input, select, textarea, label")) return;
-      catcher = catcher || makeCatcher();
-      catchTarget = t; forwarded = false;
+      catchTarget = t; forwarded = false; x0 = e.clientX; y0 = e.clientY;
       t.classList.add("is-pressed");
       catcher.style.left = (e.clientX - 32) + "px";
       catcher.style.top = (e.clientY - 32) + "px";
-      catcher.style.display = "block";
+      catcher.style.pointerEvents = "auto";
       clearTimeout(catchTimer); catchTimer = setTimeout(release, 1500);
+    }, true);
+    document.addEventListener("pointermove", function (e) {
+      if (catchTarget && Math.abs(e.clientX - x0) + Math.abs(e.clientY - y0) > 14) release();
+    }, true);
+    // Filet de sécurité : si iOS n'envoie pas le clic à l'interrupteur, l'appui passe quand même (sans vibration).
+    document.addEventListener("pointerup", function () {
+      if (catchTarget && !forwarded) { clearTimeout(upTimer); upTimer = setTimeout(forward, 450); }
     }, true);
     document.addEventListener("pointercancel", release, true);
     window.addEventListener("scroll", function () { if (catchTarget) release(); }, { passive: true, capture: true });
