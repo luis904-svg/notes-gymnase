@@ -130,3 +130,12 @@ button.is-pressed { transform: scale(.94); transition: transform 90ms ease-out; 
 /* Synchronisation */
 .sy-code { font-size: 22px; font-weight: 600; letter-spacing: 0.06em; padding: 12px 16px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); text-align: center; user-select: all; -webkit-user-select: all; }
 .ob-sync { margin-top: 18px; font-size: 16px; }
+
+/* Haut de l'écran sur iPhone : la barre d'état (heure, batterie) est peinte par iOS dans la couleur
+   theme-color (#F5F5F7). Le haut de la page reste de cette même couleur unie, et le dégradé
+   n'apparaît qu'en fondu plus bas : plus de bande qui fait contraste. */
+.bgfx, .ob::before {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent 24px, #000 180px);
+  mask-image: linear-gradient(to bottom, transparent 0, transparent 24px, #000 180px);
+}
+body::before { background: var(--bg); }
