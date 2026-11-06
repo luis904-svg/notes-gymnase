@@ -61,7 +61,8 @@
     if (s.id === "welcome") {
       return '<div class="ob-hero"><img src="icon-180.png" alt="" class="ob-icon"><h1>Bienvenue</h1>' +
         '<p>Réponds à quelques questions sur ton cursus pour créer ton tableau de bord. Tes réponses et tes notes restent sur cet appareil.</p>' +
-        '<p class="ob-fine">École de maturité vaudoise · règles 2026-2027</p></div>';
+        '<p class="ob-fine">École de maturité vaudoise · règles 2026-2027</p>' +
+        (window.Sync && Sync.available() ? '<button type="button" class="link ob-sync" id="ob-sync">J\'ai déjà mes notes sur un autre appareil</button>' : '') + '</div>';
     }
     var h = '<h1 class="ob-title">' + esc(s.title) + '</h1>' + (s.sub ? '<p class="ob-sub">' + esc(s.sub) + '</p>' : "");
     if (s.id === "gymnase") {
@@ -150,6 +151,16 @@
     document.body.appendChild(root);
     document.body.classList.add("ob-open");
     root.addEventListener("click", function (e) {
+      if (e.target.id === "ob-sync") {
+        var code = window.prompt("Code de synchronisation (sur ton autre appareil : Réglages → Synchronisation)");
+        if (code == null) return;
+        e.target.textContent = "Récupération…";
+        window.Sync.join(code).then(function (ok) {
+          if (ok) { hap("success"); close(); }
+          else { e.target.textContent = "J'ai déjà mes notes sur un autre appareil"; window.alert("Aucune note trouvée pour ce code. Vérifie-le, ou continue la configuration."); }
+        });
+        return;
+      }
       var r = e.target.closest(".ob-row[data-f]");
       if (r && !r.disabled) {
         var f = r.dataset.f, v = r.dataset.v;
