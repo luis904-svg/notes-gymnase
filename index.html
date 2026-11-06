@@ -845,7 +845,7 @@ td input[type="date"] { width: auto; }
     }
 
   function renderNotes(notes) {
-    var sorted = notes.slice().sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
+    var sorted = notes.slice().sort(function (a, b) { var x = String(a.id), y = String(b.id); return x < y ? 1 : x > y ? -1 : 0; });
     var shown = ui.showAll ? sorted : sorted.slice(0, 8);
     $("#notes").innerHTML = shown.length ? shown.map(noteItem).join("") : '<li class="empty" style="display:block;border:0">Aucune note pour l\'instant. Ajoute la première avec le formulaire, ou regarde un exemple.<div class="btns" style="margin-top:10px"><button type="button" class="btn-ghost" id="demo-on">Voir avec des notes d\'exemple</button></div></li>';
     $("#more").hidden = sorted.length <= 8;

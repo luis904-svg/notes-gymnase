@@ -1,7 +1,7 @@
 /* Notes — couche app : haptique, animations (Motion), sauvegarde, installation. */
 (function () {
   "use strict";
-  var M = window.Motion || null;
+  var M = /[?&]noanim=1/.test(location.search) ? null : (window.Motion || null);
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
   function canAnim() { return !!M && !reduce.matches; }
   function $(s, r) { return (r || document).querySelector(s); }
@@ -138,10 +138,15 @@
         var c = el.closest("[data-subj]"), key = sel + "|" + (c ? c.dataset.subj : i);
         var from = prev.has(key) ? prev.get(key) : (firstRun || sel.indexOf("sheet") >= 0 ? 0 : to);
         prev.set(key, to);
-        if (from === to || !canAnim()) return;
-        var tail = raw.slice(raw.indexOf(txt) + txt.length);
+        // Pas d'animation sur un écran caché : la valeur exacte reste affichée telle quelle.
+        if (from === to || !canAnim() || el.offsetParent === null) return;
+        var tail = raw.slice(raw.indexOf(txt) + txt.length), final = raw;
         node.nodeValue = from.toFixed(dec) + tail;
-        M.animate(from, to, { duration: 0.9, ease: [0.2, 0.8, 0.2, 1], onUpdate: function (v) { node.nodeValue = v.toFixed(dec) + tail; } });
+        var a = M.animate(from, to, { duration: 0.9, ease: [0.2, 0.8, 0.2, 1], onUpdate: function (v) { node.nodeValue = v.toFixed(dec) + tail; } });
+        // Toujours finir sur le texte exact calculé par le tableau de bord, même si l'animation est interrompue.
+        var done = function () { node.nodeValue = final; };
+        if (a && a.then) a.then(done, done);
+        setTimeout(done, 1200);
       });
     });
   }
@@ -153,6 +158,7 @@
     var root = document.getElementById(v === "add" ? "view-add" : v === "settings" ? "view-settings" : "view-dash");
     if (!root) return;
     watchers.forEach(function (stop) { try { stop(); } catch (e) {} }); watchers = [];
+    $$(".panel").forEach(function (p) { if (p.style.opacity === "0") p.style.opacity = ""; });
     var h = window.innerHeight, now = [], later = [];
     $$(".panel", root).forEach(function (p) {
       if (p.parentElement.closest(".panel")) return;
@@ -165,6 +171,8 @@
         M.animate(p, { opacity: [0, 1], y: [36, 0], scale: [0.97, 1] }, SPRING);
       }, { amount: 0.12 }));
     });
+    // Sécurité : aucun panneau ne doit rester invisible.
+    setTimeout(function () { later.forEach(function (p) { if (p.style.opacity === "0" && p.getBoundingClientRect().top < window.innerHeight) p.style.opacity = ""; }); }, 2500);
     var cards = $$("#subjects .card", root);
     if (cards.length && v === "dash") M.animate(cards, { opacity: [0, 1], y: [16, 0], scale: [0.95, 1] }, Object.assign({ delay: M.stagger(0.035, { startDelay: 0.18 }) }, SPRING));
     if (v === "add") {
@@ -224,7 +232,12 @@
 
   /* ---------- Défilement ---------- */
   var head = $("header.top");
-  function onScroll() { if (head) head.classList.toggle("scrolled", window.scrollY > 8); }
+  function onScroll() {
+    if (head) head.classList.toggle("scrolled", window.scrollY > 8);
+    // Filet de sécurité si l'apparition au défilement ne s'est pas déclenchée.
+    var h = window.innerHeight;
+    $$(".panel").forEach(function (p) { if (p.style.opacity === "0" && p.getBoundingClientRect().top < h - 40) p.style.opacity = ""; });
+  }
   window.addEventListener("scroll", onScroll, { passive: true }); onScroll();
 
   /* ---------- Changement de verdict ---------- */

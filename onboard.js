@@ -1,7 +1,7 @@
 /* Notes — configuration au premier lancement (et « Modifier mon profil »). */
 (function () {
   "use strict";
-  var G = window.Grid, M = window.Motion || null;
+  var G = window.Grid, M = /[?&]noanim=1/.test(location.search) ? null : (window.Motion || null);
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
   function canAnim() { return !!M && !reduce.matches; }
   function hap(k) { if (window.FX) window.FX.haptic(k); }
