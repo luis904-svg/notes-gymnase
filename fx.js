@@ -47,7 +47,8 @@
      clavier ; utiliser le retour clavier d'iOS) et les interrupteurs natifs, qui vibrent déjà seuls. */
   var TAPPABLE = "button, a[href], [data-subj], [data-close], summary, .grab, .bars .bar, .ob-row, input[type=checkbox]:not([switch]), input[type=radio]";
   document.addEventListener("click", function (e) {
-    if (e.target.closest(".hx")) return;
+    if (e.target.closest(".hx, .hx-catch")) return;
+    if (catchTarget && !forwarded) release(); // le clic est arrivé directement au bouton
     var t = e.target.closest(TAPPABLE);
     if (!t || t.disabled) return;
     if (t.matches("[data-del]") || t.type === "submit") return; // retours dédiés (avertissement, réussite, erreur)
@@ -60,6 +61,53 @@
   }, true);
   // Feuille de détail relâchée : petit tic quand elle revient en place.
   document.addEventListener("pointerup", function (e) { if (e.target.closest(".grab")) haptic("tap"); }, true);
+
+  /* ---------- iPhone : interrupteur sous le doigt ----------
+     Safari ne fait vibrer qu'un vrai interrupteur touché par l'utilisateur (un clic par script ne
+     suffit pas). Au moment où le doigt se pose sur un bouton, on glisse donc un interrupteur
+     invisible exactement sous le doigt : c'est lui que le doigt touche (vraie vibration iOS), puis
+     on transmet l'appui au bouton. Si le doigt glisse (défilement), on retire l'interrupteur. */
+  var HXTEST = /[?&]hxtest=1/.test(location.search);
+  var catcher = null, catchTarget = null, catchTimer = null, forwarded = false;
+  function release() {
+    if (catcher) catcher.style.display = "none";
+    if (catchTarget) catchTarget.classList.remove("is-pressed");
+    catchTarget = null; clearTimeout(catchTimer);
+  }
+  function forward() {
+    if (forwarded || !catchTarget) return;
+    forwarded = true;
+    var t = catchTarget;
+    release();
+    lastTick = Date.now(); // la vibration vient de l'interrupteur : pas de second tic
+    if (typeof t.click === "function") t.click();
+    else t.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+  }
+  function makeCatcher() {
+    var l = document.createElement("label"); l.className = "hx-catch"; l.setAttribute("aria-hidden", "true");
+    var i = document.createElement("input"); i.type = "checkbox"; i.setAttribute("switch", ""); i.tabIndex = -1;
+    l.appendChild(i); document.body.appendChild(l);
+    // Le toucher active l'interrupteur (vibration), puis on relaie l'appui une seule fois.
+    l.addEventListener("click", function (e) { e.stopPropagation(); setTimeout(forward, 0); });
+    return l;
+  }
+  if (IOS || HXTEST) {
+    document.addEventListener("pointerdown", function (e) {
+      if (!hapticsOn || (e.pointerType !== "touch" && !HXTEST)) return;
+      if (e.target.closest(".hx, .hx-catch")) return;
+      var t = e.target.closest(TAPPABLE);
+      if (!t || t.disabled || t.matches("input, select, textarea, label")) return;
+      catcher = catcher || makeCatcher();
+      catchTarget = t; forwarded = false;
+      t.classList.add("is-pressed");
+      catcher.style.left = (e.clientX - 32) + "px";
+      catcher.style.top = (e.clientY - 32) + "px";
+      catcher.style.display = "block";
+      clearTimeout(catchTimer); catchTimer = setTimeout(release, 1500);
+    }, true);
+    document.addEventListener("pointercancel", release, true);
+    window.addEventListener("scroll", function () { if (catchTarget) release(); }, { passive: true, capture: true });
+  }
 
   /* ---------- Chiffres qui défilent ---------- */
   var prev = new Map(), firstRun = true;
