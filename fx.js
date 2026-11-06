@@ -17,14 +17,14 @@
   var HK = "notes2m01.haptics";
   var hapticsOn = true;
   try { hapticsOn = localStorage.getItem(HK) !== "off"; } catch (e) {}
-  var hx = null;
+  var IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  // Méthode éprouvée (même principe que la librairie ios-haptics) : un interrupteur neuf à chaque tic,
+  // caché, ajouté au <head>, cliqué via son libellé puis retiré.
   function tick() {
-    if (!hx) {
-      hx = document.createElement("label"); hx.className = "hx"; hx.setAttribute("aria-hidden", "true");
-      var i = document.createElement("input"); i.type = "checkbox"; i.setAttribute("switch", ""); i.tabIndex = -1;
-      hx.appendChild(i); document.body.appendChild(hx);
-    }
-    hx.click();
+    var l = document.createElement("label"); l.className = "hx"; l.setAttribute("aria-hidden", "true"); l.style.display = "none";
+    var i = document.createElement("input"); i.type = "checkbox"; i.setAttribute("switch", "");
+    l.appendChild(i); document.head.appendChild(l);
+    try { l.click(); } finally { document.head.removeChild(l); }
   }
   var VIB = { tap: 8, select: 6, success: [12, 90, 20], warn: [20, 70, 20], error: [30, 60, 30, 60, 30], heavy: 30 };
   var TICKS = { tap: 1, select: 1, success: 2, warn: 2, error: 3, heavy: 1 };
@@ -36,7 +36,8 @@
     var now = Date.now(), simple = kind === "tap" || kind === "select";
     if (simple && now - lastTick < 90) return;
     lastTick = now;
-    if (navigator.vibrate) { try { navigator.vibrate(VIB[kind] || 8); } catch (e) {} return; }
+    // Sur iPhone, toujours l'interrupteur : navigator.vibrate peut exister mais ne fait rien.
+    if (!IOS && navigator.vibrate) { try { navigator.vibrate(VIB[kind] || 8); } catch (e) {} return; }
     var n = TICKS[kind] || 1;
     tick();
     for (var k = 1; k < n; k++) setTimeout(tick, k * 120);
