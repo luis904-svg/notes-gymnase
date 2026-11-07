@@ -1,6 +1,6 @@
 /* Hors-ligne : la page vient du réseau si possible, sinon du cache ; le reste du cache d'abord. */
-var V = "notes2m01-v26";
-var ASSETS = ["./", "index.html", "fx.css", "fx.js", "grid.js", "sync.js", "onboard.js", "guide.js", "hello.js", "motion.js", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
+var V = "notes2m01-v27";
+var ASSETS = ["./", "index.html", "fx.css", "fx.js", "grid.js", "cert.js", "sync.js", "onboard.js", "guide.js", "hello.js", "motion.js", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(V).then(function (c) { return c.addAll(ASSETS.map(function (u) { return new Request(u, { cache: "reload" }); })); }).then(function () { return self.skipWaiting(); }));
 });

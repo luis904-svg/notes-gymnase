@@ -101,6 +101,7 @@
       applying = true;
       try { localStorage.setItem("notes2m01.exams", JSON.stringify(M.exams || {})); } catch (e) {}
       if (window.VPExam && VPExam.reload) VPExam.reload();
+      if (window.Cert && Cert.reload) Cert.reload();
       app().replace({ cfg: M.cfg, grades: grades });
       applying = false;
     }

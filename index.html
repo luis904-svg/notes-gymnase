@@ -938,6 +938,7 @@ td input[type="date"] { width: auto; }
     if (state.cfg.profile.year === 3) $("#promo").innerHTML = NO_PROMO; else renderPromo(notes); renderBars(notes); renderAlerts(notes); renderSubjects(notes); renderChart(notes); renderNotes(base); renderDetail();
     if (window.FX) FX.rendered();
     if (window.Onboard) Onboard.refresh();
+    if (window.Cert) Cert.render();
   }
 
   /* ---------- Persistance ---------- */
@@ -1099,6 +1100,18 @@ td input[type="date"] { width: auto; }
     get: function () { return clone(state); },
     profile: function () { return state.cfg.profile; },
     grades: function () { return state.grades.slice(); },
+    subjectsAll: function () { return state.cfg.subjects.slice(); },
+    annualAvg: function (id) { return sub(id) ? subjAvg(id, state.grades.filter(function (g) { return !!sub(g.subject); })).avg : null; },
+    redraw: function () { render(); },
+    storedAvg: function (id, tpShare) {
+      // Notes d'une branche qui n'est plus enseignée cette année (reprises de 2e) : gardées dans les données, masquées ailleurs.
+      var mine = state.grades.filter(function (g) { return g.subject === id; });
+      if (!mine.length) return null;
+      var tests = mine.filter(function (g) { return g.type !== "tp"; }), tps = mine.filter(function (g) { return g.type === "tp"; });
+      var share = tpShare == null ? 0.25 : tpShare;
+      if (share > 0 && tests.length && tps.length) return (1 - share) * wavg(tests) + share * wavg(tps);
+      return wavg(mine);
+    },
     setProfile: function (prof) {
       state = normalize({ cfg: { s1End: state.cfg.s1End, profile: prof, subjects: state.cfg.subjects }, grades: state.grades });
       ui.chartSubj = "__all"; ui.detail = null; fillSelects(); renderSettings(); persist(); render();
@@ -1130,6 +1143,7 @@ td input[type="date"] { width: auto; }
 </script>
 <script src="motion.js"></script>
 <script src="fx.js"></script>
+<script src="cert.js"></script>
 <script src="sync.js"></script>
 <script src="onboard.js"></script>
 <script src="guide.js"></script>
