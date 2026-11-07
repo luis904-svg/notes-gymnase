@@ -334,3 +334,17 @@ body.hl-open { overflow: hidden; }
 .cert-min h3.sec { margin: 0 0 2px; }
 .cert-min p { margin: 0; font-size: 16px; }
 .cert-min .meta { font-size: 12px; color: var(--muted); }
+
+/* Passage d'une année à l'autre : années précédentes */
+.yp-year { margin: 0 0 24px; }
+.yp-year h2 { margin: 0; }
+.yp-br { background: transparent; }
+.yp-br + .yp-br { box-shadow: inset 0 1px 0 var(--line); }
+.yp-sum { display: flex; align-items: center; gap: 12px; padding: 12px 16px; min-height: 56px; cursor: pointer; list-style: none; }
+.yp-empty .yp-sum { cursor: default; }
+.yp-br > summary::-webkit-details-marker { display: none; }
+.yp-b { font-family: var(--mono); font-size: 22px; font-weight: 600; letter-spacing: -0.03em; flex: none; }
+.yp-b.crit, .yp-notes .crit { color: var(--crit); }
+.yp-notes { list-style: none; margin: 0; padding: 0 16px 12px 28px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+.yp-notes li { display: flex; justify-content: space-between; gap: 12px; }
+.yp-notes .mono { font-weight: 600; }

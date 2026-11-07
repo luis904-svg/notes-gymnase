@@ -547,6 +547,7 @@ td input[type="date"] { width: auto; }
     var s = { cfg: { s1End: S1_DEFAULT, profile: prof, subjects: Grid.build(prof) }, grades: [] };
     if (!raw || typeof raw !== "object") return s;
     if (raw.cfg && raw.cfg.s1End) s.cfg.s1End = raw.cfg.s1End;
+    if (raw.cfg && Array.isArray(raw.cfg.archive)) s.cfg.archive = raw.cfg.archive;
     if (raw.cfg && Array.isArray(raw.cfg.subjects)) {
       s.cfg.subjects = s.cfg.subjects.map(function (d) {
         var o = raw.cfg.subjects.filter(function (x) { return x.id === d.id; })[0];
@@ -939,6 +940,7 @@ td input[type="date"] { width: auto; }
     if (window.FX) FX.rendered();
     if (window.Onboard) Onboard.refresh();
     if (window.Cert) Cert.render();
+    if (window.YearPass) YearPass.refresh();
   }
 
   /* ---------- Persistance ---------- */
@@ -1103,9 +1105,47 @@ td input[type="date"] { width: auto; }
     subjectsAll: function () { return state.cfg.subjects.slice(); },
     annualAvg: function (id) { return sub(id) ? subjAvg(id, state.grades.filter(function (g) { return !!sub(g.subject); })).avg : null; },
     redraw: function () { render(); },
+    archive: function () { return (state.cfg.archive || []).slice(); },
+    verdict: function () {
+      var r = promotion(state.grades.filter(function (g) { return !!sub(g.subject); })), st = STATUS[r.status] || STATUS.none;
+      return { status: r.status, cls: st[0], label: st[1] };
+    },
+    // Classe l'année dans l'archive (notes + profil + réglages), repart de zéro avec le profil suivant, dates décalées d'un an.
+    passYear: function (nextYear) {
+      var pr = state.cfg.profile, y = parseInt(state.cfg.s1End.slice(0, 4), 10), v = window.NotesApp.verdict();
+      var entry = { year: pr.year, label: (y - 1) + "\u2013" + y, profile: clone(pr), s1End: state.cfg.s1End, subjects: clone(state.cfg.subjects),
+        grades: clone(state.grades), verdict: v.status === "none" ? "" : v.label, at: Date.now() };
+      var np = Object.assign({}, pr, { year: nextYear });
+      state = normalize({ cfg: { s1End: String(y + 1) + state.cfg.s1End.slice(4), profile: np, subjects: state.cfg.subjects, archive: (state.cfg.archive || []).concat([entry]) }, grades: [] });
+      ui.period = "year"; ui.chartSubj = "__all"; ui.detail = null;
+      fillSelects(); renderSettings(); persist(); render();
+    },
+    undoPass: function () {
+      var a = state.cfg.archive || []; if (!a.length) return false;
+      var e = a[a.length - 1];
+      state = normalize({ cfg: { s1End: e.s1End, profile: e.profile, subjects: e.subjects, archive: a.slice(0, -1) }, grades: e.grades });
+      ui.period = "year"; ui.chartSubj = "__all"; ui.detail = null;
+      fillSelects(); renderSettings(); persist(); render();
+      return true;
+    },
+    // Moyennes d'une année archivée (avec les branches et les réglages de cette année-là).
+    archiveStats: function (e) {
+      var keep = state.cfg.subjects; state.cfg.subjects = e.subjects;
+      try {
+        var all = e.grades.filter(function (g) { return !!sub(g.subject); });
+        return e.subjects.filter(function (s) { return !s.part; }).map(function (s) {
+          var a = subjAvg(s.id, all);
+          return { id: s.id, ids: s.parts || [s.id], name: s.name, avg: a.avg, bulletin: a.avg == null ? null : roundHalf(a.avg), n: a.n, counts: s.counts !== false };
+        });
+      } finally { state.cfg.subjects = keep; }
+    },
     storedAvg: function (id, tpShare) {
       // Notes d'une branche qui n'est plus enseignée cette année (reprises de 2e) : gardées dans les données, masquées ailleurs.
       var mine = state.grades.filter(function (g) { return g.subject === id; });
+      if (!mine.length) {
+        var arch = state.cfg.archive || [];
+        for (var i = arch.length - 1; i >= 0 && !mine.length; i--) if (arch[i].year === 2) mine = arch[i].grades.filter(function (g) { return g.subject === id; });
+      }
       if (!mine.length) return null;
       var tests = mine.filter(function (g) { return g.type !== "tp"; }), tps = mine.filter(function (g) { return g.type === "tp"; });
       var share = tpShare == null ? 0.25 : tpShare;
@@ -1113,7 +1153,7 @@ td input[type="date"] { width: auto; }
       return wavg(mine);
     },
     setProfile: function (prof) {
-      state = normalize({ cfg: { s1End: state.cfg.s1End, profile: prof, subjects: state.cfg.subjects }, grades: state.grades });
+      state = normalize({ cfg: { s1End: state.cfg.s1End, profile: prof, subjects: state.cfg.subjects, archive: state.cfg.archive }, grades: state.grades });
       ui.chartSubj = "__all"; ui.detail = null; fillSelects(); renderSettings(); persist(); render();
     },
     replace: function (raw) { state = normalize(raw); fillSelects(); renderSettings(); persist(); render(); }
@@ -1148,4 +1188,5 @@ td input[type="date"] { width: auto; }
 <script src="onboard.js"></script>
 <script src="guide.js"></script>
 <script src="hello.js"></script>
+<script src="year.js"></script>
 </body></html>

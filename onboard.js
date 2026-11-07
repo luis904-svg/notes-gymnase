@@ -134,6 +134,9 @@
   }
 
   function finish() {
+    var cur0 = window.NotesApp.profile();
+    if (cur0 && p.year !== cur0.year && window.NotesApp.grades().length &&
+      !window.confirm("Tu changes d'année sans classer tes notes : elles seront comptées dans les moyennes de la nouvelle année. Pour les classer dans « Années précédentes », annule puis utilise « Passer à l'année suivante » dans Réglages. Continuer quand même ?")) return;
     var gs = window.NotesApp.grades(), next = G.build(p).map(function (x) { return x.id; });
     var lost = gs.filter(function (g) { return next.indexOf(g.subject) < 0; }).length;
     if (lost && !window.confirm(lost + " note" + (lost > 1 ? "s appartiennent" : " appartient") + " à des branches absentes de ce profil. Elles seront masquées, pas supprimées. Continuer ?")) return;
@@ -153,12 +156,13 @@
     else done();
   }
 
-  function open(edit) {
+  function open(edit, startId) {
     if (root) return;
     editing = !!edit;
     var cur = window.NotesApp.profile();
     p = cur ? JSON.parse(JSON.stringify(cur)) : {};
-    step = editing ? 1 : 0; dir = 1; guideTouched = false;
+    step = editing ? 1 : 0; dir = 1;
+    if (startId) { var vs0 = visible(); for (var i0 = 0; i0 < vs0.length; i0++) if (vs0[i0].id === startId) step = i0; } guideTouched = false;
     root = document.createElement("div");
     root.className = "ob"; root.setAttribute("role", "dialog"); root.setAttribute("aria-modal", "true"); root.setAttribute("aria-label", "Configuration");
     document.body.appendChild(root);

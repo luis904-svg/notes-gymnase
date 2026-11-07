@@ -170,6 +170,10 @@
       { t: "Mon cursus", v: "profil", p: [
         "<b>Réglages → Mon cursus → Modifier mon profil</b> rouvre la configuration déjà remplie : change d'année, de langue ou d'option à tout moment.",
         "Tes notes sont gardées. Celles d'une branche qui n'existe plus sont seulement masquées."] },
+      { t: "Passer à l'année suivante", v: "profil", p: [
+        "Quand ton année est terminée, ne change pas ton année à la main : touche <b>Réglages → Année scolaire → Passer en 2e (ou 3e) année</b>.",
+        "Tes notes de l'année sont <b>classées dans « Années précédentes »</b> (rien n'est supprimé), les moyennes repartent de zéro, tes choix (langues, option, maths) sont conservés et les dates de semestre avancent d'un an. En passant en 3e, tu choisis ton option complémentaire, et les notes de 2e de chimie, physique et arts sont reprises pour le certificat.",
+        "<b>Années précédentes</b> te laisse relire les notes et les moyennes de chaque année. <b>Annuler le dernier passage</b> remet tout comme avant."] },
       { t: "Objectif", v: "settings:goal", p: [
         "Dans <b>Réglages</b>, touche une branche, puis règle son <b>Objectif</b> : la moyenne que tu vises.",
         "Le tableau de bord affiche alors ton écart, une barre grise en pointillés dans l'histogramme, et une alerte si tu es nettement en dessous."] },
