@@ -8,9 +8,10 @@
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function $(s, r) { return (r || document).querySelector(s); }
 
-  var p = {}, step = 0, editing = false, root = null, dir = 1;
+  var p = {}, step = 0, editing = false, root = null, dir = 1, guideTouched = false;
   var STEPS = [
     { id: "welcome" },
+    { id: "guide", when: function () { return !editing; } },
     { id: "gymnase", title: "Ton gymnase", sub: "Il s'affichera en haut de ton tableau de bord." },
     { id: "year", title: "Ton année", sub: "Les branches et leurs périodes changent d'une année à l'autre." },
     { id: "l2", title: "Deuxième langue (L2)", sub: "La langue nationale que tu suis au gymnase." },
@@ -62,7 +63,14 @@
       return '<div class="ob-hero"><img src="icon-180.png" alt="" class="ob-icon"><h1>Bienvenue</h1>' +
         '<p>Réponds à quelques questions sur ton cursus pour créer ton tableau de bord. Tes réponses et tes notes restent sur cet appareil.</p>' +
         '<p class="ob-fine">École de maturité vaudoise · règles 2026-2027</p>' +
+        '<p class="ob-fine ob-disc">' + esc(window.Guide ? Guide.disclaimer : "Application non officielle. Résultats indicatifs : seul ton bulletin fait foi.") + '</p>' +
         (window.Sync && Sync.available() ? '<button type="button" class="link ob-sync" id="ob-sync">J\'ai déjà mes notes sur un autre appareil</button>' : '') + '</div>';
+    }
+    if (s.id === "guide") {
+      return '<div class="ob-hero"><div class="ob-gi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19v-3M9 7.5h6M9 11h6"/></svg></div>' +
+        '<h1>Un guide en 4 chapitres</h1>' +
+        '<p>Une formation d\'environ 10 minutes : ajouter tes notes, lire le tableau de bord, comprendre les règles de calcul et sauvegarder tes données.</p>' +
+        '<p class="ob-fine">Tu peux la suivre maintenant ou plus tard, dans Réglages → Guide d\'utilisation.</p></div>';
     }
     var h = '<h1 class="ob-title">' + esc(s.title) + '</h1>' + (s.sub ? '<p class="ob-sub">' + esc(s.sub) + '</p>' : "");
     if (s.id === "gymnase") {
@@ -102,8 +110,10 @@
       '<div class="ob-top"><button type="button" class="link ob-back"' + (step === 0 || (editing && step === 1) ? (editing ? ' data-cancel' : " hidden") : "") + '>' + (editing && step === 1 ? "Annuler" : "‹ Retour") + '</button>' +
       (s.id !== "welcome" ? '<div class="ob-prog" aria-hidden="true"><i style="width:' + pct + '%"></i></div>' : "") + '</div>' +
       '<div class="ob-body" id="ob-body">' + body(s) + '</div>' +
-      '<div class="ob-foot"><button type="button" class="btn ob-next"' + (valid(s) ? "" : " disabled") + '>' +
-      (s.id === "welcome" ? "Commencer" : last ? (editing ? "Enregistrer" : "Créer mon tableau de bord") : "Continuer") + '</button></div>';
+      (s.id === "guide"
+        ? '<div class="ob-foot"><button type="button" class="btn" id="ob-guide">' + (guideTouched ? "Reprendre le guide" : "Suivre le guide maintenant") + '</button><button type="button" class="link ob-later" id="ob-later">' + (guideTouched ? "Continuer la configuration" : "Plus tard") + '</button></div>'
+        : '<div class="ob-foot"><button type="button" class="btn ob-next"' + (valid(s) ? "" : " disabled") + '>' +
+          (s.id === "welcome" ? "Commencer" : last ? (editing ? "Enregistrer" : "Créer mon tableau de bord") : "Continuer") + '</button></div>');
     var b = $("#ob-body", root);
     if (canAnim()) {
       M.animate(b, { opacity: [0, 1], x: [dir * 36, 0] }, { type: "spring", stiffness: 340, damping: 30 });
@@ -145,7 +155,7 @@
     editing = !!edit;
     var cur = window.NotesApp.profile();
     p = cur ? JSON.parse(JSON.stringify(cur)) : {};
-    step = editing ? 1 : 0; dir = 1;
+    step = editing ? 1 : 0; dir = 1; guideTouched = false;
     root = document.createElement("div");
     root.className = "ob"; root.setAttribute("role", "dialog"); root.setAttribute("aria-modal", "true"); root.setAttribute("aria-label", "Configuration");
     document.body.appendChild(root);
@@ -161,6 +171,11 @@
         });
         return;
       }
+      if (e.target.closest("#ob-guide")) {
+        window.Guide.open({ start: true, onClose: function (res) { guideTouched = true; if (!root) return; if (res && res.completed) go(1); else render(); } });
+        return;
+      }
+      if (e.target.closest("#ob-later")) { go(1); return; }
       var r = e.target.closest(".ob-row[data-f]");
       if (r && !r.disabled) {
         var f = r.dataset.f, v = r.dataset.v;
@@ -205,8 +220,14 @@
   var ua = navigator.userAgent;
   var isIOS = /iP(hone|ad|od)/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   var isAndroid = /Android/.test(ua);
-  var inApp = /FBAN|FBAV|Instagram|Snapchat|Line\/|TikTok|musical_ly|LinkedInApp/.test(ua);
   function standalone() { return window.navigator.standalone === true || window.matchMedia("(display-mode: standalone)").matches; }
+  // Navigateur intégré à une app (Moodle, réseaux sociaux…) : l'installation y est impossible.
+  function detectInApp(u, ios, installed) {
+    if (/MoodleMobile/i.test(u) || /FBAN|FBAV|Instagram|Snapchat|Line\/|TikTok|musical_ly|LinkedInApp/.test(u)) return true;
+    return !!(ios && !installed && !/Safari\//.test(u)); // sur iOS, seul le vrai Safari (ou Chrome, Firefox) annonce « Safari/ »
+  }
+  var isMoodle = /MoodleMobile/i.test(ua);
+  var inApp = detectInApp(ua, isIOS, standalone());
   var deferredPrompt = null;
   window.addEventListener("beforeinstallprompt", function (e) {
     e.preventDefault(); deferredPrompt = e;
@@ -219,7 +240,7 @@
   var ICON_HOME = '<img src="icon-180.png" alt="">';
 
   function steps() {
-    if (inApp) return [["!", "Ce navigateur ne peut pas installer d'app", "Touche le menu de l'app (⋯ ou ⋮) puis « Ouvrir dans Safari » ou « Ouvrir dans le navigateur »."]];
+    if (inApp) return [["!", "Ouvre ce lien dans " + (isIOS ? "Safari" : "ton navigateur"), "Cherche « Ouvrir dans " + (isIOS ? "Safari" : "le navigateur") + " » (icône boussole ou ⋯ ou ⋮), ou copie le lien ci-dessous et colle-le dans " + (isIOS ? "Safari" : "ton navigateur") + "."]];
     if (isIOS) return [
       [ICON_SHARE, "Touche le bouton Partager", "En bas de Safari. Si tu ne le vois pas, touche d'abord " + "⋯" + "."],
       [ICON_ADD, "Choisis « Sur l'écran d'accueil »", "Fais défiler la liste si besoin, puis touche « Ajouter »."],
@@ -236,13 +257,15 @@
     var el = document.createElement("div");
     el.className = "ob ob-install"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Installer l'app");
     el.innerHTML =
-      '<div class="ob-body"><div class="ob-hero"><img src="icon-180.png" alt="" class="ob-icon"><h1>Installe l\'app</h1>' +
-      '<p>Ajoute Notes à ton écran d\'accueil avant de commencer. Elle s\'ouvrira en plein écran, marchera sans connexion, et tu ne feras la configuration qu\'une fois.</p></div>' +
+      '<div class="ob-body"><div class="ob-hero"><img src="icon-180.png" alt="" class="ob-icon"><h1>' + (inApp ? "Ouvre l\'app dans " + (isIOS ? "Safari" : "ton navigateur") : "Installe l\'app") + '</h1>' +
+      '<p>' + (inApp ? "Cette fenêtre" + (isMoodle ? " (l\'app Moodle)" : "") + " ne permet pas d\'installer l\'app. Ouvre le lien dans " + (isIOS ? "Safari" : "ton navigateur") + " puis installe-la depuis là : tu ne feras la configuration qu\'une fois." : "Ajoute Notes à ton écran d\'accueil avant de commencer. Elle s\'ouvrira en plein écran, marchera sans connexion, et tu ne feras la configuration qu\'une fois.") + '</p></div>' +
       '<ol class="inst-steps">' + steps().map(function (s, i) {
         return '<li><span class="inst-ic' + (s[0] === "!" ? " warn" : "") + '">' + (s[0] === "!" ? "!" : s[0]) + '</span><span class="ob-txt"><span class="ob-n">' + (steps().length > 1 ? (i + 1) + ". " : "") + esc(s[1]) + '</span><span class="ob-s">' + esc(s[2]) + '</span></span></li>';
       }).join("") + '</ol>' +
+      (inApp ? '<p class="inst-url mono" id="inst-url">' + esc(location.origin + location.pathname) + '</p>' : '') +
       '<p class="ob-fine">Pourquoi ? Safari et l\'app de l\'écran d\'accueil gardent leurs données séparément : une configuration faite ici ne serait pas reprise dans l\'app.</p></div>' +
-      '<div class="ob-foot"><button type="button" class="btn ob-next" id="inst-btn"' + (deferredPrompt ? "" : " hidden") + '>Installer l\'app</button>' +
+      '<div class="ob-foot">' + (inApp ? '<button type="button" class="btn ob-next" id="inst-copy">Copier le lien</button>' : '') +
+      '<button type="button" class="btn ob-next" id="inst-btn"' + (deferredPrompt && !inApp ? "" : " hidden") + '>Installer l\'app</button>' +
       '<button type="button" class="link inst-skip" id="inst-skip">Continuer dans le navigateur</button>' +
       (isIOS && !inApp ? '<div class="inst-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v15M6 13l6 6 6-6"/></svg></div>' : "") + '</div>';
     document.body.appendChild(el);
@@ -252,6 +275,16 @@
       var ar = el.querySelector(".inst-arrow svg");
       if (ar) M.animate(ar, { y: [0, 10, 0] }, { duration: 1.4, repeat: Infinity, ease: "easeInOut" });
     }
+    var cp = el.querySelector("#inst-copy");
+    if (cp) cp.addEventListener("click", function () {
+      var url = location.origin + location.pathname, u = el.querySelector("#inst-url");
+      function fallback() {
+        try { var r = document.createRange(); r.selectNodeContents(u); var sl = window.getSelection(); sl.removeAllRanges(); sl.addRange(r); document.execCommand("copy"); cp.textContent = "Lien copié ✓"; }
+        catch (x) { cp.textContent = "Touche le lien et copie-le"; }
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(function () { cp.textContent = "Lien copié ✓"; hap("success"); }, fallback);
+      else fallback();
+    });
     el.querySelector("#inst-btn").addEventListener("click", function () {
       if (!deferredPrompt) return;
       deferredPrompt.prompt();
@@ -266,7 +299,7 @@
     window.addEventListener("appinstalled", function () { var s = el.querySelector(".ob-hero p"); if (s) s.textContent = "C'est installé ! Ouvre Notes depuis ton écran d'accueil."; });
   }
 
-  window.Onboard = { open: open, refresh: refreshSummary };
+  window.Onboard = { open: open, refresh: refreshSummary, detectInApp: detectInApp };
   mountSettingsButton(); refreshSummary();
   if (!window.NotesApp.profile()) {
     if ((isIOS || isAndroid) && !standalone()) openInstall();
