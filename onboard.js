@@ -79,7 +79,7 @@
       if (g && g.warn) h += '<p class="ob-warn">' + esc(g.warn) + '</p>';
     }
     if (s.id === "year") {
-      h += list([{ id: 1, name: "1re année" }, { id: 2, name: "2e année" }, { id: 3, name: "3e année", sub: "moyennes seulement, sans calcul du certificat" }], "year");
+      h += list([{ id: 1, name: "1re année" }, { id: 2, name: "2e année" }, { id: 3, name: "3e année", sub: "avec le certificat de maturité et les examens" }], "year");
       h += '<label class="ob-field"><span>Nom de ta classe (facultatif)</span><input id="ob-classe" type="text" maxlength="12" autocomplete="off" placeholder="2M01" value="' + esc(p.classe || "") + '"></label>';
     }
     if (s.id === "l2") h += list(G.L2, "l2");

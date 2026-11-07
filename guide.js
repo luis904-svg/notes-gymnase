@@ -147,7 +147,11 @@
     { t: "Lire le tableau de bord", d: "2 min", s: [
       { t: "Le verdict de promotion", v: "promo", p: [
         "Le verdict (<b>Promotion assurée</b>, <b>Marge faible</b>, <b>Cas limite</b> ou <b>En danger</b>) vérifie trois règles : total des notes, groupe français + L2/L3 + maths + OS d'au moins 16, et 4 notes sous 4 au maximum.",
-        "<span class='note'>En 3e année, il n'y a pas de verdict : le certificat dépend aussi des examens.</span>"] },
+        "<span class='note'>En 3e année, ce verdict est remplacé par celui du certificat de maturité (étape suivante).</span>"] },
+      { t: "En 3e : le certificat de maturité", v: "promo", p: [
+        "En 3e, le tableau de bord vérifie les trois conditions du certificat : au moins <b>56 points</b> sur les 14 notes de maturité avec <b>double compensation</b> (chaque point manquant sous 4 compte double), <b>4 notes sous 4</b> au maximum, et au moins <b>38,5 points</b> sur les 11 notes d'examen.",
+        "Dans <b>Examens et notes de maturité</b>, entre tes notes d'écrit et d'oral au fur et à mesure. Avant les examens, l'app affiche la <b>note minimale</b> à obtenir à chaque épreuve pour réussir, et le minimum pour avoir 4 dans chaque branche.",
+        "Chimie, physique et la discipline artistique gardent leur <b>note de 2e</b> : l'app la reprend de tes notes de l'an passé, et tu peux la corriger à la main."] },
       { t: "Tes branches", v: "bars", p: [
         "Chaque barre et chaque carte montrent la <b>note de bulletin</b>, arrondie : <b>vert</b> dès 4.5, <b>orange</b> pour 4, <b>rouge</b> sous 4.",
         "Touche une branche pour son détail : année et semestres, courbe, toutes les notes et, sous 4, la note à viser au prochain test."] },
