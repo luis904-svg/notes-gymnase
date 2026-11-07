@@ -149,10 +149,9 @@
         "Le verdict (<b>Promotion assurée</b>, <b>Marge faible</b>, <b>Cas limite</b> ou <b>En danger</b>) vérifie trois règles : total des notes, groupe français + L2/L3 + maths + OS d'au moins 16, et 4 notes sous 4 au maximum.",
         "<span class='note'>En 3e année, ce verdict est remplacé par celui du certificat de maturité (étape suivante).</span>"] },
       { t: "En 3e : le certificat de maturité", v: "promo", p: [
-        "En haut du tableau de bord, une pastille te dit où tu en es : <b>Bonne voie</b> (vert), <b>Serré</b> (orange) ou <b>Compliqué</b> (rouge), puis <b>Maturité réussie</b> ou <b>non réussie</b> quand tous les examens sont saisis. Elle compare la note qu'il te faudrait aux examens avec ta moyenne actuelle dans les branches d'examen.",
-        "Le certificat vérifie trois conditions : au moins <b>56 points</b> sur les 14 notes de maturité avec <b>double compensation</b> (chaque point manquant sous 4 compte double), <b>4 notes sous 4</b> au maximum, et au moins <b>38,5 points</b> sur les 11 notes d'examen.",
-        "Dans <b>Examens et notes de maturité</b>, entre tes notes d'écrit et d'oral au fur et à mesure. Pour connaître la <b>note minimale</b> à viser à l'examen, touche la carte d'une branche d'examen : le détail indique ce qu'il faut à l'écrit et à l'oral pour avoir 4 dans la branche.",
-        "Chimie, physique et la discipline artistique gardent leur <b>note de 2e</b> : l'app la reprend de tes notes de l'an passé, et tu peux la corriger à la main."] },
+        "En 3e, le tableau de bord est le même qu'en 2e. L'en-tête montre une pastille (<b>Bonne voie</b>, <b>Serré</b> ou <b>Compliqué</b>, puis <b>Maturité réussie</b> ou <b>non réussie</b> quand tous les examens sont saisis) et trois jauges : le <b>total des 14 notes avec double compensation</b> (seuil 56), le <b>total des examens</b> (seuil 38,5) et les <b>notes sous 4</b> (4 au maximum).",
+        "Les examens se saisissent dans le <b>détail de chaque branche</b> : touche la carte de français, L2, L3, maths, option spécifique ou option complémentaire, entre l'écrit et l'oral, et lis la <b>note minimale</b> à viser pour avoir 4 dans la branche.",
+        "Chimie, physique et la discipline artistique ont leur carte avec la <b>note de 2e reprise</b>. Pour la corriger, va dans <b>Réglages → Notes reprises de 2e</b>."] },
       { t: "Tes branches", v: "bars", p: [
         "Chaque barre et chaque carte montrent la <b>note de bulletin</b>, arrondie : <b>vert</b> dès 4.5, <b>orange</b> pour 4, <b>rouge</b> sous 4.",
         "Touche une branche pour son détail : année et semestres, courbe, toutes les notes et, sous 4, la note à viser au prochain test."] },

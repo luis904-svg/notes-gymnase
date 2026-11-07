@@ -348,3 +348,9 @@ body.hl-open { overflow: hidden; }
 .yp-notes { list-style: none; margin: 0; padding: 0 16px 12px 28px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
 .yp-notes li { display: flex; justify-content: space-between; gap: 12px; }
 .yp-notes .mono { font-weight: 600; }
+
+/* Réglages : notes reprises de 2e */
+#carriedset .row { gap: 12px; }
+#carriedset input { min-height: 40px; }
+/* Saisie des examens dans la feuille de détail */
+.cert-min .exam-fields { margin: 4px 0 6px; }

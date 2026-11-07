@@ -433,7 +433,7 @@ td input[type="date"] { width: auto; }
           <li>Total des notes de bulletin d'au moins 4 × le nombre de notes (1re : 11 notes, soit 44 points ; 2e : 12 notes, soit 48 points si l'informatique compte).</li>
           <li>Au moins 16 points sur le groupe français + moyenne arrondie de L2 et L3 + maths + OS.</li>
           <li>Au plus 4 notes inférieures à 4.</li>
-          <li>En 3e, il n'y a pas de promotion : le certificat combine notes annuelles et examens (non calculé dans l'app).</li>
+          <li>En 3e, le certificat de maturité remplace la promotion : au moins 56 points sur les 14 notes avec double compensation (chaque point sous 4 compte double), au plus 4 notes sous 4, et au moins 38,5 points aux 11 examens. Note finale d'une branche d'examen = (2 × annuelle + écrit + oral) / 4, arrondie au demi-point ; chimie, physique et art gardent leur note de 2e.</li>
           <li>Cas limite : un demi-point sur une seule note suffirait. La conférence des maîtres peut alors promouvoir par faveur.</li>
         </ul>
       </div>
@@ -572,6 +572,7 @@ td input[type="date"] { width: auto; }
   }
   function leafAvg(id, notes) {
     var s = sub(id), mine = notes.filter(function (g) { return g.subject === id; });
+    if (s && s.carried) return { avg: window.Cert && Cert.carriedValue ? Cert.carriedValue(id) : null, n: 0, prov: false, carried: true };
     if (!mine.length) return { avg: null, n: 0, prov: false };
     var tests = mine.filter(function (g) { return g.type !== "tp"; });
     var tps = mine.filter(function (g) { return g.type === "tp"; });
@@ -727,7 +728,7 @@ td input[type="date"] { width: auto; }
     state.cfg.subjects.filter(function (s) { return s.counts && !s.part; }).forEach(function (s) {
       var a = subjAvg(s.id, notes);
       if (a.avg == null) return;
-      var b = roundHalf(a.avg), need = s.parts ? null : needFor(s.id, notes);
+      var b = roundHalf(a.avg), need = (s.parts || s.carried) ? null : needFor(s.id, notes);
       var needTxt = need != null && a.avg < 3.75 ? " Il faudrait au moins " + need.toFixed(2).replace(/0$/, "") + " au prochain test (coef 1) pour passer à 4." : "";
       if (b < 4) items.push(["t-crit", 0, "<b>" + esc(s.name) + "</b> : " + fmtB(b) + " au bulletin (moy. " + fmtAvg(a.avg) + ")." + needTxt]);
       else if (a.avg < 4.25) items.push(["t-warn", 1, "<b>" + esc(s.name) + "</b> : moy. " + fmtAvg(a.avg) + ", proche du seuil de 4 (bulletin " + fmtB(b) + ")."]);
@@ -745,7 +746,7 @@ td input[type="date"] { width: auto; }
       var minN = s.parts ? null : Math.ceil(s.periods) + 1;
       var vals = subjSeries(s.id, notes).map(function (p) { return p.avg; }).filter(function (v) { return v != null; });
       var lines = '<span>moy. exacte <span class="mono">' + fmtAvg(a.avg) + '</span>' + (a.prov ? " · sans TP ou sans test" : "") + '</span>';
-      lines += '<span>' + a.n + ' note' + (a.n > 1 ? "s" : "") + (minN ? ' sur ' + minN + ' min.' : "") + '</span>';
+      lines += s.carried ? '<span>note de 2e reprise</span>' : '<span>' + a.n + ' note' + (a.n > 1 ? "s" : "") + (minN ? ' sur ' + minN + ' min.' : "") + '</span>';
       if (s.goal && a.avg != null) { var dl = a.avg - s.goal; lines += '<span>objectif ' + s.goal + ' · <span class="mono">' + (dl >= 0 ? "+" : "−") + Math.abs(dl).toFixed(2) + '</span></span>'; }
       if (s.counts === false) lines += '<span>ne compte pas pour la promotion</span>';
       var parts = "";
@@ -756,7 +757,7 @@ td input[type="date"] { width: auto; }
         }).join("") + '</div>';
       }
       var need = "";
-      if (!s.parts && a.avg != null && a.avg < 3.75) { var nf = needFor(s.id, notes); need = '<div class="need">' + (nf != null ? "Prochain test : au moins " + nf.toFixed(2).replace(/0$/, "") + " pour atteindre 4." : "4 n'est plus atteignable avec un seul test.") + '</div>'; }
+      if (!s.parts && !s.carried && a.avg != null && a.avg < 3.75) { var nf = needFor(s.id, notes); need = '<div class="need">' + (nf != null ? "Prochain test : au moins " + nf.toFixed(2).replace(/0$/, "") + " pour atteindre 4." : "4 n'est plus atteignable avec un seul test.") + '</div>'; }
       return '<article class="card ' + (t === "crit" ? "t-crit" : "") + (ui.flash === s.id ? " flash" : "") + '" data-subj="' + s.id + '" tabindex="0" role="button" aria-label="Voir le détail : ' + esc(s.name) + '"><div class="card-head"><h3>' + esc(s.name) + '</h3><span class="per">' + s.periods + ' pér.' + (s.verify ? " · à vérifier" : "") + '</span></div>' +
         '<div class="card-body"><div><div class="big ' + t + '" title="Note de bulletin">' + fmtB(b) + '</div></div>' + spark(vals) + '</div>' +
         '<div class="lines">' + lines + '</div>' + need + parts + '<span class="more">Voir le détail ›</span></article>';
@@ -765,13 +766,13 @@ td input[type="date"] { width: auto; }
   }
 
   function fillSelects() {
-    var leaves = state.cfg.subjects.filter(function (s) { return !s.parts; });
+    var leaves = state.cfg.subjects.filter(function (s) { return !s.parts && !s.carried; });
     var cur = $("#f-subj").value;
     $("#f-subj").innerHTML = leaves.map(function (s) { return '<option value="' + s.id + '">' + esc(s.name) + '</option>'; }).join("");
     if (cur) $("#f-subj").value = cur;
     var cs = ui.chartSubj;
     $("#chart-subj").innerHTML = '<option value="__all">Moyenne générale (toutes branches)</option>' +
-      state.cfg.subjects.filter(function (s) { return !s.part; }).map(function (s) { return '<option value="' + s.id + '">' + esc(s.name) + '</option>'; }).join("");
+      state.cfg.subjects.filter(function (s) { return !s.part && !s.carried; }).map(function (s) { return '<option value="' + s.id + '">' + esc(s.name) + '</option>'; }).join("");
     $("#chart-subj").value = cs;
   }
 
@@ -860,6 +861,13 @@ td input[type="date"] { width: auto; }
     var s = ui.detail ? sub(ui.detail) : null;
     if (!s) { ui.detail = null; el.hidden = true; document.body.style.overflow = ""; return; }
     var all = currentGrades(), ids = s.parts || [s.id];
+    if (s.carried) {
+      $("#sheet-box").innerHTML = '<div class="grab" aria-hidden="true"></div><div class="sheet-head"><div><h2 id="sheet-title">' + esc(s.name) + '</h2><p>Note de 2e reprise</p></div><button type="button" class="btn-ghost" data-close id="sheet-close">Fermer</button></div>' +
+        (window.Cert && Cert.detail ? Cert.detail(s.id) : "");
+      if (!dragging) { $("#sheet-box").style.transform = ""; $("#sheet-box").style.transition = ""; }
+      el.hidden = false; document.body.style.overflow = "hidden";
+      return;
+    }
     var mine = all.filter(function (g) { return ids.indexOf(g.subject) >= 0; }).sort(function (a, b) { if (a.date !== b.date) return a.date < b.date ? 1 : -1; var x = String(a.sortKey || a.id), y = String(b.sortKey || b.id); return x < y ? 1 : x > y ? -1 : 0; });
     var tiles = [["year", "Année"], ["s1", "Semestre 1"], ["s2", "Semestre 2"]].map(function (p) {
       var a = subjAvg(s.id, periodNotes(all, p[0])), b = roundHalf(a.avg);
@@ -904,14 +912,14 @@ td input[type="date"] { width: auto; }
     return s.periods + " pér." + (s.goal ? " · objectif " + s.goal : "") + (s.tpShare ? " · TP " + Math.round(s.tpShare * 100) + " %" : "") + (s.part ? " · via OS" : s.counts ? "" : " · hors promotion") + (s.verify ? " · à vérifier" : "");
   }
   function renderSettings() {
-    var rows = state.cfg.subjects.map(function (s) {
+    var rows = state.cfg.subjects.filter(function (s) { return !s.carried; }).map(function (s) {
       return '<tr><td>' + esc(s.name) + (s.verify ? ' <span class="muted">· à vérifier</span>' : "") + '</td>' +
         '<td><input type="number" min="1" max="10" step="1" data-k="periods" data-id="' + s.id + '" value="' + s.periods + '" aria-label="Périodes ' + esc(s.name) + '"></td>' +
         '<td><input type="number" min="1" max="6" step="0.5" data-k="goal" data-id="' + s.id + '" value="' + (s.goal || "") + '" placeholder="–" aria-label="Objectif ' + esc(s.name) + '"></td>' +
         '<td><input type="number" min="0" max="100" step="5" data-k="tp" data-id="' + s.id + '" value="' + Math.round((s.tpShare || 0) * 100) + '" aria-label="Part des TP ' + esc(s.name) + '"></td>' +
         '<td>' + (s.part ? '<span class="muted">via OS</span>' : '<input type="checkbox" switch data-k="counts" data-id="' + s.id + '"' + (s.counts ? " checked" : "") + ' aria-label="Compte pour la promotion ' + esc(s.name) + '">') + '</td></tr>';
     }).join("");
-    $("#settings-list").innerHTML = state.cfg.subjects.map(function (s) {
+    $("#settings-list").innerHTML = state.cfg.subjects.filter(function (s) { return !s.carried; }).map(function (s) {
       return '<details class="srow" data-sid="' + s.id + '"' + (ui.setOpen === s.id ? " open" : "") + '><summary><span><span class="sn">' + esc(s.name) + '</span><span class="ss">' + setSummary(s) + '</span></span></summary><div class="sfields">' +
         '<label>Périodes<input type="number" inputmode="numeric" min="1" max="10" step="1" data-k="periods" data-id="' + s.id + '" value="' + s.periods + '"></label>' +
         '<label>Objectif<input type="number" inputmode="decimal" min="1" max="6" step="0.5" data-k="goal" data-id="' + s.id + '" value="' + (s.goal || "") + '" placeholder="–"></label>' +
@@ -927,7 +935,7 @@ td input[type="date"] { width: auto; }
     var pr = state.cfg.profile, gname = Grid.gymnaseName(pr.gymnase), t = "Notes " + (pr.classe || pr.year + "M");
     $("header.top h1").textContent = t; document.title = t;
     $("header.top p").textContent = (gname ? gname + " · " : "") + "École de maturité vaudoise · 2026–2027";
-    $("#h-promo").textContent = pr.year === 3 ? "Année de maturité" : "Promotion en " + (pr.year + 1) + "e année";
+    $("#h-promo").textContent = pr.year === 3 ? "Certificat de maturité" : "Promotion en " + (pr.year + 1) + "e année";
   }
   var NO_PROMO = '<div class="verdict"><span class="pill t-none">3e année</span><p>Pas de promotion en 3e : le certificat dépend aussi des examens. L\'app suit tes moyennes et tes objectifs.</p></div>';
   function render() {

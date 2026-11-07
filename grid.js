@@ -119,6 +119,12 @@
     add({ id: "ed", name: "Économie et droit", short: "É&D" }, [2, 0, 0]);
     if (oc) add({ id: "oc", name: "OC " + oc.name, short: "OC", hasTP: !!oc.tp }, [0, 0, 3]);
     add({ id: "tm", name: "Travail de maturité", short: "TM" }, [0, 0, 1]);
+    // 3e année : chimie, physique et art ne sont plus enseignées, mais leur note de 2e compte pour le certificat.
+    if (y === 2) {
+      [["ch", "Chimie", "Chim."], ["ph", "Physique", "Phys."], ["art", art.name, art.short]].forEach(function (c) {
+        out.push({ id: c[0], name: c[1], short: c[2], periods: 0, counts: true, carried: true, tpShare: 0 });
+      });
+    }
     return out;
   }
 

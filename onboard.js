@@ -91,7 +91,7 @@
     if (s.id === "recap") {
       var subs = G.build(p), gname = G.gymnaseName(p.gymnase);
       h = '<h1 class="ob-title">' + esc(s.title) + '</h1><p class="ob-sub">' + esc((gname ? gname + " · " : "") + p.year + (p.year === 1 ? "re" : "e") + " année" + (p.classe ? " · " + p.classe : "")) + '</p>';
-      h += '<div class="ob-list ob-recap">' + subs.filter(function (x) { return !x.part; }).map(function (x) {
+      h += '<div class="ob-list ob-recap">' + subs.filter(function (x) { return !x.part && !x.carried; }).map(function (x) {
         var parts = x.parts ? subs.filter(function (c) { return x.parts.indexOf(c.id) >= 0; }).map(function (c) { return c.name + " " + fmtP(c.periods) + (c.tpShare ? " (TP 25 %)" : ""); }).join(" + ") : "";
         return '<div class="ob-row ob-static"><span class="ob-txt"><span class="ob-n">' + esc(x.name) + '</span><span class="ob-s">' +
           fmtP(x.periods) + " par semaine" + (x.tpShare ? " · TP 25 %" : "") + (parts ? " · " + esc(parts) : "") + (x.counts ? "" : " · ne compte pas pour la promotion") + '</span></span></div>';
