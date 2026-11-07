@@ -205,7 +205,7 @@ body.gd-open .tabbar { display: none; }
 .gd-f { background: var(--bg); border-radius: 9px; padding: 5px 9px; }
 .gd-f small { display: block; color: var(--muted); font-size: 10px; }
 .gd-f span { font-size: 13px; }
-.gd-f.hl { outline: 2px solid var(--accent); animation: gdGlow 1.8s ease-in-out infinite; }
+.gd-f.gd-hl { outline: 2px solid var(--accent); animation: gdGlow 1.8s ease-in-out infinite; }
 @keyframes gdGlow { 0%, 100% { box-shadow: 0 0 0 0 rgba(0,102,204,.3); } 50% { box-shadow: 0 0 0 7px rgba(0,102,204,0); } }
 .gd-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
 .gd-chips { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; }
@@ -303,7 +303,13 @@ body.gd-open .tabbar { display: none; }
 /* Animation « Hello World » */
 body.hl-open { overflow: hidden; }
 .hl { position: fixed; inset: 0; z-index: 100; background: #fff; display: flex; align-items: center; justify-content: center; padding: 0 6vw; color-scheme: light; }
-.hl-ink { width: min(88vw, 660px); --p: -16%;
-  -webkit-mask-image: linear-gradient(90deg, #000 0, #000 var(--p), transparent calc(var(--p) + 16%));
-  mask-image: linear-gradient(90deg, #000 0, #000 var(--p), transparent calc(var(--p) + 16%)); }
+.hl-ink { width: min(66vw, 400px); }
 .hl-ink svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+/* Guide : ligne de réglage mise en avant, cartes « Mon cursus » et « Fin du semestre 1 » */
+.gd-sf.gd-hl { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+.gd-sf.gd-hl span { font-weight: 600; color: var(--accent); }
+.gd-pad { padding: 12px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.gd-h { font-size: 14px; }
+.gd-mut { color: var(--muted); font-size: 11px; }
+.gd-pad .gd-f { align-self: stretch; }

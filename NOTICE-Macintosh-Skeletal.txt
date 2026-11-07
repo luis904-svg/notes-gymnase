@@ -1,5 +1,5 @@
-Avis : le lettrage « Hello World » de l'animation d'accueil utilise des tracés de la police
-« Macintosh Skeletal Filled » (https://github.com/npwitk/Macintosh-Skeletal-Filled).
+Avis : le lettrage « Hello World » de l'animation d'accueil utilise des lignes de plume extraites de la police
+« Macintosh Skeletal Variable » (https://github.com/npwitk/Macintosh-Skeletal-Filled).
 Cette police est dérivée de « Macintosh Skeletal », propriété d'Apple Inc. Cette application est un projet
 personnel, non commercial et non officiel : elle n'est ni affiliée à Apple, ni soutenue par Apple.
 

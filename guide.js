@@ -53,7 +53,7 @@
     },
     add: function () {
       return "<div class='gd-form'><div class='gd-f'><small>Branche</small><span>Mathématiques (renforcé)</span></div>" +
-        "<div class='gd-2'><div class='gd-f hl'><small>Note (1 à 6)</small><span>4.75</span></div><div class='gd-f'><small>Date</small><span>06.11.2026</span></div></div>" +
+        "<div class='gd-2'><div class='gd-f gd-hl'><small>Note (1 à 6)</small><span>4.75</span></div><div class='gd-f'><small>Date</small><span>06.11.2026</span></div></div>" +
         "<div class='gd-chips'><span>× 1</span><span class='on'>× 0.5</span><span>× 1/3</span><span>× 0.25</span></div>" +
         "<span class='gd-btn'>Ajouter</span></div>" + tabs("add");
     },
@@ -101,10 +101,19 @@
       return "<div class='gd-os'><div class='bx'><small>Physique OS · 2,5 pér.</small><b>4.88</b></div><i>+</i><div class='bx'><small>Applications des maths · 2 pér.</small><b>5.00</b></div></div>" +
         "<div class='gd-os res'><div class='bx'><small>Note d'OS (moyenne pondérée)</small><b>4.93 → 5</b></div></div>";
     },
-    settings: function () {
+    settings: function (hl) {
+      var row = function (k, label, val) { return "<div class='gd-sf" + (hl === k ? " gd-hl" : "") + "'><span>" + label + "</span>" + val + "</div>"; };
       return "<div class='gd-set'><div class='gd-sr'><b>Physique</b><small>3 pér. · objectif 5.5 · TP 25 %</small></div>" +
-        "<div class='gd-sf'><span>Périodes</span><em>3</em></div><div class='gd-sf'><span>Objectif</span><em>5.5</em></div>" +
-        "<div class='gd-sf'><span>Part des TP (%)</span><em>25</em></div><div class='gd-sf'><span>Compte pour la promotion</span><i class='gd-sw'><u></u></i></div></div>";
+        row("per", "Périodes", "<em>3</em>") + row("goal", "Objectif", "<em>5.5</em>") + row("tp", "Part des TP (%)", "<em>25</em>") +
+        row("count", "Compte pour la promotion", "<i class='gd-sw'><u></u></i>") + "</div>";
+    },
+    profil: function () {
+      return "<div class='gd-set gd-pad'><b class='gd-h'>Mon cursus</b><small class='gd-mut'>2e année · L2 Allemand · L3 Anglais · OS Économie et droit · maths standard</small>" +
+        "<span class='gd-btn ghost'>Modifier mon profil</span></div>";
+    },
+    semestre: function () {
+      return "<div class='gd-set gd-pad'><small class='gd-mut'>Fin du semestre 1</small><div class='gd-f gd-hl'><span>22.01.2027</span></div></div>" +
+        "<div class='gd-seg'><span>Année</span><span class='on'>Semestre 1</span><span>Semestre 2</span></div>";
     },
     backup: function () {
       return "<div class='gd-bk'><div class='gd-file'>" + ic("doc") + "<b>notes-sauvegarde.json</b></div>" +
@@ -122,58 +131,61 @@
 
   /* ---------- Contenu ---------- */
   var CH = [
-    { t: "Prise en main", d: "4 min", s: [
+    { t: "Prise en main", d: "3 min", s: [
       { t: "Installe l'app", v: "install", p: [
-        "Ouvre le lien dans <b>Safari</b> (pas dans Moodle ni dans une autre app), touche <b>Partager</b>, puis <b>Sur l'écran d'accueil</b> et <b>Ajouter</b>.",
-        "Ouvre ensuite <b>Notes</b> depuis ton écran d'accueil : c'est là que tes notes seront enregistrées. Celles saisies dans Safari ne se retrouvent pas dans l'icône."] },
+        "Ouvre le lien dans <b>Safari</b>, touche <b>Partager</b>, puis <b>Sur l'écran d'accueil</b> et <b>Ajouter</b>.",
+        "Utilise ensuite toujours l'icône <b>Notes</b> : les notes saisies dans Safari ne se retrouvent pas dans l'app installée."] },
       { t: "Fais la configuration", v: "config", p: [
-        "Réponds aux questions : gymnase, année, langues (L2 et L3), option spécifique, niveau de maths, discipline artistique, et option complémentaire en 3e.",
-        "L'app crée tes branches avec leurs périodes. Les choix impossibles sont grisés, avec la raison. Tu pourras tout changer dans <b>Réglages → Modifier mon profil</b>."] },
+        "Choisis ton gymnase, ton année, tes langues, ton option spécifique, ton niveau de maths et ta discipline artistique (et l'option complémentaire en 3e).",
+        "L'app crée tes branches avec leurs périodes. Un choix impossible est grisé, avec la raison."] },
       { t: "Ajoute une note", v: "add", p: [
-        "Touche <b>Ajouter</b> en bas, choisis la branche, tape la note (de 1 à 6, décimales possibles, par exemple 4.75) et la date.",
-        "Choisis le <b>coefficient</b> avec les boutons (× 0.5, × 1/3…) ou tape-le toi-même, puis le type <b>Test</b> ou <b>TP</b> et un intitulé si tu veux. Touche <b>Ajouter</b> : une coche confirme.",
-        "<span class='note'>Pas encore de notes ? Sur le tableau de bord vide, touche « Voir avec des notes d'exemple » pour essayer l'app avec des notes fictives, non enregistrées.</span>"] },
-      { t: "Modifie ou supprime une note", v: "edit", p: [
-        "Dans <b>Dernières notes</b> (et dans le détail d'une branche), <b>Modifier</b> rouvre le formulaire déjà rempli.",
-        "<b>Supprimer</b> demande une seconde touche (« Confirmer ? ») pour éviter les fausses manœuvres."] }
+        "Touche <b>Ajouter</b> en bas, choisis la branche, tape la note (de 1 à 6, par exemple 4.75) et la date.",
+        "Règle le <b>coefficient</b> (boutons × 1, × 0.5, × 1/3, × 0.25, ou tape-le), le type <b>Test</b> ou <b>TP</b>, puis touche <b>Ajouter</b>."] },
+      { t: "Corrige ou supprime", v: "edit", p: [
+        "Dans <b>Dernières notes</b> ou dans le détail d'une branche : <b>Modifier</b> rouvre la note, <b>Supprimer</b> demande une seconde touche (« Confirmer ? »)."] }
     ] },
-    { t: "Comprendre le tableau de bord", d: "3 min", s: [
+    { t: "Lire le tableau de bord", d: "2 min", s: [
       { t: "Le verdict de promotion", v: "promo", p: [
-        "En haut, un verdict : <b>Promotion assurée</b>, <b>Marge faible</b>, <b>Cas limite</b> ou <b>En danger</b>, calculé sur toutes tes notes.",
-        "Trois indicateurs : le <b>total des notes</b> (au moins 4 × le nombre de notes), le <b>groupe</b> français + L2/L3 + maths + OS (au moins 16) et le nombre de <b>notes sous 4</b> (4 au maximum). Le trait noir marque le seuil.",
+        "Le verdict (<b>Promotion assurée</b>, <b>Marge faible</b>, <b>Cas limite</b> ou <b>En danger</b>) vérifie trois règles : total des notes, groupe français + L2/L3 + maths + OS d'au moins 16, et 4 notes sous 4 au maximum.",
         "<span class='note'>En 3e année, il n'y a pas de verdict : le certificat dépend aussi des examens.</span>"] },
-      { t: "Les moyennes par branche", v: "bars", p: [
-        "Chaque barre est la <b>note de bulletin</b> d'une branche, arrondie au demi-point. Le trait pointillé marque le 4.",
-        "<b>Vert</b> dès 4.5, <b>orange</b> pour 4, <b>rouge</b> sous 4. Si tu as fixé un objectif, il apparaît en pointillés gris. Touche une barre pour ouvrir le détail de la branche."] },
-      { t: "Les cartes et le détail", v: "card", p: [
-        "Chaque carte montre la <b>note de bulletin</b> (le gros chiffre), la moyenne exacte, le nombre de notes saisies sur le minimum conseillé et l'écart avec ton objectif.",
-        "Touche une carte : le détail affiche année, semestre 1 et semestre 2, la courbe et toutes les notes. Sous 4, l'app indique la note à viser au prochain test pour remonter à 4."] },
-      { t: "Alertes, graphique et périodes", v: "watch", p: [
-        "<b>À surveiller</b> liste les branches sous 4 ou proches du seuil. Le graphique suit l'évolution de la moyenne générale, ou d'une seule branche (menu au-dessus).",
-        "Les boutons <b>Année</b>, <b>Semestre 1</b> et <b>Semestre 2</b> filtrent tout le tableau de bord. Règle la date de fin du semestre 1 dans Réglages."] }
+      { t: "Tes branches", v: "bars", p: [
+        "Chaque barre et chaque carte montrent la <b>note de bulletin</b>, arrondie : <b>vert</b> dès 4.5, <b>orange</b> pour 4, <b>rouge</b> sous 4.",
+        "Touche une branche pour son détail : année et semestres, courbe, toutes les notes et, sous 4, la note à viser au prochain test."] },
+      { t: "Alertes et périodes", v: "watch", p: [
+        "<b>À surveiller</b> liste les branches en difficulté. Les boutons <b>Année</b>, <b>Semestre 1</b> et <b>Semestre 2</b> filtrent tout le tableau de bord."] }
     ] },
     { t: "Règles de calcul", d: "1 min", s: [
       { t: "Moyenne et arrondi", v: "round", p: [
-        "Ta moyenne est <b>cumulée depuis septembre</b> : ce n'est pas la moyenne de deux semestres. La note de bulletin est arrondie au <b>demi-point</b>, vers le haut dès x,25 et x,75."] },
-      { t: "Coefficients et TP", v: "tp", p: [
-        "Chaque note a un <b>coefficient</b>. Dans les branches de sciences, les <b>TP comptent pour 25 %</b> et les tests pour 75 % par défaut : le canton ne fixe pas cette part, change-la dans Réglages si ton prof fait autrement."] },
-      { t: "Options à deux parties", v: "os", p: [
-        "Certaines options (physique et applications des maths, biologie et chimie, philosophie et psychologie) mélangent leurs deux parties selon leurs périodes, puis arrondissent <b>une seule fois</b>.",
-        "Le minimum de notes est <b>périodes + 1</b> : l'app te prévient s'il t'en manque. <span class='note'>Vérifie toujours avec le vade-mecum de ton gymnase.</span>"] }
+        "La moyenne est <b>cumulée depuis septembre</b>. La note de bulletin est arrondie au <b>demi-point</b>, vers le haut dès x,25 et x,75."] },
+      { t: "TP et options à deux parties", v: "tp", p: [
+        "Les <b>TP</b> comptent pour 25 % par défaut. Une option à deux parties (par exemple physique et applications des maths) mélange ses parties selon leurs périodes, puis arrondit une seule fois.",
+        "<span class='note'>Le détail est dans « Comment les moyennes sont calculées », en bas du tableau de bord.</span>"] }
     ] },
-    { t: "Gérer tes données", d: "3 min", s: [
-      { t: "Réglages par branche", v: "settings", p: [
-        "Dans <b>Réglages</b>, touche une branche pour régler ses <b>périodes</b>, ton <b>objectif</b>, la <b>part des TP</b> et l'interrupteur <b>Compte pour la promotion</b> (utile si ton gymnase ne compte pas l'informatique).",
-        "Pour changer d'année, de langue ou d'option, utilise <b>Modifier mon profil</b>."] },
-      { t: "Sauvegarde : exporter et importer", v: "backup", p: [
-        "Tes notes sont dans la mémoire de l'app, sur ton téléphone. <b>Si tu supprimes l'icône, elles disparaissent.</b>",
-        "<b>Réglages → Sauvegarde → Exporter</b> crée un fichier à garder (Fichiers, AirDrop, e-mail). <b>Importer un fichier</b> remplace les notes de l'appareil par celles du fichier."] },
-      { t: "Synchroniser plusieurs appareils", v: "sync", p: [
-        "<b>Réglages → Synchronisation → Activer la synchronisation</b> affiche un code de 16 caractères. Sur ton autre appareil, touche <b>J'ai déjà un code</b> et tape-le.",
-        "Tes notes sont chiffrées avec ce code : personne d'autre ne peut les lire. <b>Garde-le précieusement et ne le partage pas</b> : il ne peut pas être récupéré."] },
+    { t: "Les réglages, option par option", d: "4 min", s: [
+      { t: "Mon cursus", v: "profil", p: [
+        "<b>Réglages → Mon cursus → Modifier mon profil</b> rouvre la configuration déjà remplie : change d'année, de langue ou d'option à tout moment.",
+        "Tes notes sont gardées. Celles d'une branche qui n'existe plus sont seulement masquées."] },
+      { t: "Objectif", v: "settings:goal", p: [
+        "Dans <b>Réglages</b>, touche une branche, puis règle son <b>Objectif</b> : la moyenne que tu vises.",
+        "Le tableau de bord affiche alors ton écart, une barre grise en pointillés dans l'histogramme, et une alerte si tu es nettement en dessous."] },
+      { t: "Part des TP", v: "settings:tp", p: [
+        "<b>Part des TP (%)</b> : la part des travaux pratiques dans la moyenne de la branche. 25 par défaut ; mets la valeur de ton prof, ou 0 pour que les TP comptent comme des notes ordinaires."] },
+      { t: "Périodes", v: "settings:per", p: [
+        "<b>Périodes</b> : le nombre de périodes par semaine. Il fixe le minimum de notes conseillé (périodes + 1) et le poids de chaque partie dans une option à deux parties.",
+        "Corrige-le seulement si ton horaire est différent de la grille officielle."] },
+      { t: "Compte pour la promotion", v: "settings:count", p: [
+        "Cet interrupteur ajoute ou retire la branche du verdict de promotion. Utile si ton gymnase ne compte pas une branche, par exemple l'informatique en 2e."] },
+      { t: "Fin du semestre 1", v: "semestre", p: [
+        "Indique la date de fin du semestre 1 de ton gymnase. Elle sépare les notes des boutons <b>Semestre 1</b> et <b>Semestre 2</b>."] },
+      { t: "Sauvegarde", v: "backup", p: [
+        "<b>Exporter</b> crée un fichier de toutes tes notes et réglages (Fichiers, AirDrop). <b>Importer un fichier</b> remplace ce qu'il y a sur l'appareil.",
+        "<b>Supprimer l'icône efface les notes</b> : exporte régulièrement."] },
+      { t: "Synchronisation", v: "sync", p: [
+        "<b>Activer la synchronisation</b> donne un code de 16 caractères. Sur ton autre appareil, touche <b>J'ai déjà un code</b> et tape-le.",
+        "Les notes sont chiffrées avec ce code : garde-le secret, il ne peut pas être récupéré."] },
       { t: "Vibrations et dépannage", v: "tips", p: [
-        "Coupe ou remets les vibrations dans <b>Réglages → Retours haptiques</b> (iOS 18 ou plus récent). Pour que le clavier vibre aussi : réglages de l'iPhone → Sons et vibrations → Retour clavier.",
-        "Si l'app ne semble pas à jour, ferme-la complètement (balaie-la vers le haut) et rouvre-la <b>deux fois</b>. « Hors connexion » veut dire que le réseau ou le serveur n'est pas disponible : tes notes restent sur ton téléphone et se synchroniseront plus tard."] }
+        "<b>Retours haptiques</b> active ou coupe les vibrations. Si l'app ne semble pas à jour, ferme-la complètement et rouvre-la deux fois.",
+        "« Hors connexion » : tes notes restent sur le téléphone et se synchroniseront plus tard."] }
     ] }
   ];
 
@@ -203,7 +215,7 @@
         "<div class='gd-dots' aria-hidden='true'>" + ch.s.map(function (_, i) { return "<i class='" + (i === s ? "on" : i < s ? "past" : "") + "'></i>"; }).join("") + "</div>" +
         "<button type='button' class='link' data-gd='close'>Fermer</button></div>" +
         "<div class='gd-body'><p class='gd-kick'>Chapitre " + (c + 1) + " · " + ch.t + " · Étape " + (s + 1) + " sur " + ch.s.length + "</p>" +
-        "<div class='gd-vis' aria-hidden='true'>" + V[stp.v]() + "</div>" +
+        "<div class='gd-vis' aria-hidden='true'>" + V[stp.v.split(":")[0]](stp.v.split(":")[1]) + "</div>" +
         "<h1 class='gd-title'>" + stp.t + "</h1><div class='gd-text'>" + stp.p.map(function (t) { return t.indexOf("<span class='note'>") === 0 ? "<p class='note'>" + t.replace(/^<span class='note'>|<\/span>$/g, "") + "</p>" : "<p>" + t + "</p>"; }).join("") + "</div></div>" +
         "<div class='gd-foot'>" + (s > 0 || c > 0 ? "<button type='button' class='btn-ghost' data-gd='prev'>Précédent</button>" : "") +
         "<button type='button' class='btn' data-gd='next'>" + (last ? "Terminer le chapitre" : "Suivant") + "</button></div>";
@@ -295,7 +307,7 @@
         "<p class='muted small'><b>" + DISCLAIMER.split(". ")[0] + ".</b> " + DISCLAIMER.split(". ")[1] + "</p>" +
         "<p class='muted small'><b>Tes données.</b> Tes notes et ton profil restent sur ton téléphone : l'app n'a pas de compte et ne collecte aucune donnée personnelle. Si tu supprimes l'icône, ils sont effacés, pense donc à exporter une sauvegarde.</p>" +
         "<p class='muted small'>La synchronisation est facultative : elle envoie une copie chiffrée avec ton code, que personne d'autre ne peut lire. Cette copie est stockée chez Cloudflare. Le site est hébergé par GitHub, qui peut enregistrer des données techniques de connexion comme tout site web.</p>" +
-        "<p class='gd-copy'>©mutter</p>";
+        "<p class='gd-copy'>©louis mutter</p>";
       host.appendChild(d);
     }
     refreshEntry();
