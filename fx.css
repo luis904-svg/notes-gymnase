@@ -299,3 +299,11 @@ body.gd-open .tabbar { display: none; }
 .ob-gi svg { width: 46px; height: 46px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .ob-later { display: block; margin: 6px auto 0; font-size: 16px; color: var(--muted); }
 .inst-url { margin: 14px 0 0; padding: 12px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); font-size: 13px; word-break: break-all; -webkit-user-select: text; user-select: text; }
+
+/* Animation « Hello World » */
+body.hl-open { overflow: hidden; }
+.hl { position: fixed; inset: 0; z-index: 100; background: #fff; display: flex; align-items: center; justify-content: center; padding: 0 6vw; color-scheme: light; }
+.hl-ink { width: min(88vw, 660px); --p: -16%;
+  -webkit-mask-image: linear-gradient(90deg, #000 0, #000 var(--p), transparent calc(var(--p) + 16%));
+  mask-image: linear-gradient(90deg, #000 0, #000 var(--p), transparent calc(var(--p) + 16%)); }
+.hl-ink svg { display: block; width: 100%; height: auto; overflow: visible; }

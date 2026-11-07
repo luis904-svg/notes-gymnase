@@ -139,8 +139,11 @@
     if (lost && !window.confirm(lost + " note" + (lost > 1 ? "s appartiennent" : " appartient") + " à des branches absentes de ce profil. Elles seront masquées, pas supprimées. Continuer ?")) return;
     window.NotesApp.setProfile(Object.assign({ v: 1 }, p));
     hap("success");
-    close();
+    // Première configuration : « Hello World » s'écrit à la main, puis le tableau de bord apparaît.
+    if (!editing && window.Hello) window.Hello.play({ onCovered: closeNow, onReveal: function () { if (window.FX) window.FX.view("dash"); } });
+    else close();
   }
+  function closeNow() { if (!root) return; root.remove(); root = null; document.body.classList.remove("ob-open"); window.scrollTo(0, 0); }
 
   function close() {
     var el = root;
