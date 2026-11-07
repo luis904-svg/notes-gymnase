@@ -328,3 +328,9 @@ body.hl-open { overflow: hidden; }
 .cert-list li { display: flex; justify-content: space-between; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 15px; }
 .cert-list .mono { font-weight: 600; }
 @media (max-width: 520px) { .exam-fields { grid-template-columns: 1fr 1fr; } }
+
+/* Note minimale à l'examen, dans le détail d'une branche (3e) */
+.cert-min { background: var(--bg); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.cert-min h3.sec { margin: 0 0 2px; }
+.cert-min p { margin: 0; font-size: 16px; }
+.cert-min .meta { font-size: 12px; color: var(--muted); }

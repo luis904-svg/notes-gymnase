@@ -73,6 +73,48 @@
     return null;
   }
 
+  var EXAM_IDS = ["fr", "l2", "l3", "ma", "os", "oc"];
+  // Moyenne actuelle des notes annuelles dans les branches d'examen.
+  function examAverage() {
+    var t = 0, n = 0;
+    EXAM_IDS.forEach(function (id) { var a = app().annualAvg(id); if (a != null) { t += a; n++; } });
+    return n ? t / n : null;
+  }
+  /* Statut : on compare la note qu'il faudrait à toutes les épreuves restantes (m.x) à la moyenne actuelle.
+     Vert si elle ne dépasse pas la moyenne ; orange jusqu'à 1 point au-dessus ; rouge au-delà. */
+  function status(real, m) {
+    if (real.complete) {
+      return real.pass ? { cls: "t-good", label: "Maturité réussie", text: "Les trois conditions du certificat sont remplies." }
+        : { cls: "t-crit", label: "Maturité non réussie", text: "Au moins une condition n'est pas remplie. Une session de rattrapage existe si l'échec vient seulement des examens." };
+    }
+    if (m.missing) return { cls: "t-none", label: "Certificat", text: "Il manque encore : " + m.missing.join(", ") + "." };
+    if (m.x == null) return { cls: "t-crit", label: "Compliqué", text: "Même avec 6 à toutes les épreuves restantes, la maturité ne serait pas atteinte avec tes notes actuelles." };
+    var avg = examAverage();
+    if (avg == null) return { cls: "t-none", label: "Certificat", text: "Ajoute des notes dans tes branches d'examen pour voir où tu en es." };
+    var gap = m.x - avg, hint = " Touche une branche d'examen pour voir la note minimale à viser.";
+    if (gap <= 1e-9) return { cls: "t-good", label: "Bonne voie", text: "Tes moyennes actuelles te mettent en bonne voie pour réussir la maturité." + hint };
+    if (gap <= 1 + 1e-9) return { cls: "t-warn", label: "Serré", text: "C'est possible, mais il te faudra des examens meilleurs que tes moyennes actuelles." + hint };
+    return { cls: "t-crit", label: "Compliqué", text: "Il te faudrait des examens nettement meilleurs que tes moyennes actuelles." + hint };
+  }
+  // Bloc affiché dans le détail d'une branche (feuille qui s'ouvre en touchant la carte).
+  function detail(id) {
+    var pr = app() && app().profile();
+    if (!pr || pr.year !== 3 || EXAM_IDS.indexOf(id) < 0) return "";
+    var r = compute(null).rows.filter(function (x) { return x.id === id; })[0];
+    if (!r) return "";
+    var hasW = !!(r.w && r.w.real), hasO = !!(r.o && r.o.real), line;
+    if (r.na == null) line = "Entre des notes de l'année dans cette branche pour calculer la note minimale à l'examen.";
+    else if (r.oralOnly ? hasO : (hasW && hasO)) line = "Examen passé : note finale <b>" + fmt(r.final) + "</b>.";
+    else {
+      var need = needFor4(r), what = r.oralOnly ? "à l'oral" : hasW ? "à l'oral" : hasO ? "à l'écrit" : "à l'écrit et à l'oral";
+      if (need == null) line = "Même avec 6 " + what + ", tu n'atteindrais pas 4 dans cette branche.";
+      else if (need <= 1) line = "Tu as déjà <b>4</b> dans cette branche, quelle que soit la note de l'examen.";
+      else line = "Pour avoir <b>4</b> dans cette branche, il te faut au moins <b>" + fmt(need) + "</b> " + what + ".";
+    }
+    return '<div class="cert-min"><h3 class="sec">Examen : note minimale</h3><p>' + line + '</p>' +
+      '<span class="meta">Note annuelle ' + fmt(r.na) + ' · ' + (r.oralOnly ? "note finale = (annuelle + oral) / 2" : "note finale = (2 × annuelle + écrit + oral) / 4") + ', arrondie au demi-point</span></div>';
+  }
+
   /* ---------- Affichage ---------- */
   var panel = null;
   function metric(label, val, unit, sub, ratio, cls, markAt, markLabel) {
@@ -84,19 +126,9 @@
     var a = app(), pr = a && a.profile(), dash = document.getElementById("view-dash");
     if (!pr || pr.year !== 3) { if (panel) panel.hidden = true; return; }
     var real = compute(null), m = minimum(), promo = document.getElementById("promo");
-    // Verdict en haut (remplace « Promotion »)
-    var pill, text;
-    if (real.complete) { pill = real.pass ? ["t-good", "Maturité réussie"] : ["t-crit", "Conditions non remplies"]; text = real.pass ? "Les trois conditions du certificat sont remplies." : "Au moins une condition n'est pas remplie. Une session de rattrapage existe si l'échec vient seulement des examens."; }
-    else if (m.missing) { pill = ["t-none", "Certificat"]; text = "Il manque encore : " + m.missing.join(", ") + "."; }
-    else if (m.x == null) { pill = ["t-crit", "Très difficile"]; text = "Même avec 6 à toutes les épreuves restantes, les conditions ne seraient pas remplies avec les notes actuelles."; }
-    else { pill = [m.x <= 4 ? "t-good" : m.x <= 5 ? "t-warn" : "t-crit", "Il te faut " + fmt(m.x) + " aux examens"]; text = "Avec tes notes actuelles, il te faut au moins " + fmt(m.x) + " à chaque épreuve encore à passer pour obtenir la maturité" + (m.x <= 1 ? " (les épreuves ne sont plus décisives)" : "") + "."; }
-    var show = real.complete ? real : (m.r || real);
-    var tag = real.complete ? "" : " (avec " + (m.x != null ? fmt(m.x) : "?") + " aux examens restants)";
-    promo.innerHTML = '<div class="verdict"><span class="pill ' + pill[0] + '">' + pill[1] + '</span><p>' + esc(text) + '</p></div><div class="metrics">' +
-      metric("Total avec double compensation" + tag, fmt(show.score), "/ 84", "chaque point manquant sous 4 compte double · seuil 56", show.score / 84, show.score < 56 ? "crit" : show.score < 58 ? "warn" : "", 56 / 84, "56 min") +
-      metric("Notes inférieures à 4", String(show.fails), "/ 4 max", show.fails > 4 ? "trop de notes insuffisantes" : (4 - show.fails) + " en réserve", show.fails / 5, show.fails > 4 ? "crit" : show.fails === 4 ? "warn" : "") +
-      metric("Total des examens" + tag, fmt(show.examTotal), "/ " + show.nExam * 6, show.nExam + " épreuves · seuil 38,5", show.examTotal / (show.nExam * 6), show.examTotal < 38.5 ? "crit" : show.examTotal < 40.5 ? "warn" : "", 38.5 / (show.nExam * 6), "38,5 min") +
-      '</div>';
+    // Haut de l'écran : seulement le statut (la note minimale est dans le détail de chaque branche).
+    var st = status(real, m);
+    promo.innerHTML = '<div class="verdict"><span class="pill ' + st.cls + '">' + st.label + '</span><p>' + esc(st.text) + '</p></div>';
 
     if (!panel) {
       panel = document.createElement("section"); panel.className = "panel"; panel.id = "cert";
@@ -114,8 +146,8 @@
     panel.innerHTML = '<h2>Examens et notes de maturité</h2>' +
       '<p class="muted small" style="margin:-8px 0 14px">Entre tes notes d\'examen au fur et à mesure. Note finale = (2 × note annuelle + écrit + oral) / 4, arrondie au demi-point (OC : moyenne de l\'annuelle et de l\'oral).</p>' +
       '<div class="exam-list">' + rows.filter(function (r) { return r.exam; }).map(function (r) {
-        var e = data.exams[r.id] || {}, need = needFor4(r);
-        return '<div class="exam-row"><div class="exam-head"><b>' + esc(r.name) + '</b><span class="muted small">' + (need != null ? "au moins " + fmt(need) + " " + (r.oralOnly ? "à l'oral" : "à l'écrit et à l'oral") + " pour 4" : "") + '</span></div><div class="exam-fields">' +
+        var e = data.exams[r.id] || {};
+        return '<div class="exam-row"><div class="exam-head"><b>' + esc(r.name) + '</b><span class="muted small">' + "" + '</span></div><div class="exam-fields">' +
           (r.oralOnly ? '<div class="exam-out"><span class="muted small">—</span></div>' : '<label>Écrit' + inp('data-exam="' + r.id + '" data-k="w"', e.w) + '</label>') +
           '<label>Oral' + inp('data-exam="' + r.id + '" data-k="o"', e.o) + '</label>' +
           '<div class="exam-out"><span class="muted small">Annuelle</span><span class="mono">' + fmt(r.na) + '</span></div>' +
@@ -135,6 +167,6 @@
       '<p class="muted small" style="margin:12px 0 0">Sans examen, la note de maturité est la note annuelle. Le travail de maturité se saisit comme une note de la discipline « Travail de maturité ». Règles : REM art. 17-20 ; en cas de doute, ton gymnase fait foi.</p>';
   }
 
-  window.Cert = { render: render, reload: function () { data = load(); }, compute: compute, minimum: minimum };
+  window.Cert = { render: render, reload: function () { data = load(); }, compute: compute, minimum: minimum, detail: detail };
   try { render(); } catch (e) {}
 })();

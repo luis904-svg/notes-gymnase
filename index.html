@@ -884,7 +884,7 @@ td input[type="date"] { width: auto; }
     if (!s.parts && ya.avg != null && ya.avg < 3.75) { var nf = needFor(s.id, all); need = '<div class="need">' + (nf != null ? "Prochain test : au moins " + nf.toFixed(2).replace(/0$/, "") + " pour atteindre 4." : "4 n'est plus atteignable avec un seul test.") + '</div>'; }
     $("#sheet-box").innerHTML =
       '<div class="grab" aria-hidden="true"></div><div class="sheet-head"><div><h2 id="sheet-title">' + esc(s.name) + '</h2><p>' + s.periods + ' périodes' + (s.counts === false ? " · ne compte pas pour la promotion" : "") + '</p></div><button type="button" class="btn-ghost" data-close id="sheet-close">Fermer</button></div>' +
-      '<div class="tiles">' + tiles + '</div>' + need + info +
+      '<div class="tiles">' + tiles + '</div>' + need + (window.Cert && Cert.detail ? Cert.detail(s.id) : "") + info +
       '<div><h3 class="sec">Évolution</h3><div id="sheet-chart"></div></div>' +
       '<div><h3 class="sec">Toutes les notes (' + mine.length + ')</h3>' +
       (mine.length ? '<ul class="notes" id="sheet-notes">' + mine.map(noteItem).join("") + '</ul>' : '<p class="empty">Aucune note dans cette branche.</p>') + '</div>';
