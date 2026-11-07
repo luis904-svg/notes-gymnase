@@ -1,4 +1,4 @@
-/* Notes — animation « Hello World » après la première configuration (écriture à la main, trait arrondi et dégradé, dans l'esprit du démarrage d'un produit Apple).
+/* Notes — animation « Hello World » après la première configuration (écriture à la main, trait arrondi noir sur blanc, dans l'esprit du démarrage d'un produit Apple).
    Lettrage : police Sofia (Latinotype, licence SIL Open Font 1.1), convertie en tracé vectoriel et épaissie. */
 (function () {
   "use strict";
@@ -15,10 +15,7 @@
     playing = true;
     var el = document.createElement("div");
     el.className = "hl"; el.setAttribute("role", "status"); el.setAttribute("aria-label", "Hello World");
-    el.innerHTML = "<div class='hl-ink'><svg viewBox='" + VB + "' aria-hidden='true' focusable='false'><defs>" +
-      "<linearGradient id='hl-g' gradientUnits='userSpaceOnUse' x1='" + X0 + "' y1='0' x2='" + X1 + "' y2='0'>" +
-      "<stop offset='0.000' stop-color='#9BB0D8'/><stop offset='0.125' stop-color='#3FCFA9'/><stop offset='0.250' stop-color='#B6C730'/><stop offset='0.375' stop-color='#F7A23A'/><stop offset='0.500' stop-color='#F5617F'/><stop offset='0.625' stop-color='#D14FC4'/><stop offset='0.750' stop-color='#9558E8'/><stop offset='0.875' stop-color='#8F9BEA'/><stop offset='1.000' stop-color='#9BB0D8'/>" +
-      "</linearGradient></defs><path d='" + PATH + "' fill='url(#hl-g)' stroke='url(#hl-g)' stroke-width='" + SW + "' stroke-linejoin='round' stroke-linecap='round'/></svg></div>";
+    el.innerHTML = "<div class='hl-ink'><svg viewBox='" + VB + "' aria-hidden='true' focusable='false'><path d='" + PATH + "' fill='#000' stroke='#000' stroke-width='" + SW + "' stroke-linejoin='round' stroke-linecap='round'/></svg></div>";
     document.body.appendChild(el);
     document.body.classList.add("hl-open");
     var ink = el.firstChild, ended = false, covered = false, leaving = false, timers = [];
@@ -53,7 +50,7 @@
     // 1) fondu d'entrée, 2) l'écriture de gauche à droite, 3) pause, 4) fondu de sortie
     M.animate(el, { opacity: [0, 1] }, { duration: 0.4, ease: "easeOut" }).then(function () {
       cover();
-      M.animate(ink, { scale: [0.94, 1], opacity: [0.6, 1] }, { duration: 2.8, ease: [0.25, 0.1, 0.25, 1] });
+      M.animate(ink, { scale: [0.94, 1] }, { duration: 2.8, ease: [0.25, 0.1, 0.25, 1] });
       M.animate(-16, 100, { duration: 2.7, ease: [0.5, 0, 0.25, 1], onUpdate: setP }).then(function () {
         if (window.FX) window.FX.haptic("success");
         later(leave, 1000);
