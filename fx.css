@@ -354,3 +354,7 @@ body.hl-open { overflow: hidden; }
 #carriedset input { min-height: 40px; }
 /* Saisie des examens dans la feuille de détail */
 .cert-min .exam-fields { margin: 4px 0 6px; }
+
+/* Champ date (iOS) : largeur propre, sans débordement de la grille */
+input[type="date"] { -webkit-appearance: none; appearance: none; display: block; width: 100%; min-width: 0; max-width: 100%; text-align: left; }
+input[type="date"]::-webkit-date-and-time-value { text-align: left; min-height: 1.2em; }

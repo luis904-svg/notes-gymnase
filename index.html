@@ -626,6 +626,7 @@ td input[type="date"] { width: auto; }
     var r = evalBulletins(bm);
     r.bm = bm;
     if (!r.nb) { r.status = "none"; return r; }
+    if (!r.fails.length && r.nb < r.expected) { r.status = "partial"; return r; }
     if (!r.fails.length) {
       var tight = (r.total - 4 * r.nb < 2) || (r.gp != null && r.gp - 16 < 1) || r.ins === 4;
       r.status = tight ? "tight" : "ok";
@@ -695,6 +696,7 @@ td input[type="date"] { width: auto; }
 
   var STATUS = {
     none: ["t-none", "Pas encore de notes", "Ajoute tes premières notes pour voir ta situation."],
+    partial: ["t-none", "Verdict incomplet", "Aucune condition n'est en défaut pour l'instant, mais il manque encore des notes dans certaines branches pour conclure."],
     ok: ["t-good", "Promotion assurée", "Au rythme actuel, les trois conditions sont remplies avec de la marge."],
     tight: ["t-warn", "Marge faible", "Les conditions sont remplies, mais une ou deux mauvaises notes peuvent les faire basculer."],
     exam: ["t-warn", "Examen complémentaire", "Cinq notes sous 4 : tu pourrais passer par une épreuve complémentaire en août."],
