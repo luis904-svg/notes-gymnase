@@ -933,10 +933,13 @@ td input[type="date"] { width: auto; }
     $("#s-s1").value = state.cfg.s1End;
   }
 
+  // Changement d'année : le chiffre de l'année en tête de la classe suit (2M01 → 3M01).
+  function bumpClasse(c, from, to) { c = String(c || ""); return c && from !== to && c.charAt(0) === String(from) ? String(to) + c.slice(1) : c; }
   function renderHead() {
     var pr = state.cfg.profile, gname = Grid.gymnaseName(pr.gymnase), t = "Notes " + (pr.classe || pr.year + "M");
     $("header.top h1").textContent = t; document.title = t;
-    $("header.top p").textContent = (gname ? gname + " · " : "") + "École de maturité vaudoise · 2026–2027";
+    var sy = parseInt(state.cfg.s1End.slice(0, 4), 10);
+    $("header.top p").textContent = (gname ? gname + " · " : "") + "École de maturité vaudoise · " + (sy - 1) + "–" + sy;
     $("#h-promo").textContent = pr.year === 3 ? "Certificat de maturité" : "Promotion en " + (pr.year + 1) + "e année";
   }
   var NO_PROMO = '<div class="verdict"><span class="pill t-none">3e année</span><p>Pas de promotion en 3e : le certificat dépend aussi des examens. L\'app suit tes moyennes et tes objectifs.</p></div>';
@@ -1125,7 +1128,7 @@ td input[type="date"] { width: auto; }
       var pr = state.cfg.profile, y = parseInt(state.cfg.s1End.slice(0, 4), 10), v = window.NotesApp.verdict();
       var entry = { year: pr.year, label: (y - 1) + "\u2013" + y, profile: clone(pr), s1End: state.cfg.s1End, subjects: clone(state.cfg.subjects),
         grades: clone(state.grades), verdict: v.status === "none" ? "" : v.label, at: Date.now() };
-      var np = Object.assign({}, pr, { year: nextYear });
+      var np = Object.assign({}, pr, { year: nextYear, classe: bumpClasse(pr.classe, pr.year, nextYear) });
       state = normalize({ cfg: { s1End: String(y + 1) + state.cfg.s1End.slice(4), profile: np, subjects: state.cfg.subjects, archive: (state.cfg.archive || []).concat([entry]) }, grades: [] });
       ui.period = "year"; ui.chartSubj = "__all"; ui.detail = null;
       fillSelects(); renderSettings(); persist(); render();
@@ -1163,6 +1166,7 @@ td input[type="date"] { width: auto; }
       return wavg(mine);
     },
     setProfile: function (prof) {
+      prof = Object.assign({}, prof, { classe: bumpClasse(prof.classe, state.cfg.profile ? state.cfg.profile.year : null, prof.year) });
       state = normalize({ cfg: { s1End: state.cfg.s1End, profile: prof, subjects: state.cfg.subjects, archive: state.cfg.archive }, grades: state.grades });
       ui.chartSubj = "__all"; ui.detail = null; fillSelects(); renderSettings(); persist(); render();
     },
