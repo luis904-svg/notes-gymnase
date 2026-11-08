@@ -101,7 +101,7 @@
     }
     return h;
   }
-  function fmtP(n) { return String(n).replace(".", ",") + " pér."; }
+  function fmtP(n) { return String(n) + " pér."; }
 
   function render() {
     var vs = visible(), s = vs[step], last = step === vs.length - 1;

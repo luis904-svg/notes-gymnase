@@ -138,8 +138,8 @@
       var ref = 3.5 * s.nExamNotes, d2 = s.examTotal - ref;
       g2 = metric("Total des examens", fmt(s.examTotal), "/ " + 6 * s.nExam,
         (partial ? "au rythme actuel : " : "") + delta(d2, String(ref).replace(/\.0$/, "")) + " (" + s.realExams + " épreuve" + (s.realExams > 1 ? "s" : "") + " passée" + (s.realExams > 1 ? "s" : "") + " sur " + s.nExam + ")",
-        s.examTotal / (6 * s.nExam), d2 < 0 ? "crit" : d2 < 2 ? "warn" : "", 38.5 / (6 * s.nExam), "38,5 min");
-    } else g2 = metric("Total des examens", "–", "/ " + 6 * s.nExam, "aucune épreuve", 0, "", 38.5 / (6 * s.nExam), "38,5 min");
+        s.examTotal / (6 * s.nExam), d2 < 0 ? "crit" : d2 < 2 ? "warn" : "", 38.5 / (6 * s.nExam), "38.5 min");
+    } else g2 = metric("Total des examens", "–", "/ " + 6 * s.nExam, "aucune épreuve", 0, "", 38.5 / (6 * s.nExam), "38.5 min");
     var g3 = metric("Notes inférieures à 4", String(s.fails), "/ 4 max", s.fails > 4 ? "trop de notes insuffisantes" : (4 - s.fails) + " en réserve", s.fails / 5, s.fails > 4 ? "crit" : s.fails === 4 ? "warn" : "");
     promo.innerHTML = '<div class="verdict"><span class="pill ' + st.cls + '">' + st.label + '</span><p>' + esc(st.text) + '</p></div><div class="metrics">' + g1 + g2 + g3 + '</div>';
   }
