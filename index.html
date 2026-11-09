@@ -862,13 +862,13 @@ td input[type="date"] { width: auto; }
   function renderDetail() {
     var el = $("#sheet");
     var s = ui.detail ? sub(ui.detail) : null;
-    if (!s) { ui.detail = null; if (window.IOSSheet && !el.hidden) IOSSheet.close(); else { el.hidden = true; document.body.style.overflow = ""; } return; }
+    if (!s) { ui.detail = null; if (window.IOSDetail && IOSDetail.close()) return; if (window.IOSSheet && !el.hidden) IOSSheet.close(); else { el.hidden = true; document.body.style.overflow = ""; } return; }
     var all = currentGrades(), ids = s.parts || [s.id];
     if (s.carried) {
       $("#sheet-box").innerHTML = '<div class="grab" aria-hidden="true"></div><div class="sheet-head"><div><h2 id="sheet-title">' + esc(s.name) + '</h2><p>Note de 2e reprise</p></div><button type="button" class="btn-ghost" data-close id="sheet-close">Fermer</button></div>' +
         (window.Cert && Cert.detail ? Cert.detail(s.id) : "");
       if (!dragging && !window.IOSSheet) { $("#sheet-box").style.transform = ""; $("#sheet-box").style.transition = ""; }
-      if (window.IOSSheet) IOSSheet.open(); else { el.hidden = false; document.body.style.overflow = "hidden"; }
+      if (window.IOSDetail && IOSDetail.open()) { /* page entière (téléphone) */ } else if (window.IOSSheet) IOSSheet.open(); else { el.hidden = false; document.body.style.overflow = "hidden"; }
       return;
     }
     var mine = all.filter(function (g) { return ids.indexOf(g.subject) >= 0; }).sort(function (a, b) { if (a.date !== b.date) return a.date < b.date ? 1 : -1; var x = String(a.sortKey || a.id), y = String(b.sortKey || b.id); return x < y ? 1 : x > y ? -1 : 0; });
@@ -903,7 +903,7 @@ td input[type="date"] { width: auto; }
     renderChart(all, $("#sheet-chart"), s.id);
     var sn = $("#sheet-notes"); if (sn) sn.addEventListener("click", noteClick);
     if (!dragging && !window.IOSSheet) { $("#sheet-box").style.transform = ""; $("#sheet-box").style.transition = ""; }
-    if (window.IOSSheet) IOSSheet.open(); else { el.hidden = false; document.body.style.overflow = "hidden"; }
+    if (window.IOSDetail && IOSDetail.open()) { /* page entière (téléphone) */ } else if (window.IOSSheet) IOSSheet.open(); else { el.hidden = false; document.body.style.overflow = "hidden"; }
   }
   function openDetail(id) { ui.detail = id; renderDetail(); $("#sheet-close").focus(); }
   function closeDetail() {
@@ -1056,6 +1056,7 @@ td input[type="date"] { width: auto; }
   });
   $("#tabbar").addEventListener("click", function (e) {
     var b = e.target.closest("[data-tab]"); if (!b) return;
+    if (b.dataset.tab === "dash" && window.IOSDetail && IOSDetail.active()) { IOSDetail.back(); return; }
     ui.detail = null; renderDetail();
     var t = b.dataset.tab;
     if (t === ui.view) { window.scrollTo({ top: 0, behavior: "smooth" }); return; }
@@ -1159,6 +1160,7 @@ td input[type="date"] { width: auto; }
       if (k === "counts") s.counts = !!v;
       s.verify = false; persist(); render(); renderSettings();
     },
+    closeDetail: function () { closeDetail(); },
     setS1End: function (v) { if (v) { state.cfg.s1End = v; persist(); render(); renderSettings(); } },
     replace: function (raw) { state = normalize(raw); fillSelects(); renderSettings(); persist(); render(); }
   };
@@ -1192,6 +1194,7 @@ td input[type="date"] { width: auto; }
 <script src="ios-nav.js"></script>
 <script src="ios-title.js"></script>
 <script src="ios-settings.js"></script>
+<script src="ios-detail.js"></script>
 <script src="cert.js"></script>
 <script src="sync.js"></script>
 <script src="onboard.js"></script>

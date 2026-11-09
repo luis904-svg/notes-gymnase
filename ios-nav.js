@@ -10,7 +10,8 @@
    ressort reprend la vitesse du doigt. Le vrai DOM n'est touché qu'à la validation (provider.go()).
    Un « provider » (IOSNav.setBack) décrit la page qu'on peut quitter par balayage :
    { can(): bool, parent(clone): retouche la copie pour montrer la page du dessous, parentScroll(): défilement de cette page,
-     parentBar(): {title, on, back} état de la barre de titre de cette page, go(): vrai retour }. */
+     parentBar(): {title, on, back} état de la barre de titre de cette page, go(): vrai retour,
+     drag(on) facultatif : appelé au début (true) et à l'annulation (false) du geste }. */
 (function () {
   "use strict";
   var IM = window.IOSMotion, wrap = document.querySelector(".wrap");
@@ -99,6 +100,7 @@
       try {
         var top = snapshot("out", window.scrollY), under = snapshot("in", g.pv.parentScroll(), g.pv.parent, g.pv.parentBar());
         g.L = mount(under, top); g.mode = "drag"; g.base = t.clientX;
+        if (g.pv.drag) g.pv.drag(true);   // ex. la barre du bas revient pendant le geste
       } catch (x) { g.mode = "off"; return; }
     }
     if (e.cancelable) e.preventDefault();
@@ -121,6 +123,7 @@
           suppress = true;
           try { s.pv.go(); } finally { suppress = false; }
         }
+        if (!commit && s.pv.drag) s.pv.drag(false);
         unmount(s.L);
       }
     });

@@ -53,6 +53,12 @@
   var dashCtx = { key: "dash", title: function () { return h1.textContent; }, large: h1 };
   var addCtx = { key: "add", title: "Ajouter", large: addTitle };
   // Le texte du h1 d'Accueil est réécrit par renderHead : la barre le suit.
+  // Le titre d'Ajouter suit l'intitulé du formulaire (« Ajouter une note » / « Modifier la note »).
+  var hAdd = document.getElementById("h-add");
+  if (hAdd && addTitle) new MutationObserver(function () {
+    var t = /^Modifier/.test(hAdd.textContent) ? "Modifier la note" : "Ajouter";
+    addTitle.textContent = t; addCtx.title = t; if (ctx === addCtx) set(addCtx);
+  }).observe(hAdd, { childList: true, characterData: true, subtree: true });
   new MutationObserver(function () { if (ctx === dashCtx) set(dashCtx); }).observe(h1, { childList: true, characterData: true, subtree: true });
   document.addEventListener("ios:view", function (e) {
     if (e.detail === "dash") set(dashCtx);
@@ -61,8 +67,15 @@
   });
   set(dashCtx);
 
+  // Barre du bas : cachée tant qu'une raison est active (sous-page de Réglages, page de détail d'une matière).
+  var pillWhy = {};
+  function pill(k, hide) {
+    pillWhy[k] = !!hide;
+    document.body.classList.toggle("ios-pill-hidden", Object.keys(pillWhy).some(function (x) { return pillWhy[x]; }));
+  }
+
   window.IOSTitle = {
-    set: set, update: update,
+    set: set, update: update, pill: pill,
     /* Copie de la barre pour les fantômes de ios-nav.js. ov : { title, on, back } pour imposer un état (page du dessous). */
     ghost: function (scrollY, ov) {
       var c = bar.cloneNode(true);

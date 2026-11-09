@@ -60,8 +60,10 @@
   --ios-hair: 1px;
   --ios-tab-h: 52px;
   /* Barre du bas : pilule flottante opaque (style Instagram), pastille active qui glisse */
-  --ios-pill: #E5E5EA;
-  --ios-pill-active: #D1D1D6;
+  --ios-pill: var(--ios-bg);
+  --ios-pill-active: #E5E5EA;
+  --ios-back-bg: #E5E5EA;
+  --ios-dur-pill: 350ms;
   --ios-pill-pad: 6px;
   --ios-pill-side: 16px;
   --ios-pill-bottom: 8px;
@@ -148,6 +150,11 @@ header.top.scrolled { border-bottom-color: var(--ios-bar-hairline); box-shadow: 
     gap: 0; justify-content: space-around; padding: var(--ios-pill-pad);
     border: var(--ios-hair) solid var(--ios-bar-hairline); border-radius: 999px;
     background: var(--ios-pill); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none;
+    transition: transform var(--ios-dur-pill) var(--ios-ease-out), visibility 0s;
+  }
+  body.ios-pill-hidden .tabbar {
+    transform: translateY(calc(100% + var(--ios-pill-bottom) + env(safe-area-inset-bottom, 0px) + 8px)); visibility: hidden;
+    transition: transform var(--ios-dur-pill) var(--ios-ease-out), visibility 0s var(--ios-dur-pill);
   }
   .tabbar button { position: relative; flex: 1; min-height: var(--ios-tab-h); border-radius: 999px; padding: 0; justify-content: center; color: var(--ink); }
   .tabbar button[aria-current="page"] { background: var(--ios-clear); color: var(--ink); }
@@ -236,7 +243,7 @@ html.noanim *, html.noanim *::before, html.noanim *::after {
     display: none; align-items: center; justify-content: center; position: absolute; pointer-events: auto;
     left: max(var(--ios-pill-side), env(safe-area-inset-left, 0px)); top: calc((var(--ios-bar-h) - var(--ios-back)) / 2);
     width: var(--ios-back); height: var(--ios-back); padding: 0; border: 0; border-radius: 50%;
-    background: var(--ios-pill); color: var(--ink);
+    background: var(--ios-back-bg); color: var(--ink);
   }
   .ios-bar.has-back .ios-bar-back { display: flex; }
   .ios-bar-back svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
@@ -298,4 +305,38 @@ html.noanim *, html.noanim *::before, html.noanim *::after {
   .ios-slot .backup { margin: 0; padding: var(--ios-pad); border: 0; border-radius: var(--ios-r-group); background: var(--ios-cell); }
   .ios-slot .backup > h3, .ios-slot .gd-copy { display: none; }
   .ios-rules { padding: var(--ios-pad); }
+}
+
+/* ---------- Calendrier de la page « Fin du semestre 1 » ---------- */
+@media (max-width: 700px) {
+  .ios-cal { padding: 8px 12px 14px; }
+  .ios-cal-head { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px 10px; font-size: 17px; }
+  .ios-cal-head b { font-weight: 600; text-transform: capitalize; }
+  .ios-cal-head span { display: flex; gap: 6px; }
+  .ios-cal-head button { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; background: var(--ios-clear); }
+  .ios-cal-head .ios-chev { stroke: var(--ios-blue); }
+  .ios-cal-wd, .ios-cal-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); row-gap: 4px; text-align: center; }
+  .ios-cal-wd { padding-bottom: 6px; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .ios-day { justify-self: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; background: var(--ios-clear); font-size: 19px; color: var(--ink); }
+  .ios-day.is-today { color: var(--ios-blue); font-weight: 600; }
+  .ios-day.is-sel { background: var(--ios-blue); color: var(--ios-white); font-weight: 600; }
+}
+
+/* ---------- Détail d'une matière : page entière (ios-detail.js) ---------- */
+.ios-detail { display: none; }
+@media (max-width: 700px) {
+  body.ios-detail-open .ios-detail { display: block; }
+  body.ios-detail-open #view-dash, body.ios-detail-open header.top, body.ios-detail-open #demo { display: none; }
+  .ios-dpage { display: flex; flex-direction: column; gap: 16px; padding-bottom: 8px; }
+  .ios-dpage .ios-large { margin-bottom: 0; }
+  .ios-dpage .ios-sub { margin: -12px 0 0; font-size: 15px; color: var(--muted); }
+  .ios-dpage > .ios-grp-head { margin: 8px var(--ios-pad) -8px; }
+  .ios-dpage .tiles { gap: 10px; }
+  .ios-dpage .tile { padding: 14px 12px; border-radius: var(--ios-r-group); background: var(--ios-cell); }
+  .ios-dpage .need { padding: 14px var(--ios-pad); border-radius: var(--ios-r-group); background: var(--ios-cell); font-size: 15px; }
+  .ios-dpage .ios-row { cursor: default; }
+  .ios-chart { padding: 12px 8px; }
+  .ios-notes { padding: 0 var(--ios-pad); }
+  .ios-notes .empty { padding: 14px 0; }
+  .ios-notes .notes li { padding: 12px 0; }
 }
