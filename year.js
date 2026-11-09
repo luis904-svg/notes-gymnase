@@ -92,7 +92,10 @@
         return '<section class="yp-year"><h2>' + esc(e.label) + ' · ' + ORD[e.year] + ' année</h2>' +
           '<p class="muted small" style="margin:2px 0 10px">' + (e.verdict ? "Verdict en fin d'année : " + esc(e.verdict) + " · " : "") + n + " note" + (n > 1 ? "s" : "") + '</p>' +
           '<div class="ob-list">' + rows.map(function (r) { return rowHtml(e, r); }).join("") + '</div></section>';
-      }).join("") + '</div>');
+      }).join("") +
+      '<button type="button" class="link danger" id="yp-undo-h" style="padding-left:0;margin-top:18px">Annuler le dernier passage…</button>' +
+      '<p class="ob-fine">Remet les notes de ' + esc(arch[0].label) + ' dans le tableau de bord et revient en ' + ORD[arch[0].year] + ' année.</p></div>',
+      function (e) { if (e.target.closest("#yp-undo-h") && undo()) close(); });
   }
 
   /* ---------- Annuler le dernier passage ---------- */
@@ -102,6 +105,7 @@
     if (!window.confirm("Revenir à la " + ORD[e.year] + " année (" + e.label + ") ? Tes notes de " + e.label + " reviennent dans le tableau de bord." +
       (n ? (n > 1 ? " Les " + n + " notes saisies depuis le passage seront supprimées." : " La note saisie depuis le passage sera supprimée.") : ""))) return;
     app().undoPass(); hap("heavy");
+    return true;
   }
 
   /* ---------- Bloc dans Réglages ---------- */

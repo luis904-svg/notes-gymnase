@@ -255,7 +255,11 @@
     var b = ev.target.closest("[data-act]"); if (!b) return;
     var a = b.dataset.act.split(":"), kind = a[0];
     if (kind === "go") push(a[1], a[2]);
-    else if (kind === "click") { var t = document.getElementById(a[1]); if (t) t.click(); }
+    else if (kind === "click") {
+      var t = document.getElementById(a[1]); if (t) t.click();
+      // Un bouton d'origine peut changer l'état tout de suite (ex. « Annuler le dernier passage ») : la page est refaite si aucune fenêtre n'est ouverte.
+      if (!document.body.classList.contains("ob-open") && !document.body.classList.contains("gd-open")) show(window.scrollY);
+    }
     else if (kind === "step") { if (window.Onboard) Onboard.open(true, a[1]); }
     else if (kind === "cal") { cal.m += a[1] === "next" ? 1 : -1; if (cal.m > 11) { cal.m = 0; cal.y++; } if (cal.m < 0) { cal.m = 11; cal.y--; } show(window.scrollY); }
     else if (kind === "day") { app().setS1End(a[1]); show(window.scrollY); }
