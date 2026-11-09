@@ -58,9 +58,11 @@
     return {
       reset: function () { s = []; },
       add: function (t, y) { s.push([t, y]); while (s.length > 2 && t - s[0][0] > 100) s.shift(); },
-      velocity: function () {
+      // tNow : instant du relâchement ; un doigt resté immobile plus de 100 ms avant de lever n'a plus de vitesse.
+      velocity: function (tNow) {
         if (s.length < 2) return 0;
         var a = s[0], b = s[s.length - 1], dt = b[0] - a[0];
+        if (tNow != null && tNow - b[0] > 100) return 0;
         return dt > 0 ? (b[1] - a[1]) / dt * 1000 : 0;
       }
     };

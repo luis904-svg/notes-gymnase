@@ -1,44 +1,83 @@
-/* ios-title.js : grand titre qui se réduit, comme dans Réglages iOS (téléphone, ≤ 700 px).
-   Une barre fixe (.ios-bar, hauteur --ios-bar-h sous la zone sûre) reste vide tant que le grand titre « Notes … »
-   (h1 de l'en-tête) est visible. Dès que le bas du grand titre passe sous la barre, le petit titre centré apparaît et
-   le filet d'un pixel avec lui (classe .is-on). Le texte suit le h1 (renderHead le réécrit). La barre n'existe pas
-   dans les sous-écrans Ajouter / Réglages (règle CSS) ni sur grand écran. Aucune animation de défilement en JS :
-   un simple écouteur passif, un fondu CSS de 150 ms (supprimé avec « Réduire les animations »). */
+/* ios-title.js : barre de titre à la iOS (téléphone, ≤ 700 px) : grand titre qui se réduit, titre inline, bouton retour.
+   Une barre fixe (.ios-bar, hauteur --ios-bar-h sous la zone sûre) suit un « contexte » : IOSTitle.set({ key, title, large, back }).
+   - large : l'élément « grand titre » de la page (h1). La barre reste vide tant qu'il est visible ; dès que son bas passe
+     sous la barre, le petit titre centré apparaît avec le filet d'un pixel (classe .is-on).
+   - sans large (sous-page) : titre inline et filet toujours affichés.
+   - back : fonction du bouton de retour (chevron seul dans un rond opaque, à gauche) ; absent sur les pages d'onglet.
+   Contextes par défaut : Accueil (h1 de l'en-tête « Notes … ») et Ajouter (grand titre « Ajouter »). Réglages et ses
+   sous-pages sont gérés par ios-settings.js. Un simple écouteur de défilement passif, fondu CSS de 150 ms. */
 (function () {
   "use strict";
-  var h1 = document.querySelector("header.top h1");
+  var h1 = document.querySelector("header.top h1"), addView = document.getElementById("view-add");
   if (!h1) return;
   var bar = document.createElement("div");
   bar.className = "ios-bar"; bar.setAttribute("aria-hidden", "true");
+  var back = document.createElement("button");
+  back.type = "button"; back.className = "ios-bar-back"; back.setAttribute("aria-label", "Retour");
+  back.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
   var label = document.createElement("span");
   label.className = "ios-bar-title";
-  bar.appendChild(label);
+  bar.appendChild(back); bar.appendChild(label);
   document.body.appendChild(bar);
 
-  var on = false;
-  function sync() { if (label.textContent !== h1.textContent) label.textContent = h1.textContent; }
-  /* Défilement à partir duquel le bas du grand titre passe sous la barre. */
+  // Grand titre de la page Ajouter (téléphone seulement, voir ios.css).
+  var addTitle = null;
+  if (addView) {
+    addTitle = document.createElement("h1"); addTitle.className = "ios-large"; addTitle.textContent = "Ajouter";
+    addView.insertBefore(addTitle, addView.firstChild);
+  }
+
+  var ctx = null, on = false, thr = {};
+  function titleOf(c) { return typeof c.title === "function" ? c.title() : c.title; }
   function threshold() {
-    var barBottom = bar.getBoundingClientRect().bottom, h = h1.getBoundingClientRect();
-    return h.bottom + window.scrollY - barBottom;
+    if (!ctx || !ctx.large) return 0;
+    var t = ctx.large.getBoundingClientRect().bottom + window.scrollY - bar.getBoundingClientRect().bottom;
+    if (ctx.key) thr[ctx.key] = t;
+    return t;
   }
   function update() {
-    var next = window.scrollY >= threshold();
-    if (next === on) return;
-    on = next; bar.classList.toggle("is-on", on);
+    var next = !ctx ? false : !ctx.large ? true : window.scrollY >= threshold();
+    if (next !== on) { on = next; bar.classList.toggle("is-on", on); }
   }
-  new MutationObserver(sync).observe(h1, { childList: true, characterData: true, subtree: true });
+  function set(c) {
+    ctx = c || null;
+    bar.classList.toggle("is-empty", !ctx);
+    bar.classList.toggle("has-back", !!(ctx && ctx.back));
+    if (ctx) { var t = titleOf(ctx); if (label.textContent !== t) label.textContent = t; }
+    update();
+  }
+  back.addEventListener("click", function () { if (ctx && ctx.back) ctx.back(); });
   window.addEventListener("scroll", update, { passive: true });
   window.addEventListener("resize", update);
-  sync(); update();
 
-  /* Pour les fantômes de ios-nav.js : copie de la barre dans l'état qu'elle aurait à ce défilement. */
+  var dashCtx = { key: "dash", title: function () { return h1.textContent; }, large: h1 };
+  var addCtx = { key: "add", title: "Ajouter", large: addTitle };
+  // Le texte du h1 d'Accueil est réécrit par renderHead : la barre le suit.
+  new MutationObserver(function () { if (ctx === dashCtx) set(dashCtx); }).observe(h1, { childList: true, characterData: true, subtree: true });
+  document.addEventListener("ios:view", function (e) {
+    if (e.detail === "dash") set(dashCtx);
+    else if (e.detail === "add") set(addCtx);
+    // « settings » : ios-settings.js
+  });
+  set(dashCtx);
+
   window.IOSTitle = {
-    ghost: function (scrollY) {
+    set: set, update: update,
+    /* Copie de la barre pour les fantômes de ios-nav.js. ov : { title, on, back } pour imposer un état (page du dessous). */
+    ghost: function (scrollY, ov) {
       var c = bar.cloneNode(true);
       c.classList.add("ios-bar-ghost");
-      c.classList.toggle("is-on", scrollY >= threshold());
+      if (ov) {
+        if (ov.title != null) c.querySelector(".ios-bar-title").textContent = ov.title;
+        c.classList.toggle("has-back", !!ov.back);
+        c.classList.toggle("is-on", !!ov.on);
+        c.classList.remove("is-empty");
+      } else {
+        c.classList.toggle("is-on", ctx && ctx.large ? scrollY >= threshold() : !!ctx);
+      }
       return c;
-    }
+    },
+    /* Seuil mémorisé d'un grand titre (défilement à partir duquel la barre est « on »), pour la page du dessous. */
+    threshold: function (key, dflt) { return thr[key] != null ? thr[key] : dflt; }
   };
 })();

@@ -47,8 +47,25 @@
   --ios-title-inline: 17px;
   --ios-title-inline-weight: 600;
   --ios-dur-title: 150ms;
+  --ios-back: 36px;
+  /* Listes de Réglages (carrés d'icône, lignes, chevrons) */
+  --ios-gray: #8E8E93;
+  --ios-white: #FFFFFF;
+  --ios-chev: rgba(60, 60, 67, 0.3);
+  --ios-r-icon: 7px;
+  --ios-icon: 29px;
+  --ios-row-h: 52px;
+  --ios-grp-gap: 24px;
+  --ios-avatar: 56px;
   --ios-hair: 1px;
   --ios-tab-h: 52px;
+  /* Barre du bas : pilule flottante opaque (style Instagram), pastille active qui glisse */
+  --ios-pill: #E5E5EA;
+  --ios-pill-active: #D1D1D6;
+  --ios-pill-pad: 6px;
+  --ios-pill-side: 16px;
+  --ios-pill-bottom: 8px;
+  --ios-pill-icon: 26px;
   --ios-pad: 20px;
 
   /* Variables historiques de l'app, réaffectées à iOS */
@@ -121,18 +138,24 @@ header.top.scrolled { border-bottom-color: var(--ios-bar-hairline); box-shadow: 
 .bar i, .bars-legend .lg-val { background: var(--ios-green); }
 .bars .bar.good rect { fill: var(--ios-green); }
 
-/* ---------- Téléphone : barre d'onglets en bande opaque pleine largeur ---------- */
+/* ---------- Téléphone : barre d'onglets en pilule flottante opaque, icônes seules ----------
+   Pilule gris clair aplat (pas de verre ni d'ombre), pastille plus foncée sous l'onglet actif : c'est l'indicateur
+   .ind de fx.js (il glisse d'un onglet à l'autre). Les libellés restent pour les lecteurs d'écran. */
 @media (max-width: 700px) {
   .tabbar {
-    left: 0; right: 0; bottom: 0; transform: none; gap: 0; justify-content: space-around;
-    padding: 0 max(8px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(8px, env(safe-area-inset-left, 0px));
-    border: 0; border-top: var(--ios-hair) solid var(--ios-bar-hairline); border-radius: 0;
-    background: var(--ios-bg); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none;
+    left: max(var(--ios-pill-side), env(safe-area-inset-left, 0px)); right: max(var(--ios-pill-side), env(safe-area-inset-right, 0px));
+    bottom: calc(var(--ios-pill-bottom) + env(safe-area-inset-bottom, 0px)); transform: none;
+    gap: 0; justify-content: space-around; padding: var(--ios-pill-pad);
+    border: var(--ios-hair) solid var(--ios-bar-hairline); border-radius: 999px;
+    background: var(--ios-pill); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none;
   }
-  .tabbar button { flex: 1; min-height: var(--ios-tab-h); border-radius: 0; padding: 7px 4px; }
-  .tabbar button[aria-current="page"] { background: var(--ios-clear); }
-  .tabbar .ind { display: none; }
-  body { padding-bottom: calc(var(--ios-tab-h) + 24px + env(safe-area-inset-bottom, 0px)); }
+  .tabbar button { position: relative; flex: 1; min-height: var(--ios-tab-h); border-radius: 999px; padding: 0; justify-content: center; color: var(--ink); }
+  .tabbar button[aria-current="page"] { background: var(--ios-clear); color: var(--ink); }
+  .tabbar svg { width: var(--ios-pill-icon); height: var(--ios-pill-icon); }
+  .tabbar button[aria-current="page"] svg { stroke-width: 2.25; }
+  .tabbar button span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .tabbar .ind { background: var(--ios-pill-active); top: var(--ios-pill-pad); bottom: var(--ios-pill-pad); }
+  body { padding-bottom: calc(var(--ios-tab-h) + 2 * var(--ios-pill-pad) + var(--ios-pill-bottom) + 24px + env(safe-area-inset-bottom, 0px)); }
   .sheet-box { border-radius: var(--ios-r-sheet) var(--ios-r-sheet) 0 0; }
   /* La feuille est animée par ios-sheet.js (ressort, voile lié à la position) : plus d'animation CSS. */
   .sheet:not([hidden]) .sheet-box, .sheet:not([hidden]) .sheet-bg { animation: none; }
@@ -196,7 +219,6 @@ button:active, button.is-pressed { transform: scale(var(--ios-press-scale)); tra
     opacity: 0; transition: opacity var(--ios-dur-title) ease;
   }
   .ios-bar.is-on .ios-bar-title { opacity: 1; }
-  body:has(.wrap.is-sub) .ios-bar:not(.ios-bar-ghost) { display: none; }
   .ios-nav-ghost .ios-bar { z-index: 1; transition: none; }
 }
 @media (prefers-reduced-motion: reduce) { .ios-bar, .ios-bar-title { transition: none; } }
@@ -204,4 +226,76 @@ button:active, button.is-pressed { transform: scale(var(--ios-press-scale)); tra
 /* ---------- ?noanim=1 : plus aucune animation ni transition CSS (durées à zéro : les états finaux s'appliquent) ---------- */
 html.noanim *, html.noanim *::before, html.noanim *::after {
   animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; transition-delay: 0s !important;
+}
+
+/* ---------- Barre de titre : bouton retour (chevron seul, rond opaque) et état vide ---------- */
+.ios-large, .ios-set { display: none; }
+@media (max-width: 700px) {
+  .ios-bar.is-empty { visibility: hidden; }
+  .ios-bar-back {
+    display: none; align-items: center; justify-content: center; position: absolute; pointer-events: auto;
+    left: max(var(--ios-pill-side), env(safe-area-inset-left, 0px)); top: calc((var(--ios-bar-h) - var(--ios-back)) / 2);
+    width: var(--ios-back); height: var(--ios-back); padding: 0; border: 0; border-radius: 50%;
+    background: var(--ios-pill); color: var(--ink);
+  }
+  .ios-bar.has-back .ios-bar-back { display: flex; }
+  .ios-bar-back svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* Grand titre des pages d'onglet (Ajouter, Réglages) */
+  .ios-large {
+    display: block; margin: 0 0 4px; padding-top: calc(var(--ios-bar-h) - 4px);
+    font-size: var(--ios-title-large); font-weight: var(--ios-title-large-weight); line-height: 1.2; letter-spacing: -0.02em;
+  }
+  #view-add > div:has(> #back), #h-add { display: none; }
+  #settings-panel, details.panel:has(.rules) { display: none; }
+
+  /* Réglages : la nouvelle page remplace l'ancienne (qui reste cachée, ses blocs sont déplacés par ios-settings.js) */
+  #view-settings > :not(.ios-set) { display: none; }
+  .ios-set { display: block; }
+  .ios-page { display: flex; flex-direction: column; }
+  .ios-page:not(.ios-page-main) { padding-top: calc(var(--ios-bar-h) + 8px); }
+  .ios-page > .ios-grp, .ios-page > .ios-grp-head { margin-top: var(--ios-grp-gap); }
+  .ios-page > .ios-large + .ios-grp { margin-top: 12px; }
+  .ios-page:not(.ios-page-main) > .ios-grp:first-child { margin-top: 0; }
+  .ios-page > .ios-grp-head + .ios-grp, .ios-page > .ios-grp + .ios-grp-foot { margin-top: 8px; }
+  .ios-grp { background: var(--ios-cell); border-radius: var(--ios-r-group); overflow: hidden; }
+  .ios-grp-head, .ios-grp-foot { margin-left: var(--ios-pad); margin-right: var(--ios-pad); font-size: 13px; line-height: 1.4; color: var(--muted); }
+  .ios-grp-head { margin-bottom: 0; }
+
+  .ios-row {
+    position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: var(--ios-row-h);
+    padding: 0 16px 0 var(--ios-pad); border: 0; border-radius: 0; background: var(--ios-clear); color: var(--ink);
+    text-align: left; font-size: 17px; letter-spacing: -0.022em;
+  }
+  button.ios-row { cursor: pointer; transition: background-color var(--ios-dur-highlight-out) ease-out; }
+  button.ios-row:active, button.ios-row.is-pressed { background-color: var(--ios-press-row); transform: none; transition: none; }
+  .ios-row + .ios-row::before { content: ""; position: absolute; top: 0; left: var(--ios-pad); right: 0; height: var(--ios-hair); background: var(--ios-sep); }
+  .ios-row + .ios-row.has-ic::before { left: calc(var(--ios-pad) + var(--ios-icon) + 12px); }
+  .ios-row-l { flex: 1; min-width: 0; }
+  .ios-val { flex: none; max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+  .ios-chev { flex: none; width: 14px; height: 14px; fill: none; stroke: var(--ios-chev); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+  .ios-ic { flex: none; display: flex; align-items: center; justify-content: center; width: var(--ios-icon); height: var(--ios-icon); border-radius: var(--ios-r-icon); }
+  .ios-ic svg { width: 19px; height: 19px; fill: none; stroke: var(--ios-white); stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .ios-ic-blue { background: var(--ios-blue); }
+  .ios-ic-green { background: var(--ios-green); }
+  .ios-ic-orange { background: var(--ios-orange); }
+  .ios-ic-red { background: var(--ios-red); }
+  .ios-ic-gray { background: var(--ios-gray); }
+
+  .ios-prof { min-height: 84px; gap: 14px; }
+  .ios-avatar { flex: none; display: flex; align-items: center; justify-content: center; width: var(--ios-avatar); height: var(--ios-avatar); border-radius: 50%; background: var(--ios-blue); color: var(--ios-white); font-size: 20px; font-weight: 600; }
+  .ios-prof-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .ios-prof-t b { font-size: 20px; font-weight: 600; }
+  .ios-prof-t span { font-size: 14px; color: var(--muted); }
+
+  .ios-page .ios-row input.ios-date[type="date"] { flex: none; margin-left: auto; width: 150px; min-width: 0; padding: 6px 10px; border: 0; border-radius: 8px; background: var(--ios-fill); color: var(--ink); font-size: 17px; }
+  .ios-page .ios-row input.ios-in[type="number"] { flex: none; width: 110px; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 0; background: var(--ios-clear); box-shadow: none; text-align: right; font-size: 17px; color: var(--ink); outline: none; }
+  .ios-page .ios-row input.ios-in::placeholder { color: var(--muted); }
+  .ios-row > input[switch] { flex: none; }
+  .ios-copy { margin: 32px 0 0; text-align: center; font-size: 13px; color: var(--muted); }
+
+  /* Blocs d'autres modules déplacés dans une sous-page */
+  .ios-slot .backup { margin: 0; padding: var(--ios-pad); border: 0; border-radius: var(--ios-r-group); background: var(--ios-cell); }
+  .ios-slot .backup > h3, .ios-slot .gd-copy { display: none; }
+  .ios-rules { padding: var(--ios-pad); }
 }

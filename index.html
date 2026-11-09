@@ -1150,6 +1150,16 @@ td input[type="date"] { width: auto; }
       state = normalize({ cfg: { s1End: state.cfg.s1End, profile: prof, subjects: state.cfg.subjects, archive: state.cfg.archive }, grades: state.grades });
       ui.chartSubj = "__all"; ui.detail = null; fillSelects(); renderSettings(); persist(); render();
     },
+    // Réglages à la iOS (ios-settings.js) : mêmes règles que le tableau des branches.
+    setSubj: function (id, k, v) {
+      var s = sub(id); if (!s) return;
+      if (k === "periods") s.periods = Math.max(1, parseInt(v, 10) || s.periods);
+      if (k === "goal") s.goal = v ? Math.min(6, Math.max(1, parseFloat(v))) : null;
+      if (k === "tp") s.tpShare = Math.min(1, Math.max(0, (parseFloat(v) || 0) / 100));
+      if (k === "counts") s.counts = !!v;
+      s.verify = false; persist(); render(); renderSettings();
+    },
+    setS1End: function (v) { if (v) { state.cfg.s1End = v; persist(); render(); renderSettings(); } },
     replace: function (raw) { state = normalize(raw); fillSelects(); renderSettings(); persist(); render(); }
   };
 
@@ -1181,6 +1191,7 @@ td input[type="date"] { width: auto; }
 <script src="ios-sheet.js"></script>
 <script src="ios-nav.js"></script>
 <script src="ios-title.js"></script>
+<script src="ios-settings.js"></script>
 <script src="cert.js"></script>
 <script src="sync.js"></script>
 <script src="onboard.js"></script>

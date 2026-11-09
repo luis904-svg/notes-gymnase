@@ -84,7 +84,7 @@
     var m = mode; mode = null;
     if (m !== "drag") return;
     suppress = true; setTimeout(function () { suppress = false; }, 0);
-    var h = height(), pos = p * h, vy = track.velocity();           // px/s, positif vers le bas
+    var h = height(), pos = p * h, vy = track.velocity(t);           // px/s, positif vers le bas
     if (pos > 0 && IM.project(pos, vy) > h * 0.5) {
       closing = true;
       stop();
