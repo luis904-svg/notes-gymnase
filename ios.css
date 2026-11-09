@@ -1,0 +1,207 @@
+/* ios.css : style « Réglages iOS 27, Réduire la transparence activé ».
+   Chargé APRÈS fx.css. Toute valeur brute (couleur, rayon, hauteur) vit dans le bloc TOKENS ;
+   les règles plus bas n'utilisent que var(--ios-…) ou les variables historiques réaffectées.
+   Valeurs : mesures sur Réglages iOS 27.2 (voir design/DESIGN-ios.md). Nouvelles classes : préfixe ios-. */
+
+/* TOKENS */
+:root {
+  /* Surfaces et textes (mesurés, clair) */
+  --ios-bg: #F2F2F7;
+  --ios-cell: #FFFFFF;
+  --ios-label: #000000;
+  --ios-label-2: rgba(60, 60, 67, 0.6);
+  --ios-sep: rgba(60, 60, 67, 0.12);
+  --ios-bar-hairline: #DADADE;
+  --ios-fill: rgba(120, 120, 128, 0.12);
+  --ios-scrim: rgba(0, 0, 0, 0.2);
+  --ios-clear: transparent;
+  /* Couleurs système iOS 26/27 (HIG) */
+  --ios-blue: #0088FF;
+  --ios-blue-soft: rgba(0, 136, 255, 0.12);
+  --ios-green: #34C759;
+  --ios-green-text: #248A3D;
+  --ios-green-soft: rgba(52, 199, 89, 0.14);
+  --ios-orange: #FF8D28;
+  --ios-orange-soft: rgba(255, 141, 40, 0.14);
+  --ios-red: #FF383C;
+  --ios-red-soft: rgba(255, 56, 60, 0.12);
+  /* Géométrie (pt = px CSS à 402 px de large) */
+  --ios-r-group: 26px;
+  /* Appuis (sans dépassement) : durées à choisir, aucune valeur publiée par Apple */
+  --ios-press-row: rgba(60, 60, 67, 0.24);       /* ligne pressée : gris iOS, ≈ #D1D1D6 sur blanc (déduit) */
+  --ios-press-card: rgba(60, 60, 67, 0.12);
+  --ios-press-scale: 0.97;
+  --ios-dur-press-in: 90ms;
+  --ios-dur-press-out: 250ms;
+  --ios-dur-highlight-out: 300ms;
+  --ios-ease-out: cubic-bezier(0.32, 0.72, 0, 1);
+  /* Navigation (push/pop) : valeurs de la communauté, à régler à l'œil */
+  --ios-nav-parallax: 0.3;     /* l'écran qui part recule de 30 % de la largeur */
+  --ios-nav-dim-max: 0.1;      /* voile noir sur l'écran du dessous */
+  --ios-nav-edge: 20;          /* zone de bord du retour par balayage, en px */
+  --ios-r-sheet: 40px;
+  /* Barre de titre : grand titre (34 pt gras) qui se réduit en titre inline (17 pt semi-gras) */
+  --ios-bar-h: 44px;
+  --ios-title-large: 34px;
+  --ios-title-large-weight: 700;
+  --ios-title-inline: 17px;
+  --ios-title-inline-weight: 600;
+  --ios-dur-title: 150ms;
+  --ios-hair: 1px;
+  --ios-tab-h: 52px;
+  --ios-pad: 20px;
+
+  /* Variables historiques de l'app, réaffectées à iOS */
+  --bg: var(--ios-bg);
+  --surface: var(--ios-cell);
+  --nav: var(--ios-bg);
+  --ink: var(--ios-label);
+  --muted: var(--ios-label-2);
+  --line: var(--ios-sep);
+  --fill: var(--ios-fill);
+  --accent: var(--ios-blue);
+  --accent-focus: var(--ios-blue);
+  --accent-soft: var(--ios-blue-soft);
+  --good: var(--ios-green-text);
+  --good-soft: var(--ios-green-soft);
+  --warn: var(--ios-orange);
+  --warn-soft: var(--ios-orange-soft);
+  --crit: var(--ios-red);
+  --crit-soft: var(--ios-red-soft);
+  /* Plus de verre ni de taches de couleur */
+  --glass: var(--ios-cell);
+  --glass-strong: var(--ios-cell);
+  --glass-hi: var(--ios-clear);
+  --blob1: var(--ios-clear);
+  --blob2: var(--ios-clear);
+  --blob3: var(--ios-clear);
+}
+/* FIN TOKENS */
+
+/* L'écran d'installation redéfinit sa propre palette claire dans fx.css : on l'aligne. */
+.ob-install {
+  --bg: var(--ios-bg); --surface: var(--ios-cell); --ink: var(--ios-label); --muted: var(--ios-label-2); --line: var(--ios-sep);
+  --fill: var(--ios-fill); --accent: var(--ios-blue); --accent-focus: var(--ios-blue); --accent-soft: var(--ios-blue-soft);
+  --warn: var(--ios-orange); --warn-soft: var(--ios-orange-soft);
+  --blob1: var(--ios-clear); --blob2: var(--ios-clear); --blob3: var(--ios-clear);
+}
+
+/* ---------- Fond : aplat, sans taches ---------- */
+html { background: var(--ios-bg); }
+.bgfx { display: none; }
+.ob::before, .gd::before { background: none; }
+input[switch] { accent-color: var(--ios-green); }
+
+/* ---------- Barre du haut : bande opaque, filet quand le contenu défile ---------- */
+header.top {
+  top: env(safe-area-inset-top, 0px);
+  margin-left: calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
+  margin-right: calc(-1 * max(16px, env(safe-area-inset-right, 0px)));
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));
+  border: 0; border-bottom: var(--ios-hair) solid var(--ios-clear); border-radius: 0;
+  background: var(--ios-bg);
+  -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none;
+}
+header.top.scrolled { border-bottom-color: var(--ios-bar-hairline); box-shadow: none; }
+
+/* ---------- Groupes : cartes opaques, coins de 26 ---------- */
+.panel {
+  background: var(--ios-cell); border: 0; box-shadow: none; border-radius: var(--ios-r-group); padding: var(--ios-pad);
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+.card { border-color: var(--ios-clear); }
+.install-tip { background: var(--ios-cell); border: 0; -webkit-backdrop-filter: none; backdrop-filter: none; }
+
+/* ---------- Feuille : fond groupé, voile à 20 % ---------- */
+.sheet-bg { background: var(--ios-scrim); }
+.sheet-box { background: var(--ios-bg); border: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.sheet-box .tile, .sheet-box select, .sheet-box input[type="text"], .sheet-box input[type="number"], .sheet-box input[type="date"] { background: var(--ios-cell); }
+
+/* ---------- Jauges et histogramme : vert système ---------- */
+.bar i, .bars-legend .lg-val { background: var(--ios-green); }
+.bars .bar.good rect { fill: var(--ios-green); }
+
+/* ---------- Téléphone : barre d'onglets en bande opaque pleine largeur ---------- */
+@media (max-width: 700px) {
+  .tabbar {
+    left: 0; right: 0; bottom: 0; transform: none; gap: 0; justify-content: space-around;
+    padding: 0 max(8px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(8px, env(safe-area-inset-left, 0px));
+    border: 0; border-top: var(--ios-hair) solid var(--ios-bar-hairline); border-radius: 0;
+    background: var(--ios-bg); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+  .tabbar button { flex: 1; min-height: var(--ios-tab-h); border-radius: 0; padding: 7px 4px; }
+  .tabbar button[aria-current="page"] { background: var(--ios-clear); }
+  .tabbar .ind { display: none; }
+  body { padding-bottom: calc(var(--ios-tab-h) + 24px + env(safe-area-inset-bottom, 0px)); }
+  .sheet-box { border-radius: var(--ios-r-sheet) var(--ios-r-sheet) 0 0; }
+  /* La feuille est animée par ios-sheet.js (ressort, voile lié à la position) : plus d'animation CSS. */
+  .sheet:not([hidden]) .sheet-box, .sheet:not([hidden]) .sheet-bg { animation: none; }
+}
+
+/* ---------- Appuis : sans rebond ni échelle exagérée ----------
+   Chaque règle d'appui couvre :active (bureau, Android) ET .is-pressed (iOS tactile : fx.js garde l'effet
+   quand le doigt est sur l'interrupteur de haptique). Boutons : échelle discrète, retour sans dépassement.
+   Lignes : surbrillance immédiate au toucher, fondu de sortie. Cartes : voile sans échelle. */
+button { transition: transform var(--ios-dur-press-out) var(--ios-ease-out), background-color 150ms ease, color 150ms ease, box-shadow 150ms ease, opacity 150ms ease; }
+button:active, button.is-pressed { transform: scale(var(--ios-press-scale)); transition: transform var(--ios-dur-press-in) ease-out, background-color 150ms ease, color 150ms ease, box-shadow 150ms ease, opacity 150ms ease; }
+.link:active, .link.is-pressed, .btn-ghost:active, .btn-ghost.is-pressed { opacity: 0.4; }
+
+.ob-row, .gd-chr, .srow > summary, .yp-sum { transition: background-color var(--ios-dur-highlight-out) ease-out; }
+.ob-row:active, .ob-row.is-pressed, .gd-chr:active, .gd-chr.is-pressed, .srow > summary:active, .srow > summary.is-pressed, .yp-sum:active, .yp-sum.is-pressed {
+  background-color: var(--ios-press-row); transform: none; transition: none;
+}
+
+.card[data-subj] { transition: box-shadow var(--ios-dur-highlight-out) ease-out, border-color 150ms ease; }
+.card[data-subj]:active, .card[data-subj].is-pressed { transform: none; box-shadow: inset 0 0 0 100vmax var(--ios-press-card); transition: none; }
+
+.tabbar button, .tabbar button:active, .tabbar button.is-pressed { transform: none; transition: color 150ms ease, opacity 150ms ease; }
+.tabbar button:active, .tabbar button.is-pressed { opacity: 0.55; }
+
+/* Réduire les animations : plus d'échelle d'appui (fx.css l'emportait sur la règle générale), plus de boucle infinie. */
+@media (prefers-reduced-motion: reduce) {
+  button:active, button.is-pressed, .card[data-subj]:active, .card[data-subj].is-pressed { transform: none; }
+  *, *::before, *::after { animation-iteration-count: 1 !important; }
+}
+
+/* ---------- Navigation : fantômes de push/pop et du retour par balayage (ios-nav.js) ---------- */
+.ios-nav-ghost {
+  position: fixed; inset: 0; overflow: hidden; background: var(--bg);
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
+}
+.ios-nav-under { z-index: 26; }
+.ios-nav-top { z-index: 28; }
+.ios-nav-dim { position: fixed; inset: 0; z-index: 27; background: var(--ios-label); opacity: 0; pointer-events: none; }
+.ios-nav-ghost, .ios-nav-ghost * , .ios-nav-ghost *::before, .ios-nav-ghost *::after { animation: none !important; transition: none !important; }
+
+/* ---------- Grand titre qui se réduit (ios-title.js) ----------
+   Téléphone : l'en-tête n'est plus collant ; « Notes … » devient un grand titre dans le contenu. Une barre fixe
+   (.ios-bar) affiche le petit titre centré et le filet quand le grand titre est passé dessous. */
+.ios-bar { display: none; }
+@media (max-width: 700px) {
+  header.top, header.top.scrolled {
+    position: static; display: block; margin: 0; border: 0; box-shadow: none; background: var(--ios-clear);
+    padding: calc(var(--ios-bar-h) - 4px) 0 4px;
+  }
+  header.top h1 { font-size: var(--ios-title-large); font-weight: var(--ios-title-large-weight); line-height: 1.2; letter-spacing: -0.02em; }
+  header.top .controls { margin-top: 12px; }
+  .ios-bar {
+    display: flex; align-items: center; justify-content: center;
+    position: fixed; left: 0; right: 0; top: env(safe-area-inset-top, 0px); height: var(--ios-bar-h); z-index: 20;
+    background: var(--ios-bg); border-bottom: var(--ios-hair) solid var(--ios-clear); pointer-events: none;
+    transition: border-color var(--ios-dur-title) ease;
+  }
+  .ios-bar.is-on { border-bottom-color: var(--ios-bar-hairline); }
+  .ios-bar-title {
+    font-size: var(--ios-title-inline); font-weight: var(--ios-title-inline-weight); letter-spacing: -0.022em; color: var(--ink);
+    opacity: 0; transition: opacity var(--ios-dur-title) ease;
+  }
+  .ios-bar.is-on .ios-bar-title { opacity: 1; }
+  body:has(.wrap.is-sub) .ios-bar:not(.ios-bar-ghost) { display: none; }
+  .ios-nav-ghost .ios-bar { z-index: 1; transition: none; }
+}
+@media (prefers-reduced-motion: reduce) { .ios-bar, .ios-bar-title { transition: none; } }
+
+/* ---------- ?noanim=1 : plus aucune animation ni transition CSS (durées à zéro : les états finaux s'appliquent) ---------- */
+html.noanim *, html.noanim *::before, html.noanim *::after {
+  animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; transition-delay: 0s !important;
+}

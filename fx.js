@@ -126,7 +126,7 @@
 
   /* ---------- Chiffres qui défilent ---------- */
   var prev = new Map(), firstRun = true;
-  var COUNT = ["#promo .metric .val", "#subjects .big", "#sheet-box .tile .num"];
+  var COUNT = ["#promo .metric .val", "#subjects .big"];
   function countUps() {
     COUNT.forEach(function (sel) {
       $$(sel).forEach(function (el, i) {
@@ -249,16 +249,8 @@
     lastPill = t;
   }
 
-  /* ---------- Feuille de détail ---------- */
-  var sheetWasOpen = false;
-  function sheetFx() {
-    var open = !$("#sheet").hidden;
-    if (open && !sheetWasOpen && canAnim()) {
-      var rows = $$("#sheet-box > *");
-      M.animate(rows, { opacity: [0, 1], y: [14, 0] }, Object.assign({ delay: M.stagger(0.04, { startDelay: 0.12 }) }, SPRING));
-    }
-    sheetWasOpen = open;
-  }
+  /* ---------- Feuille de détail ----------
+     Ouverture, fermeture et tirage : voir ios-sheet.js (le contenu n'est plus échelonné). */
 
   /* ---------- Sauvegarde : exporter / importer ---------- */
   function stamp() { var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
@@ -332,8 +324,8 @@
   /* ---------- Branchements ---------- */
   window.FX = {
     haptic: haptic,
-    rendered: function () { countUps(); firstRun = false; placeSeg(); pulsePill(); sheetFx(); },
-    view: function (v) { placeTab(); enterView(v); if (v === "dash") countUps(); },
+    rendered: function () { countUps(); firstRun = false; placeSeg(); pulsePill(); },
+    view: function (v) { placeTab(); if (!(window.IOSNav && IOSNav.active())) enterView(v); if (v === "dash") countUps(); },
     success: success
   };
   mountBackup(); mountInstallTip();

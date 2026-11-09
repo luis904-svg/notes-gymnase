@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="Notes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="color-scheme" content="light only">
-<meta name="theme-color" content="#F5F5F7">
+<meta name="theme-color" content="#F2F2F7">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
 <style>
 /* Layout: barre translucide collante, tuiles blanches à 18 px sur fond parchemin, un seul bleu d'action. Tokens inspirés du design system Apple (VoltAgent/awesome-design-md) et des règles de mouvement d'Emil Kowalski. */
@@ -337,6 +337,7 @@ td input[type="date"] { width: auto; }
 }
 </style>
 <link rel="stylesheet" href="fx.css">
+<link rel="stylesheet" href="ios.css">
 </head><body>
 
 <div class="bgfx" aria-hidden="true"></div>
@@ -861,13 +862,13 @@ td input[type="date"] { width: auto; }
   function renderDetail() {
     var el = $("#sheet");
     var s = ui.detail ? sub(ui.detail) : null;
-    if (!s) { ui.detail = null; el.hidden = true; document.body.style.overflow = ""; return; }
+    if (!s) { ui.detail = null; if (window.IOSSheet && !el.hidden) IOSSheet.close(); else { el.hidden = true; document.body.style.overflow = ""; } return; }
     var all = currentGrades(), ids = s.parts || [s.id];
     if (s.carried) {
       $("#sheet-box").innerHTML = '<div class="grab" aria-hidden="true"></div><div class="sheet-head"><div><h2 id="sheet-title">' + esc(s.name) + '</h2><p>Note de 2e reprise</p></div><button type="button" class="btn-ghost" data-close id="sheet-close">Fermer</button></div>' +
         (window.Cert && Cert.detail ? Cert.detail(s.id) : "");
-      if (!dragging) { $("#sheet-box").style.transform = ""; $("#sheet-box").style.transition = ""; }
-      el.hidden = false; document.body.style.overflow = "hidden";
+      if (!dragging && !window.IOSSheet) { $("#sheet-box").style.transform = ""; $("#sheet-box").style.transition = ""; }
+      if (window.IOSSheet) IOSSheet.open(); else { el.hidden = false; document.body.style.overflow = "hidden"; }
       return;
     }
     var mine = all.filter(function (g) { return ids.indexOf(g.subject) >= 0; }).sort(function (a, b) { if (a.date !== b.date) return a.date < b.date ? 1 : -1; var x = String(a.sortKey || a.id), y = String(b.sortKey || b.id); return x < y ? 1 : x > y ? -1 : 0; });
@@ -901,8 +902,8 @@ td input[type="date"] { width: auto; }
       (mine.length ? '<ul class="notes" id="sheet-notes">' + mine.map(noteItem).join("") + '</ul>' : '<p class="empty">Aucune note dans cette branche.</p>') + '</div>';
     renderChart(all, $("#sheet-chart"), s.id);
     var sn = $("#sheet-notes"); if (sn) sn.addEventListener("click", noteClick);
-    if (!dragging) { $("#sheet-box").style.transform = ""; $("#sheet-box").style.transition = ""; }
-    el.hidden = false; document.body.style.overflow = "hidden";
+    if (!dragging && !window.IOSSheet) { $("#sheet-box").style.transform = ""; $("#sheet-box").style.transition = ""; }
+    if (window.IOSSheet) IOSSheet.open(); else { el.hidden = false; document.body.style.overflow = "hidden"; }
   }
   function openDetail(id) { ui.detail = id; renderDetail(); $("#sheet-close").focus(); }
   function closeDetail() {
@@ -976,6 +977,7 @@ td input[type="date"] { width: auto; }
 
   /* ---------- Interactions ---------- */
   function setView(v) {
+    var navPrev = ui.view; if (window.IOSNav) IOSNav.before(navPrev, v);
     ui.view = v;
     $("#view-dash").hidden = v !== "dash"; $("#view-add").hidden = v !== "add"; $("#view-settings").hidden = v !== "settings";
     $("#go-add").hidden = v !== "dash";
@@ -983,6 +985,7 @@ td input[type="date"] { width: auto; }
     document.querySelectorAll("[data-tab]").forEach(function (b) { if (b.dataset.tab === v) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current"); });
     window.scrollTo(0, 0);
     if (window.FX) FX.view(v);
+    if (window.IOSNav) IOSNav.after(navPrev, v);
     if (v === "dash" && ui.flash) { render(); setTimeout(function () { ui.flash = null; }, 2500); }
     if (v === "add") $("#f-val").focus({ preventScroll: true });
   }
@@ -1060,29 +1063,6 @@ td input[type="date"] { width: auto; }
     if (t === "add") resetForm();
     setView(t);
   });
-  (function () {
-    var y0 = 0, el = null, box = $("#sheet-box");
-    $("#sheet").addEventListener("pointerdown", function (e) {
-      var g = e.target.closest(".grab"); if (!g) return;
-      el = g; y0 = e.clientY; dragging = true; box.style.transition = "none";
-      try { g.setPointerCapture(e.pointerId); } catch (x) {}
-    });
-    $("#sheet").addEventListener("pointermove", function (e) {
-      if (!dragging) return;
-      box.style.transform = "translateY(" + Math.max(0, e.clientY - y0) + "px)";
-    });
-    function end(e) {
-      if (!dragging) return;
-      var dy = e.clientY - y0; dragging = false;
-      if (dy > 110) {
-        if (window.FX) FX.haptic("tap");
-        box.style.transition = "transform 250ms cubic-bezier(.32, .72, 0, 1)"; box.style.transform = "translateY(110%)";
-        setTimeout(function () { closeDetail(); box.style.transform = ""; box.style.transition = ""; }, 240);
-      } else { box.style.transition = "transform 450ms cubic-bezier(.34, 1.56, .64, 1)"; box.style.transform = ""; }
-    }
-    $("#sheet").addEventListener("pointerup", end);
-    $("#sheet").addEventListener("pointercancel", end);
-  })();
   $("#back").addEventListener("click", function () { resetForm(); setView("dash"); });
   var mqPhone = window.matchMedia("(max-width: 700px)");
   function placeSettings() {
@@ -1197,6 +1177,10 @@ td input[type="date"] { width: auto; }
 </script>
 <script src="motion.js"></script>
 <script src="fx.js"></script>
+<script src="ios-motion.js"></script>
+<script src="ios-sheet.js"></script>
+<script src="ios-nav.js"></script>
+<script src="ios-title.js"></script>
 <script src="cert.js"></script>
 <script src="sync.js"></script>
 <script src="onboard.js"></script>
