@@ -4,9 +4,6 @@
    « Annuler le dernier passage » remet tout comme avant. */
 (function () {
   "use strict";
-  var M = /[?&]noanim=1/.test(location.search) ? null : (window.Motion || null);
-  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
-  function canAnim() { return !!M && !reduce.matches; }
   function $(s, r) { return (r || document).querySelector(s); }
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function hap(k) { if (window.FX) FX.haptic(k); }
@@ -26,7 +23,6 @@
     root.innerHTML = html;
     document.body.appendChild(root); document.body.classList.add("ob-open");
     root.scrollTop = 0;
-    if (canAnim()) M.animate(root, { opacity: [0, 1] }, { duration: 0.25 });
     root.addEventListener("click", function (e) {
       if (e.target.closest("[data-yp-close]")) { close(); return; }
       if (wire) wire(e);

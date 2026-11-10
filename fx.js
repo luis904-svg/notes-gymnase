@@ -1,14 +1,12 @@
-/* Notes — couche app : haptique, animations (Motion), sauvegarde, installation. */
+/* Notes — couche app : haptique, indicateurs, sauvegarde, installation.
+   Aucune animation décorative : les écrans et les chiffres s'affichent tout de suite. */
 (function () {
   "use strict";
-  var M = /[?&]noanim=1/.test(location.search) ? null : (window.Motion || null);
-  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
-  function canAnim() { return !!M && !reduce.matches; }
   function $(s, r) { return (r || document).querySelector(s); }
-  function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
-  var SPRING = { type: "spring", stiffness: 300, damping: 26 };
-  var SNAPPY = { type: "spring", stiffness: 520, damping: 34 };
-  if (M) document.documentElement.classList.add("fx");
+  // .fx : les pastilles .ind remplacent le fond des onglets et segments actifs (fx.css).
+  document.documentElement.classList.add("fx");
+  // ?noanim=1 : plus aucune animation ni transition CSS (voir ios.css, html.noanim).
+  if (/[?&]noanim=1/.test(location.search)) document.documentElement.classList.add("noanim");
 
   /* ---------- Haptique ----------
      Android : API Vibration. iPhone (iOS 18+) : Safari n'a pas d'API, mais basculer un
@@ -124,133 +122,33 @@
     window.addEventListener("scroll", function () { if (catchTarget) release(); }, { passive: true, capture: true });
   }
 
-  /* ---------- Chiffres qui défilent ---------- */
-  var prev = new Map(), firstRun = true;
-  var COUNT = ["#promo .metric .val", "#subjects .big"];
-  function countUps() {
-    COUNT.forEach(function (sel) {
-      $$(sel).forEach(function (el, i) {
-        var node = el.firstChild;
-        if (!node || node.nodeType !== 3) return;
-        var raw = node.nodeValue, txt = raw.trim(), m = txt.match(/^(\d+(?:\.(\d+))?)$/);
-        if (!m) return;
-        var to = parseFloat(m[1]), dec = m[2] ? m[2].length : 0;
-        var c = el.closest("[data-subj]"), key = sel + "|" + (c ? c.dataset.subj : i);
-        var from = prev.has(key) ? prev.get(key) : (firstRun || sel.indexOf("sheet") >= 0 ? 0 : to);
-        prev.set(key, to);
-        // Pas d'animation sur un écran caché : la valeur exacte reste affichée telle quelle.
-        if (from === to || !canAnim() || el.offsetParent === null) return;
-        var tail = raw.slice(raw.indexOf(txt) + txt.length), final = raw;
-        node.nodeValue = from.toFixed(dec) + tail;
-        var a = M.animate(from, to, { duration: 0.9, ease: [0.2, 0.8, 0.2, 1], onUpdate: function (v) { node.nodeValue = v.toFixed(dec) + tail; } });
-        // Toujours finir sur le texte exact calculé par le tableau de bord, même si l'animation est interrompue.
-        var done = function () { node.nodeValue = final; };
-        if (a && a.then) a.then(done, done);
-        setTimeout(done, 1200);
-      });
-    });
-  }
-
-  /* ---------- Entrées en scène ---------- */
-  var watchers = [];
-  function enterView(v) {
-    if (!canAnim()) return;
-    var root = document.getElementById(v === "add" ? "view-add" : v === "settings" ? "view-settings" : "view-dash");
-    if (!root) return;
-    watchers.forEach(function (stop) { try { stop(); } catch (e) {} }); watchers = [];
-    $$(".panel").forEach(function (p) { if (p.style.opacity === "0") p.style.opacity = ""; });
-    var h = window.innerHeight, now = [], later = [];
-    $$(".panel", root).forEach(function (p) {
-      if (p.parentElement.closest(".panel")) return;
-      (p.getBoundingClientRect().top < h ? now : later).push(p);
-    });
-    if (now.length) M.animate(now, { opacity: [0, 1], y: [28, 0], scale: [0.97, 1] }, Object.assign({ delay: M.stagger(0.06) }, SPRING));
-    later.forEach(function (p) {
-      p.style.opacity = "0";
-      watchers.push(M.inView(p, function () {
-        M.animate(p, { opacity: [0, 1], y: [36, 0], scale: [0.97, 1] }, SPRING);
-      }, { amount: 0.12 }));
-    });
-    // Sécurité : aucun panneau ne doit rester invisible.
-    setTimeout(function () { later.forEach(function (p) { if (p.style.opacity === "0" && p.getBoundingClientRect().top < window.innerHeight) p.style.opacity = ""; }); }, 2500);
-    var cards = $$("#subjects .card", root);
-    if (cards.length && v === "dash") M.animate(cards, { opacity: [0, 1], y: [16, 0], scale: [0.95, 1] }, Object.assign({ delay: M.stagger(0.035, { startDelay: 0.18 }) }, SPRING));
-    if (v === "add") {
-      var fields = $$("#form > *", root);
-      M.animate(fields, { opacity: [0, 1], y: [12, 0] }, Object.assign({ delay: M.stagger(0.04, { startDelay: 0.08 }) }, SPRING));
-    }
-  }
-
-  /* ---------- Pastilles glissantes (onglets, segments) ---------- */
+  /* ---------- Pastilles des onglets et du sélecteur de période ----------
+     Placées sans animation (le segment glisse par une simple transition CSS, voir ios.css). */
   function indicator(container, activeSel) {
     if (!container) return function () {};
     var ind = document.createElement("span"); ind.className = "ind"; ind.setAttribute("aria-hidden", "true");
     container.insertBefore(ind, container.firstChild);
-    var placed = false;
     return function place() {
       var b = $(activeSel, container);
-      if (!b || !b.offsetWidth) { ind.style.opacity = "0"; placed = false; return; }
-      var x = b.offsetLeft, w = b.offsetWidth;
-      if (placed && canAnim()) M.animate(ind, { left: x + "px", width: w + "px", opacity: 1 }, SNAPPY);
-      else { ind.style.left = x + "px"; ind.style.width = w + "px"; ind.style.opacity = "1"; }
-      placed = true;
+      if (!b || !b.offsetWidth) { ind.style.opacity = "0"; return; }
+      ind.style.left = b.offsetLeft + "px"; ind.style.width = b.offsetWidth + "px"; ind.style.opacity = "1";
     };
   }
   var placeTab = indicator($("#tabbar"), '[aria-current="page"]');
   var placeSeg = indicator($(".seg"), '[aria-pressed="true"]');
   window.addEventListener("resize", function () { placeTab(); placeSeg(); });
-  $("#tabbar").addEventListener("click", function (e) {
-    var b = e.target.closest("[data-tab]");
-    if (b && canAnim()) M.animate(b.querySelector("svg"), { scale: [1, 0.78, 1.18, 1], rotate: [0, -6, 4, 0] }, { duration: 0.55, ease: "easeOut" });
-  });
 
-  /* ---------- Réussite / erreur ---------- */
-  var COLORS = ["var(--good)", "var(--accent)", "var(--warn)", "#AF52DE", "#FF2D55", "#5AC8FA"];
-  function success(d) {
-    haptic("success");
-    if (!canAnim()) return;
-    var box = $(".done-in", d), svg = $("svg", box);
-    if (svg) M.animate(svg, { scale: [0.4, 1], rotate: [-25, 0] }, { type: "spring", stiffness: 380, damping: 14 });
-    for (var i = 0; i < 22; i++) {
-      var dot = document.createElement("i");
-      dot.className = "confetti" + (i % 3 === 0 ? " sq" : "");
-      dot.style.background = COLORS[i % COLORS.length];
-      box.appendChild(dot);
-      var a = (Math.PI * 2 * i) / 22 + Math.random() * 0.4, r = 90 + Math.random() * 70;
-      M.animate(dot, { x: [0, Math.cos(a) * r], y: [0, Math.sin(a) * r + 40], scale: [0, 1.2, 0.6], rotate: [0, Math.random() * 360], opacity: [1, 1, 0] },
-        { duration: 1.1, ease: [0.15, 0.85, 0.3, 1], delay: 0.35 });
-    }
-  }
+  /* ---------- Erreur dans le formulaire : vibration seulement ---------- */
   var msg = $("#f-msg");
   if (msg && window.MutationObserver) {
-    new MutationObserver(function () {
-      if (!msg.textContent.trim()) return;
-      haptic("error");
-      if (canAnim()) M.animate($("#view-add .panel"), { x: [0, -12, 11, -8, 6, -3, 0] }, { duration: 0.5, ease: "easeOut" });
-    }).observe(msg, { childList: true, characterData: true, subtree: true });
+    new MutationObserver(function () { if (msg.textContent.trim()) haptic("error"); })
+      .observe(msg, { childList: true, characterData: true, subtree: true });
   }
 
-  /* ---------- Défilement ---------- */
+  /* ---------- Défilement : filet sous l'en-tête ---------- */
   var head = $("header.top");
-  function onScroll() {
-    if (head) head.classList.toggle("scrolled", window.scrollY > 8);
-    // Filet de sécurité si l'apparition au défilement ne s'est pas déclenchée.
-    var h = window.innerHeight;
-    $$(".panel").forEach(function (p) { if (p.style.opacity === "0" && p.getBoundingClientRect().top < h - 40) p.style.opacity = ""; });
-  }
+  function onScroll() { if (head) head.classList.toggle("scrolled", window.scrollY > 8); }
   window.addEventListener("scroll", onScroll, { passive: true }); onScroll();
-
-  /* ---------- Changement de verdict ---------- */
-  var lastPill = null;
-  function pulsePill() {
-    var p = $("#promo .pill"); if (!p) return;
-    var t = p.textContent;
-    if (lastPill !== null && t !== lastPill && canAnim()) M.animate(p, { scale: [1, 1.14, 1] }, { type: "spring", stiffness: 400, damping: 12 });
-    lastPill = t;
-  }
-
-  /* ---------- Feuille de détail ----------
-     Ouverture, fermeture et tirage : voir ios-sheet.js (le contenu n'est plus échelonné). */
 
   /* ---------- Sauvegarde : exporter / importer ---------- */
   function stamp() { var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
@@ -316,22 +214,19 @@
     var wrap = $(".wrap"); wrap.insertBefore(tip, $("#demo"));
     $("#tip-x").addEventListener("click", function () {
       try { localStorage.setItem("notes2m01.tip", "off"); } catch (e) {}
-      if (canAnim()) M.animate(tip, { opacity: 0, scale: 0.95, height: 0, marginBottom: -20 }, { duration: 0.3 }).then(function () { tip.remove(); });
-      else tip.remove();
+      tip.remove();
     });
   }
 
   /* ---------- Branchements ---------- */
   window.FX = {
     haptic: haptic,
-    rendered: function () { countUps(); firstRun = false; placeSeg(); pulsePill(); },
-    view: function (v) { placeTab(); if (!(window.IOSNav && IOSNav.active())) enterView(v); if (v === "dash") countUps(); },
-    success: success
+    rendered: function () { placeSeg(); },
+    view: function () { placeTab(); },
+    success: function () { haptic("success"); }
   };
   mountBackup(); mountInstallTip();
-  window.FX.rendered();
-  placeTab();
-  enterView("dash");
+  placeSeg(); placeTab();
 
   if ("serviceWorker" in navigator && location.protocol === "https:") {
     window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });

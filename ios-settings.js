@@ -1,6 +1,6 @@
 /* ios-settings.js : Réglages « comme Apple » sur téléphone (≤ 700 px). Spécification : design/SPEC-reglages.md.
    Réglages est une page d'onglet (grand titre « Réglages », pas de bouton Retour). Les sous-pages (Profil, Branches, une
-   branche, Synchronisation, Sauvegarde, Calcul des moyennes, À propos) sont poussées avec IOSNav.run (ressort, parallaxe)
+   branche, Synchronisation, Sauvegarde, Calcul des moyennes, À propos) sont poussées avec IOSNav.run (courte entrée CSS)
    et se quittent par le chevron de la barre ou par balayage du bord gauche (IOSNav.setBack).
    Une seule page est dans le DOM à la fois (#ios-set). Les blocs que d'autres modules montent dans #set-block (Sauvegarde,
    Synchronisation, À propos) sont déplacés dans leur sous-page, puis rendus à #set-block quand on la quitte : leurs
@@ -236,19 +236,7 @@
     if (stack.length < 2) return;
     run("pop", function () { stack.pop(); show(scrolls[key(top())] || 0); });
   }
-  var provider = {
-    can: function () { return active && stack.length > 1 && settingsVisible(); },
-    parent: function (clone) {
-      var c = clone.querySelector("#ios-set"); if (c) c.replaceChildren(build(stack[stack.length - 2]));
-    },
-    parentScroll: function () { return scrolls[key(stack[stack.length - 2])] || 0; },
-    parentBar: function () {
-      var pe = stack[stack.length - 2], p = PAGES[pe.id], y = scrolls[key(pe)] || 0;
-      return { title: titleOf(pe), on: p.large ? y >= window.IOSTitle.threshold("set-" + key(pe), 48) : true, back: stack.length - 2 > 0 };
-    },
-    go: pop,
-    drag: function (on) { if (window.IOSTitle) IOSTitle.pill("settings", !on); }
-  };
+  var provider = { can: function () { return active && stack.length > 1 && settingsVisible(); }, go: pop };
 
   /* ---------- Interactions ---------- */
   container.addEventListener("click", function (ev) {

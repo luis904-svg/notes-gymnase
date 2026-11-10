@@ -900,8 +900,8 @@ td input[type="date"] { width: auto; }
       '<div><h3 class="sec">Évolution</h3><div id="sheet-chart"></div></div>' +
       '<div><h3 class="sec">Toutes les notes (' + mine.length + ')</h3>' +
       (mine.length ? '<ul class="notes" id="sheet-notes">' + mine.map(noteItem).join("") + '</ul>' : '<p class="empty">Aucune note dans cette branche.</p>') + '</div>';
-    renderChart(all, $("#sheet-chart"), s.id);
-    var sn = $("#sheet-notes"); if (sn) sn.addEventListener("click", noteClick);
+    renderChart(all, $("#sheet-box #sheet-chart"), s.id);
+    var sn = $("#sheet-box #sheet-notes"); if (sn) sn.addEventListener("click", noteClick);
     if (!dragging && !window.IOSSheet) { $("#sheet-box").style.transform = ""; $("#sheet-box").style.transition = ""; }
     if (window.IOSDetail && IOSDetail.open()) { /* page entière (téléphone) */ } else if (window.IOSSheet) IOSSheet.open(); else { el.hidden = false; document.body.style.overflow = "hidden"; }
   }
@@ -995,15 +995,8 @@ td input[type="date"] { width: auto; }
     $("#h-add").textContent = "Ajouter une note";
   }
   function playDone(title, g) {
-    var panel = $("#view-add .panel"), d = $("#done");
-    ui.busy = true; panel.classList.add("glass");
-    d.innerHTML = '<div class="done-in"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M7 12.5l3.2 3.2L17 9"/></svg><span>' + title + " : " + g.value + " en " + esc(sub(g.subject).name) + '</span></div>';
-    d.hidden = false;
-    if (window.FX) FX.success(d);
-    setTimeout(function () {
-      d.hidden = true; panel.classList.remove("glass"); ui.busy = false;
-      setView("dash");
-    }, 1500);
+    if (window.FX) FX.success();
+    setView("dash");
   }
   $("#form").addEventListener("submit", function (e) {
     e.preventDefault();
@@ -1189,8 +1182,6 @@ td input[type="date"] { width: auto; }
 </script>
 <script src="motion.js"></script>
 <script src="fx.js"></script>
-<script src="ios-motion.js"></script>
-<script src="ios-sheet.js"></script>
 <script src="ios-nav.js"></script>
 <script src="ios-title.js"></script>
 <script src="ios-settings.js"></script>

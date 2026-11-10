@@ -1,14 +1,12 @@
 /* Notes — configuration au premier lancement (et « Modifier mon profil »). */
 (function () {
   "use strict";
-  var G = window.Grid, M = /[?&]noanim=1/.test(location.search) ? null : (window.Motion || null);
-  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
-  function canAnim() { return !!M && !reduce.matches; }
+  var G = window.Grid;   // pas d'animation : chaque étape s'affiche tout de suite
   function hap(k) { if (window.FX) window.FX.haptic(k); }
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function $(s, r) { return (r || document).querySelector(s); }
 
-  var p = {}, step = 0, editing = false, root = null, dir = 1, guideTouched = false;
+  var p = {}, step = 0, firstStep = 0, editing = false, root = null, dir = 1, guideTouched = false;
   var STEPS = [
     { id: "welcome" },
     { id: "guide", when: function () { return !editing; } },
@@ -107,20 +105,14 @@
     var vs = visible(), s = vs[step], last = step === vs.length - 1;
     var pct = Math.round((step / (vs.length - 1)) * 100);
     root.innerHTML =
-      '<div class="ob-top"><button type="button" class="link ob-back"' + (step === 0 || (editing && step === 1) ? (editing ? ' data-cancel' : " hidden") : "") + '>' + (editing && step === 1 ? "Annuler" : "‹ Retour") + '</button>' +
+      // En modification (Réglages → Profil), « Annuler » est proposé dès l'étape d'ouverture : on peut toujours ressortir sans tout parcourir.
+      '<div class="ob-top"><button type="button" class="link ob-back"' + (editing && step <= firstStep ? ' data-cancel' : step === 0 ? " hidden" : "") + '>' + (editing && step <= firstStep ? "Annuler" : "‹ Retour") + '</button>' +
       (s.id !== "welcome" ? '<div class="ob-prog" aria-hidden="true"><i style="width:' + pct + '%"></i></div>' : "") + '</div>' +
       '<div class="ob-body" id="ob-body">' + body(s) + '</div>' +
       (s.id === "guide"
         ? '<div class="ob-foot"><button type="button" class="btn" id="ob-guide">' + (guideTouched ? "Reprendre le guide" : "Suivre le guide maintenant") + '</button><button type="button" class="link ob-later" id="ob-later">' + (guideTouched ? "Continuer la configuration" : "Plus tard") + '</button></div>'
         : '<div class="ob-foot"><button type="button" class="btn ob-next"' + (valid(s) ? "" : " disabled") + '>' +
           (s.id === "welcome" ? "Commencer" : last ? (editing ? "Enregistrer" : "Créer mon tableau de bord") : "Continuer") + '</button></div>');
-    var b = $("#ob-body", root);
-    if (canAnim()) {
-      M.animate(b, { opacity: [0, 1], x: [dir * 36, 0] }, { type: "spring", stiffness: 340, damping: 30 });
-      var rows = b.querySelectorAll(".ob-row");
-      if (rows.length) M.animate(rows, { opacity: [0, 1], y: [10, 0] }, { delay: M.stagger(0.025, { startDelay: 0.05 }), type: "spring", stiffness: 380, damping: 30 });
-      var bar = $(".ob-prog i", root); if (bar) { var from = Math.round(((step - dir) / (vs.length - 1)) * 100); M.animate(bar, { width: [Math.max(0, from) + "%", pct + "%"] }, { type: "spring", stiffness: 260, damping: 30 }); }
-    }
     var input = $("#ob-classe", root);
     if (input) input.addEventListener("input", function () { p.classe = input.value.trim(); });
     root.scrollTop = 0;
@@ -149,11 +141,9 @@
   function closeNow() { if (!root) return; root.remove(); root = null; document.body.classList.remove("ob-open"); window.scrollTo(0, 0); }
 
   function close() {
-    var el = root;
-    var closed = false;
-    function done() { if (closed) return; closed = true; el.remove(); root = null; document.body.classList.remove("ob-open"); if (window.FX) window.FX.view("dash"); }
-    if (canAnim()) { M.animate(el, { opacity: [1, 0], scale: [1, 1.04] }, { duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }).then(done); setTimeout(done, 500); }
-    else done();
+    if (!root) return;
+    root.remove(); root = null; document.body.classList.remove("ob-open");
+    if (window.FX) window.FX.view("dash");
   }
 
   function open(edit, startId) {
@@ -163,6 +153,7 @@
     p = cur ? JSON.parse(JSON.stringify(cur)) : {};
     step = editing ? 1 : 0; dir = 1;
     if (startId) { var vs0 = visible(); for (var i0 = 0; i0 < vs0.length; i0++) if (vs0[i0].id === startId) step = i0; } guideTouched = false;
+    firstStep = step;
     root = document.createElement("div");
     root.className = "ob"; root.setAttribute("role", "dialog"); root.setAttribute("aria-modal", "true"); root.setAttribute("aria-label", "Configuration");
     document.body.appendChild(root);
@@ -189,7 +180,6 @@
         p[f] = f === "year" ? parseInt(v, 10) : v;
         sanitize(); hap("select");
         root.querySelectorAll('.ob-row[data-f="' + f + '"]').forEach(function (x) { var on = x === r; x.classList.toggle("on", on); x.setAttribute("aria-checked", String(on)); });
-        if (canAnim()) M.animate(r.querySelector(".ob-chk"), { scale: [0.3, 1] }, { type: "spring", stiffness: 500, damping: 15 });
         var s = visible()[step];
         if (s.id === "gymnase") {
           var g = G.find(G.GYMNASES, p.gymnase), w = root.querySelector(".ob-warn");
@@ -204,7 +194,6 @@
       if (back) { if (back.hasAttribute("data-cancel")) close(); else go(-1); }
     });
     root.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.id === "ob-classe") { e.preventDefault(); go(1); } });
-    if (canAnim()) M.animate(root, { opacity: [0, 1] }, { duration: 0.3 });
     render();
   }
 
@@ -277,11 +266,6 @@
       (isIOS && !inApp ? '<div class="inst-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v15M6 13l6 6 6-6"/></svg></div>' : "") + '</div>';
     document.body.appendChild(el);
     document.body.classList.add("ob-open");
-    if (canAnim()) {
-      M.animate(el.querySelectorAll(".ob-hero > *, .inst-steps li"), { opacity: [0, 1], y: [16, 0] }, { delay: M.stagger(0.07), type: "spring", stiffness: 300, damping: 26 });
-      var ar = el.querySelector(".inst-arrow svg");
-      if (ar) M.animate(ar, { y: [0, 10, 0] }, { duration: 1.4, repeat: Infinity, ease: "easeInOut" });
-    }
     var cp = el.querySelector("#inst-copy");
     if (cp) cp.addEventListener("click", function () {
       var url = location.origin + location.pathname, u = el.querySelector("#inst-url");

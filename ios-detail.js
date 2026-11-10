@@ -1,5 +1,5 @@
 /* ios-detail.js : détail d'une matière en PAGE ENTIÈRE sur téléphone (≤ 700 px), à la place de la feuille. Spécification :
-   design/SPEC-reglages.md (« Additions »). Sur grand écran, rien ne change : la feuille de ios-sheet.js reste.
+   design/SPEC-reglages.md (« Additions »). Sur grand écran, rien ne change : la feuille (#sheet) reste, sans animation.
    Principe : renderDetail (index.html) construit toujours son contenu dans #sheet-box ; sur téléphone, IOSDetail.open() prend
    ce contenu et en fait la page #ios-detail (grand titre = nom de la matière, trois cartes, lignes à icônes, graphique dans
    une carte, liste de notes avec ses boutons « Modifier » / « Supprimer »). Chaque nouveau rendu (note supprimée…) refait
@@ -96,20 +96,7 @@
     IOSNav.run("pop", function () { window.NotesApp.closeDetail(); });
   }
 
-  var provider = {
-    can: function () { return active && mq.matches; },
-    parent: function (clone) {                      // la copie montre l'Accueil à la place de la page
-      var d = clone.querySelector("#view-dash"), det = clone.querySelector("#ios-detail"), h = clone.querySelector("header.top");
-      if (d) d.style.display = "flex"; if (det) det.style.display = "none"; if (h) h.style.display = "block";
-    },
-    parentScroll: function () { return scrollDash; },
-    parentBar: function () {
-      var h1 = document.querySelector("header.top h1");
-      return { title: h1 ? h1.textContent : "", on: scrollDash >= IOSTitle.threshold("dash", 48), back: false };
-    },
-    go: back,
-    drag: function (on) { IOSTitle.pill("detail", !on); }
-  };
+  var provider = { can: function () { return active && mq.matches; }, go: back };
 
   mq.addEventListener && mq.addEventListener("change", function () { if (!mq.matches && active) window.NotesApp.closeDetail(); });
   window.IOSDetail = { open: open, close: close, back: back, active: function () { return active; } };

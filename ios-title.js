@@ -5,7 +5,8 @@
    - sans large (sous-page) : titre inline et filet toujours affichés.
    - back : fonction du bouton de retour (chevron seul dans un rond opaque, à gauche) ; absent sur les pages d'onglet.
    Contextes par défaut : Accueil (h1 de l'en-tête « Notes … ») et Ajouter (grand titre « Ajouter »). Réglages et ses
-   sous-pages sont gérés par ios-settings.js. Un simple écouteur de défilement passif, fondu CSS de 150 ms. */
+   sous-pages sont gérés par ios-settings.js. Un simple écouteur de défilement passif, fondu CSS de 150 ms.
+   Barre du bas : IOSTitle.pill(raison, cacher) la cache dans les sous-pages (Réglages, détail d'une matière). */
 (function () {
   "use strict";
   var h1 = document.querySelector("header.top h1"), addView = document.getElementById("view-add");
@@ -27,13 +28,11 @@
     addView.insertBefore(addTitle, addView.firstChild);
   }
 
-  var ctx = null, on = false, thr = {};
+  var ctx = null, on = false;
   function titleOf(c) { return typeof c.title === "function" ? c.title() : c.title; }
   function threshold() {
     if (!ctx || !ctx.large) return 0;
-    var t = ctx.large.getBoundingClientRect().bottom + window.scrollY - bar.getBoundingClientRect().bottom;
-    if (ctx.key) thr[ctx.key] = t;
-    return t;
+    return ctx.large.getBoundingClientRect().bottom + window.scrollY - bar.getBoundingClientRect().bottom;
   }
   function update() {
     var next = !ctx ? false : !ctx.large ? true : window.scrollY >= threshold();
@@ -74,23 +73,5 @@
     document.body.classList.toggle("ios-pill-hidden", Object.keys(pillWhy).some(function (x) { return pillWhy[x]; }));
   }
 
-  window.IOSTitle = {
-    set: set, update: update, pill: pill,
-    /* Copie de la barre pour les fantômes de ios-nav.js. ov : { title, on, back } pour imposer un état (page du dessous). */
-    ghost: function (scrollY, ov) {
-      var c = bar.cloneNode(true);
-      c.classList.add("ios-bar-ghost");
-      if (ov) {
-        if (ov.title != null) c.querySelector(".ios-bar-title").textContent = ov.title;
-        c.classList.toggle("has-back", !!ov.back);
-        c.classList.toggle("is-on", !!ov.on);
-        c.classList.remove("is-empty");
-      } else {
-        c.classList.toggle("is-on", ctx && ctx.large ? scrollY >= threshold() : !!ctx);
-      }
-      return c;
-    },
-    /* Seuil mémorisé d'un grand titre (défilement à partir duquel la barre est « on »), pour la page du dessous. */
-    threshold: function (key, dflt) { return thr[key] != null ? thr[key] : dflt; }
-  };
+  window.IOSTitle = { set: set, update: update, pill: pill };
 })();

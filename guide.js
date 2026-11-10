@@ -1,9 +1,7 @@
 /* Notes — guide d'utilisation (formation en chapitres) + « À propos » dans Réglages. */
 (function () {
   "use strict";
-  var M = /[?&]noanim=1/.test(location.search) ? null : (window.Motion || null);
-  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
-  function canAnim() { return !!M && !reduce.matches; }
+  // Pas d'animation de page : seuls les repères pulsés des illustrations (CSS) montrent où toucher.
   function $(s, r) { return (r || document).querySelector(s); }
   function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
 
@@ -240,12 +238,6 @@
     }
     root.innerHTML = h;
     root.scrollTop = 0;
-    b = $(".gd-body", root);
-    if (canAnim() && b) {
-      M.animate(b, { opacity: [0, 1], x: [dir * 34, 0] }, { type: "spring", stiffness: 340, damping: 30 });
-      var kids = $$(".gd-vis > *, .gd-chr, .gd-done > *", b);
-      if (kids.length) M.animate(kids, { opacity: [0, 1], y: [12, 0], scale: [0.96, 1] }, { delay: M.stagger(0.045, { startDelay: 0.08 }), type: "spring", stiffness: 360, damping: 28 });
-    }
   }
 
   function go(v, d) { view = v; dir = d || 1; paint(); }
@@ -277,7 +269,6 @@
       }
       if (a === "nextch") { c++; s = 0; return go("step", 1); }
     });
-    if (canAnim()) M.animate(root, { opacity: [0, 1], y: [24, 0] }, { type: "spring", stiffness: 320, damping: 30 });
     if (opts.start) {
       var l = st.last && !allDone() ? st.last : { c: 0, s: 0 };
       c = Math.min(CH.length - 1, l.c); s = Math.min(CH[c].s.length - 1, l.s); view = "step";
@@ -287,11 +278,10 @@
 
   function close() {
     var el = root; if (!el) return;
-    var completed = allDone(), cb = onClose, gone = false;
+    var completed = allDone(), cb = onClose;
     root = null; onClose = null;
-    function done() { if (gone) return; gone = true; el.remove(); document.body.classList.remove("gd-open"); refreshEntry(); if (cb) cb({ completed: completed }); }
-    if (canAnim()) { M.animate(el, { opacity: [1, 0], y: [0, 24] }, { duration: 0.3, ease: [0.2, 0.8, 0.2, 1] }).then(done); setTimeout(done, 450); }
-    else done();
+    el.remove(); document.body.classList.remove("gd-open"); refreshEntry();
+    if (cb) cb({ completed: completed });
   }
 
   /* ---------- Réglages : entrée du guide + « À propos » ---------- */

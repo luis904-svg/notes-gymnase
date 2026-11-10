@@ -1,4 +1,4 @@
-/* Couche « app iPhone » : ressorts, indicateurs glissants, haptique, sauvegarde. */
+/* Couche « app iPhone » : indicateurs, haptique, sauvegarde. */
 html.fx .v-dash:not([hidden]), html.fx .v-add:not([hidden]) { animation: none; }
 body { touch-action: manipulation; -webkit-text-size-adjust: 100%; }
 button, .tabbar, .seg, .chips, summary, .card[data-subj], .bars .bar { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
@@ -25,11 +25,6 @@ html.fx .seg button[aria-pressed="true"] { background: transparent; box-shadow: 
 /* Barre du haut qui prend de l'ombre au défilement */
 header.top { transition: box-shadow 300ms ease; }
 header.top.scrolled { box-shadow: 0 8px 28px rgba(0, 0, 0, .08); }
-
-/* Confettis de réussite */
-.done-in { position: relative; }
-.confetti { position: absolute; left: 50%; top: 60px; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; pointer-events: none; }
-.confetti.sq { border-radius: 2px; }
 
 /* Interrupteurs natifs iOS */
 input[switch] { accent-color: var(--good); }

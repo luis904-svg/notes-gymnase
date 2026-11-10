@@ -35,10 +35,11 @@
   --ios-dur-press-out: 250ms;
   --ios-dur-highlight-out: 300ms;
   --ios-ease-out: cubic-bezier(0.32, 0.72, 0, 1);
-  /* Navigation (push/pop) : valeurs de la communauté, à régler à l'œil */
-  --ios-nav-parallax: 0.3;     /* l'écran qui part recule de 30 % de la largeur */
-  --ios-nav-dim-max: 0.1;      /* voile noir sur l'écran du dessous */
-  --ios-nav-edge: 20;          /* zone de bord du retour par balayage, en px */
+  /* Navigation (push/pop) : courte entrée de la page qui apparaît, sans copie ni ressort */
+  --ios-nav-shift: 28px;       /* décalage de départ de la page qui entre */
+  --ios-dur-nav: 220ms;
+  --ios-nav-edge: 24;          /* zone de bord du retour par balayage, en px */
+  --ios-dur-seg: 200ms;        /* pastille du sélecteur de période */
   --ios-r-sheet: 40px;
   /* Barre de titre : grand titre (34 pt gras) qui se réduit en titre inline (17 pt semi-gras) */
   --ios-bar-h: 44px;
@@ -66,6 +67,7 @@
   --ios-dur-pill: 350ms;
   --ios-pill-pad: 6px;
   --ios-pill-side: 16px;
+  --ios-pill-margin: 40px;
   --ios-pill-bottom: 8px;
   --ios-pill-icon: 26px;
   --ios-pad: 20px;
@@ -142,10 +144,10 @@ header.top.scrolled { border-bottom-color: var(--ios-bar-hairline); box-shadow: 
 
 /* ---------- Téléphone : barre d'onglets en pilule flottante opaque, icônes seules ----------
    Pilule gris clair aplat (pas de verre ni d'ombre), pastille plus foncée sous l'onglet actif : c'est l'indicateur
-   .ind de fx.js (il glisse d'un onglet à l'autre). Les libellés restent pour les lecteurs d'écran. */
+   .ind de fx.js (placé sans animation). Les libellés restent pour les lecteurs d'écran. */
 @media (max-width: 700px) {
   .tabbar {
-    left: max(var(--ios-pill-side), env(safe-area-inset-left, 0px)); right: max(var(--ios-pill-side), env(safe-area-inset-right, 0px));
+    left: max(var(--ios-pill-margin), env(safe-area-inset-left, 0px)); right: max(var(--ios-pill-margin), env(safe-area-inset-right, 0px));
     bottom: calc(var(--ios-pill-bottom) + env(safe-area-inset-bottom, 0px)); transform: none;
     gap: 0; justify-content: space-around; padding: var(--ios-pill-pad);
     border: var(--ios-hair) solid var(--ios-bar-hairline); border-radius: 999px;
@@ -164,9 +166,14 @@ header.top.scrolled { border-bottom-color: var(--ios-bar-hairline); box-shadow: 
   .tabbar .ind { background: var(--ios-pill-active); top: var(--ios-pill-pad); bottom: var(--ios-pill-pad); }
   body { padding-bottom: calc(var(--ios-tab-h) + 2 * var(--ios-pill-pad) + var(--ios-pill-bottom) + 24px + env(safe-area-inset-bottom, 0px)); }
   .sheet-box { border-radius: var(--ios-r-sheet) var(--ios-r-sheet) 0 0; }
-  /* La feuille est animée par ios-sheet.js (ressort, voile lié à la position) : plus d'animation CSS. */
-  .sheet:not([hidden]) .sheet-box, .sheet:not([hidden]) .sheet-bg { animation: none; }
 }
+
+/* ---------- Animations retirées (décoratives) ----------
+   Feuille de détail (grand écran) : apparaît sans rebond. Histogramme : plus de barres qui poussent ni de chiffre qui
+   gonfle après un ajout. Seul reste le surlignage de la carte de la branche modifiée (cardFlash), qui montre où la note est allée. */
+.sheet:not([hidden]) .sheet-box, .sheet:not([hidden]) .sheet-bg { animation: none; }
+#bars.anim .bar rect, #bars.anim .bar.flash .val { animation: none; }
+.seg .ind { transition: left var(--ios-dur-seg) var(--ios-ease-out), width var(--ios-dur-seg) var(--ios-ease-out); }
 
 /* ---------- Appuis : sans rebond ni échelle exagérée ----------
    Chaque règle d'appui couvre :active (bureau, Android) ET .is-pressed (iOS tactile : fx.js garde l'effet
@@ -193,15 +200,13 @@ button:active, button.is-pressed { transform: scale(var(--ios-press-scale)); tra
   *, *::before, *::after { animation-iteration-count: 1 !important; }
 }
 
-/* ---------- Navigation : fantômes de push/pop et du retour par balayage (ios-nav.js) ---------- */
-.ios-nav-ghost {
-  position: fixed; inset: 0; overflow: hidden; background: var(--bg);
-  padding: calc(env(safe-area-inset-top, 0px) + 12px) max(16px, env(safe-area-inset-right, 0px)) 0 max(16px, env(safe-area-inset-left, 0px));
-}
-.ios-nav-under { z-index: 26; }
-.ios-nav-top { z-index: 28; }
-.ios-nav-dim { position: fixed; inset: 0; z-index: 27; background: var(--ios-label); opacity: 0; pointer-events: none; }
-.ios-nav-ghost, .ios-nav-ghost * , .ios-nav-ghost *::before, .ios-nav-ghost *::after { animation: none !important; transition: none !important; }
+/* ---------- Navigation : entrée courte de la page qui apparaît (ios-nav.js) ----------
+   Push : le contenu arrive de la droite ; pop : de la gauche. Rien ne recouvre la page pendant le mouvement. */
+@keyframes iosNavPush { from { opacity: 0; transform: translate3d(var(--ios-nav-shift), 0, 0); } }
+@keyframes iosNavPop { from { opacity: 0; transform: translate3d(calc(-1 * var(--ios-nav-shift)), 0, 0); } }
+.wrap.ios-nav-push { animation: iosNavPush var(--ios-dur-nav) var(--ios-ease-out); }
+.wrap.ios-nav-pop { animation: iosNavPop var(--ios-dur-nav) var(--ios-ease-out); }
+@media (prefers-reduced-motion: reduce) { .wrap.ios-nav-push, .wrap.ios-nav-pop { animation: none; } }
 
 /* ---------- Grand titre qui se réduit (ios-title.js) ----------
    Téléphone : l'en-tête n'est plus collant ; « Notes … » devient un grand titre dans le contenu. Une barre fixe
@@ -226,7 +231,6 @@ button:active, button.is-pressed { transform: scale(var(--ios-press-scale)); tra
     opacity: 0; transition: opacity var(--ios-dur-title) ease;
   }
   .ios-bar.is-on .ios-bar-title { opacity: 1; }
-  .ios-nav-ghost .ios-bar { z-index: 1; transition: none; }
 }
 @media (prefers-reduced-motion: reduce) { .ios-bar, .ios-bar-title { transition: none; } }
 
