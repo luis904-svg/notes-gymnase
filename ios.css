@@ -59,7 +59,7 @@
   --ios-grp-gap: 24px;
   --ios-avatar: 56px;
   --ios-hair: 1px;
-  --ios-tab-h: 52px;
+  --ios-tab-h: 56px;
   /* Barre du bas : pilule flottante opaque (style Instagram), pastille active qui glisse */
   --ios-pill: var(--ios-bg);
   --ios-pill-active: #E5E5EA;
@@ -67,7 +67,7 @@
   --ios-dur-pill: 350ms;
   --ios-pill-pad: 6px;
   --ios-pill-side: 16px;
-  --ios-pill-margin: 48px;
+  --ios-pill-w: 253px;
   --ios-pill-bottom: 8px;
   --ios-pill-icon: 26px;
   --ios-pad: 20px;
@@ -147,7 +147,7 @@ header.top.scrolled { border-bottom-color: var(--ios-bar-hairline); box-shadow: 
    .ind de fx.js (placé sans animation). Les libellés restent pour les lecteurs d'écran. */
 @media (max-width: 700px) {
   .tabbar {
-    left: max(var(--ios-pill-margin), env(safe-area-inset-left, 0px)); right: max(var(--ios-pill-margin), env(safe-area-inset-right, 0px));
+    left: 0; right: 0; margin: 0 auto; width: min(var(--ios-pill-w), calc(100% - 2 * var(--ios-pill-side)));
     bottom: calc(var(--ios-pill-bottom) + env(safe-area-inset-bottom, 0px)); transform: none;
     gap: 0; justify-content: space-around; padding: var(--ios-pill-pad);
     border: var(--ios-hair) solid var(--ios-bar-hairline); border-radius: 999px;
