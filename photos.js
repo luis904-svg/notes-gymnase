@@ -203,6 +203,8 @@
 
   window.Photos = {
     count: function (note) { return counts[note] || 0; },
+    // Page de détail (ios-detail.js) : le bouton « Photos » des actions d'une note ouvre la visionneuse.
+    open: function (note) { if (!view && counts[note]) { hap("tap"); openView(note); } },
     // Formulaire remis à zéro : les pages en attente sont abandonnées.
     reset: function () { editId = null; if (counts[PENDING]) drop([PENDING]).then(drawPending); else drawPending(); },
     onEdit: function (g) { editId = g && g.id; drawPending(); },

@@ -25,6 +25,15 @@
   --ios-orange-soft: rgba(255, 141, 40, 0.14);
   --ios-red: #FF383C;
   --ios-red-soft: rgba(255, 56, 60, 0.12);
+  --ios-red-text: #D70015;     /* texte rouge sur fond clair (contraste) */
+  /* Détail d'une matière, maquette F (v46) : anneau de la moyenne */
+  --ios-ring-track: #E3E3E8;
+  --ios-ring-num: 66px;
+  --ios-nbadge: 44px;
+  /* Confettis de la validation d'une note (couleurs de la v39) */
+  --ios-purple: #AF52DE;
+  --ios-pink: #FF2D55;
+  --ios-teal: #5AC8FA;
   /* Géométrie (pt = px CSS à 402 px de large) */
   --ios-r-group: 26px;
   /* Appuis (sans dépassement) : durées à choisir, aucune valeur publiée par Apple */
@@ -87,7 +96,7 @@
   --ios-dur-enter: 320ms;
   --ios-enter-step: 40ms;
   --ios-enter-shift: 14px;
-  --ios-dur-done: 1100ms;
+  --ios-dur-done: 1500ms;     /* validation d'une note (animation d'origine v39) */
   --ios-dur-confetti: 900ms;
   --ios-done-z: 900;
   --ios-done-icon: 96px;
@@ -104,7 +113,6 @@
   --ios-ph-z: 1000;
   /* Barre du bas v44 (ios-tabbar.js) : dock toujours en bas, accessoire du verdict, bouton Rechercher, pastilles */
   --ios-dock-gap: 8px;
-  --ios-acc-h: 44px;
   --ios-find-z: 60;
   --ios-badge: 18px;
   --ios-badge-dot: 10px;
@@ -664,19 +672,6 @@ html.noanim .tabbar .ind.ios-ind-ready { transition: none; }
     font-variant-numeric: tabular-nums; pointer-events: none; }
   .ios-badge[hidden] { display: none; }
   .ios-badge.ios-badge-dot { min-width: 0; width: var(--ios-badge-dot); height: var(--ios-badge-dot); padding: 0; top: 10px; left: calc(50% + 8px); }
-  /* Accessoire : le verdict en une ligne, au-dessus de la pilule */
-  .ios-acc { display: flex; align-items: center; gap: 8px; width: 100%; max-width: calc(var(--ios-pill-w) + var(--ios-dock-gap) + var(--ios-tab-h) + 2 * var(--ios-pill-pad));
-    min-height: var(--ios-acc-h); padding: 0 14px 0 16px; border-radius: 999px; border: var(--ios-hair) solid var(--ios-bar-hairline);
-    background: var(--ios-pill); color: var(--ios-label); font-size: 15px; text-align: left; }
-  .ios-acc[hidden] { display: none; }
-  .ios-acc:active, .ios-acc.is-pressed { transform: none; background: var(--ios-pill-active); }
-  .ios-acc-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--ios-gray); }
-  .ios-acc-t-good { background: var(--ios-green); } .ios-acc-t-warn { background: var(--ios-orange); } .ios-acc-t-crit { background: var(--ios-red); }
-  .ios-acc-t { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .ios-acc-s { margin-left: auto; flex: none; color: var(--ios-label-2); font-size: 13px; }
-  .ios-acc-chev { flex: none; width: 16px; height: 16px; color: var(--ios-chev); }
-  @media (prefers-reduced-motion: no-preference) { .ios-acc:not([hidden]) { animation: iosEnter var(--ios-dur-enter) var(--ios-ease-out); } }
-  body.ios-has-acc { padding-bottom: calc(var(--ios-tab-h) + 2 * var(--ios-pill-pad) + var(--ios-pill-bottom) + var(--ios-acc-h) + var(--ios-dock-gap) + 24px + env(safe-area-inset-bottom, 0px)); }
 }
 
 /* ---------- v44 : recherche des branches (bouton Rechercher de la barre du bas) ---------- */
@@ -702,3 +697,84 @@ body.ios-find-open { overflow: hidden; }
 .ios-find-add svg { width: 22px; height: 22px; }
 .ios-find-go:active, .ios-find-go.is-pressed, .ios-find-add:active, .ios-find-add.is-pressed { transform: none; background: var(--ios-press-row); }
 .ios-find-none { text-align: center; color: var(--ios-label-2); padding: 32px 0; margin: 0; }
+
+/* ---------- v45 : confettis de la validation d'une note (ios-anim.js, animation d'origine v39) ---------- */
+.done-in { position: relative; }
+.ios-conf { position: absolute; left: 50%; top: 60px; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; pointer-events: none; }
+.ios-conf-sq { border-radius: 2px; }
+.ios-conf-green { background: var(--ios-green); } .ios-conf-blue { background: var(--ios-blue); } .ios-conf-orange { background: var(--ios-orange); }
+.ios-conf-purple { background: var(--ios-purple); } .ios-conf-pink { background: var(--ios-pink); } .ios-conf-teal { background: var(--ios-teal); }
+
+/* ---------- v46 : détail d'une matière, maquette F (ios-detail.js, design/maquettes-detail/Mix.dc.html) ----------
+   En-tête centré avec « + », anneau de la moyenne, tuiles des semestres, carte « Évolution » (courbe simple),
+   notes groupées par semestre en lignes à pastille ; actions d'une note au toucher. La barre du bas sort de l'écran. */
+@media (max-width: 700px) {
+  body.ios-detail-open .ios-dock { transform: translate3d(0, calc(100% + var(--ios-pill-bottom) + env(safe-area-inset-bottom, 0px) + 8px), 0); visibility: hidden;
+    transition: transform var(--ios-dur-pill) var(--ios-ease-out), visibility 0s var(--ios-dur-pill); }
+  body.ios-detail-open { padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+  .ios-fpage { gap: 0; }
+  .ios-fhead { text-align: center; }
+  .ios-fpage .ios-fhead .ios-large { font-size: 28px; margin: 0; }
+  .ios-fpage .ios-fhead .ios-sub { margin: 2px 0 0; }
+  .ios-fadd { display: none; position: absolute; pointer-events: auto; right: max(var(--ios-pill-side), env(safe-area-inset-right, 0px)); top: calc((var(--ios-bar-h) - var(--ios-back)) / 2);
+    width: var(--ios-back); height: var(--ios-back); padding: 0; border: 0; border-radius: 50%; background: var(--ios-blue); color: var(--ios-white); align-items: center; justify-content: center; }
+  body.ios-detail-open .ios-bar:not(.ios-bar-ghost) .ios-fadd { display: flex; }
+  .ios-fadd svg { width: 20px; height: 20px; stroke-width: 2.4; }
+  .ios-ring { position: relative; width: 220px; height: 220px; margin: 18px auto 0; }
+  .ios-ring-svg { display: block; }
+  .ios-ring-track, .ios-ring-val { fill: none; stroke-width: 18; }
+  .ios-ring-track { stroke: var(--ios-ring-track); }
+  .ios-ring-val { stroke-linecap: round; stroke: var(--ios-gray); }
+  .ios-ring-good { stroke: var(--ios-green); } .ios-ring-warn { stroke: var(--ios-orange); } .ios-ring-crit { stroke: var(--ios-red); }
+  .ios-ring-t4, .ios-ring-tg { stroke-width: 3; stroke-linecap: round; }
+  .ios-ring-t4 { stroke: var(--ios-label); } .ios-ring-tg { stroke: var(--ios-blue); }
+  .ios-ring-lbl { position: absolute; transform: translate(-50%, -50%); font-size: 12px; font-weight: 600; }
+  .ios-ring-l4 { color: var(--ios-label); } .ios-ring-lg { color: var(--ios-blue); }
+  .ios-ring-in { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+  .ios-ring-k { font-size: 13px; font-weight: 600; color: var(--ios-label-2); text-transform: uppercase; letter-spacing: 0.03em; }
+  .ios-ring-num { font-size: var(--ios-ring-num); font-weight: 800; line-height: 1; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+  .ios-ring-s { font-size: 14px; color: var(--ios-label-2); }
+  .ios-ring-st { margin: 8px 0 0; text-align: center; font-size: 15px; font-weight: 600; }
+  .ios-ftiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 22px; }
+  .ios-ftile { background: var(--ios-cell); border-radius: 22px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+  .ios-ftile-k, .ios-ftile-s { font-size: 13px; color: var(--ios-label-2); }
+  .ios-ftile-v { font-size: 30px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; }
+  .ios-ftile-v.ios-tone-none { color: var(--ios-label); }
+  .ios-fpage > .ios-need, .ios-fpage > .ios-cert { margin-top: 12px; }
+  .ios-fchart { margin-top: 12px; padding: 18px 18px 16px; }
+  .ios-fchart-h { display: flex; align-items: baseline; justify-content: space-between; }
+  .ios-fchart-h > span:first-child { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+  .ios-fchart-r { font-size: 13px; color: var(--ios-label-2); }
+  .ios-chart { display: block; width: 100%; height: auto; margin-top: 12px; overflow: visible; }
+  .ios-chart-grid { stroke: var(--ios-fill); }
+  .ios-chart-y, .ios-chart-x { font-size: 11px; fill: var(--ios-label-2); }
+  .ios-chart-line { fill: none; stroke: var(--ios-green); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+  .ios-chart-end { fill: var(--ios-green); stroke: var(--ios-cell); stroke-width: 2.5; }
+  .ios-chart-empty { margin: 14px 0 0; font-size: 15px; color: var(--ios-label-2); }
+  .ios-fchart-rows { margin-top: 12px; border-top: var(--ios-hair) solid var(--ios-sep); }
+  .ios-fchart-row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0 0; font-size: 15px; }
+  .ios-fchart-row .mono { font-variant-numeric: tabular-nums; font-weight: 600; }
+  /* Notes : une liste (celle du moteur), titres de semestre et lignes blanches arrondies par groupe. */
+  .ios-fnotes { margin-top: 8px; }
+  .ios-fnotes .notes { gap: 0; }
+  .ios-fnotes .notes > li.ios-nsem { display: block; border: 0; padding: 22px var(--ios-pad) 7px; background: var(--ios-clear); font-size: 13px; color: var(--ios-label-2); text-transform: uppercase; letter-spacing: 0.02em; }
+  .ios-fnotes .notes > li.ios-nrow, .ios-fnotes .notes > li.ios-ta-li { background: var(--ios-cell); border-top: 0; box-shadow: inset 0 var(--ios-hair) 0 var(--ios-sep); }
+  .ios-fnotes .notes > li.ios-nfirst { box-shadow: none; border-radius: var(--ios-r-group) var(--ios-r-group) 0 0; }
+  .ios-fnotes .notes > li.ios-nlast { border-radius: 0 0 var(--ios-r-group) var(--ios-r-group); }
+  .ios-fnotes .notes > li.ios-nfirst.ios-nlast { border-radius: var(--ios-r-group); }
+  .ios-fnotes .notes > li.ios-ta-li { padding: 0 14px; }
+  .ios-fnotes .notes > li.ios-nrow { display: grid; grid-template-columns: var(--ios-nbadge) minmax(0, 1fr) 14px; gap: 2px 12px; align-items: center; padding: 10px 14px 10px 12px; min-height: 64px; box-sizing: border-box; cursor: pointer; }
+  .ios-fnotes .notes > li.ios-nrow > .v { grid-column: 1; grid-row: 1 / span 2; width: var(--ios-nbadge); height: var(--ios-nbadge); border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    font-family: inherit; font-size: 17px; font-weight: 700; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+  .ios-nv-good { background: var(--ios-green-soft); color: var(--ios-green-text); }
+  .ios-nv-mid { background: var(--ios-bg); color: var(--ios-label); }
+  .ios-nv-crit, .ios-fnotes .notes .v.ios-nv-crit { background: var(--ios-red-soft); color: var(--ios-red-text); }
+  .ios-fnotes .notes > li.ios-nrow > .what { grid-column: 2; grid-row: 1; font-size: var(--ios-title-inline); color: var(--ios-label); }
+  .ios-fnotes .notes > li.ios-nrow > .meta { grid-column: 2; grid-row: 2; font-size: 13px; color: var(--ios-label-2); }
+  .ios-fnotes .notes > li.ios-nrow::after { content: ""; grid-column: 3; grid-row: 1 / span 2; width: 8px; height: 8px; border-right: 2.5px solid var(--ios-chev); border-bottom: 2.5px solid var(--ios-chev);
+    transform: rotate(-45deg); transition: transform var(--ios-dur-seg) var(--ios-ease-out); justify-self: center; }
+  .ios-fnotes .notes > li.ios-nrow.ios-open::after { transform: rotate(45deg); }
+  .ios-fnotes .notes > li.ios-nrow > .acts { display: none; grid-column: 2 / span 2; grid-row: 3; margin: 6px 0 0 -8px; }
+  .ios-fnotes .notes > li.ios-nrow.ios-open > .acts { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+  .ios-fnotes .notes > li.ios-nrow:active { background: var(--ios-press-row); }
+}

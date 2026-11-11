@@ -196,14 +196,14 @@
       { t: "Tes branches", v: "bars", p: [
         "Chaque barre et chaque carte montrent la <b>note de bulletin</b>, arrondie : <b>vert</b> dès 4.5, <b>orange</b> pour 4, <b>rouge</b> sous 4. Touche une branche pour ouvrir son détail."] },
       { t: "Le détail d'une branche", v: "detail", p: [
-        "En haut : la <b>moyenne de l'année</b> en grand, ton écart à l'objectif (ou ta position par rapport au seuil de 4) et la <b>courbe</b> de la moyenne au fil des notes.",
-        "Dessous : les semestres, puis toutes les notes de la plus récente à la plus ancienne, avec leur date et leur coefficient. Un TA se déplie pour montrer ses ETA, et une note avec photos les ouvre quand tu la touches."] },
+        "En haut : un <b>anneau</b> avec ta note de bulletin et ta moyenne exacte (repères à 4 et à ton objectif), puis les deux <b>semestres</b> et la <b>courbe</b> de ta moyenne au fil des notes. Le <b>+</b> en haut à droite ajoute une note dans cette branche.",
+        "Dessous : les notes, rangées par semestre, de la plus récente à la plus ancienne. <b>Touche une note</b> pour voir Modifier, Supprimer et ses photos. Un TA se déplie pour montrer ses ETA."] },
       { t: "Alertes et périodes", v: "watch", p: [
         "<b>À surveiller</b> liste les branches en difficulté. Les boutons <b>Année</b>, <b>Semestre 1</b> et <b>Semestre 2</b> filtrent tout le tableau de bord."] },
       { t: "La barre du bas", v: "scrub", p: [
         "Un appui court change d'onglet. Un <b>appui long</b> fait grossir la pastille : glisse-la sans lever le doigt et relâche sur l'onglet voulu.",
         "Si tu relâches le doigt bien au-dessus de la barre, rien ne change. Un <b>balayage rapide</b> sur la barre passe à l'onglet voisin, et toucher l'onglet déjà ouvert revient au début (Réglages revient à sa page principale).",
-        "La barre reste toujours en bas, même dans le détail d'une branche. La <b>loupe</b> à droite cherche une branche : touche-la pour ouvrir son détail, ou <b>+</b> pour y ajouter une note. Au-dessus, une ligne rappelle ton <b>verdict</b> (touche-la pour le voir) ; un chiffre rouge sur Accueil compte les branches sous 4 et un point rouge sur Réglages signale une synchronisation en erreur."] }
+        "La barre reste toujours en bas, sauf dans le détail d'une branche, où elle s'efface (le chevron ou un glissement depuis le bord gauche te ramène). La <b>loupe</b> à droite cherche une branche : touche-la pour ouvrir son détail, ou <b>+</b> pour y ajouter une note. Un chiffre rouge sur Accueil compte les branches sous 4 et un point rouge sur Réglages signale une synchronisation en erreur."] }
     ] },
     { t: "Règles de calcul", d: "2 min", s: [
       { t: "Moyenne et arrondi", v: "round", p: [

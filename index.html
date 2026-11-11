@@ -1236,6 +1236,8 @@ td input[type="date"] { width: auto; }
     },
     closeDetail: function () { closeDetail(); },
     detailId: function () { return ui.detail; },
+    // Page de détail (ios-detail.js, maquette F) : moyenne cumulée au fil des notes d'une branche.
+    series: function (id) { return sub(id) ? subjSeries(id, currentGrades()).filter(function (p) { return p.avg != null; }) : []; },
     showSubject: function (id) {
       if (!sub(id)) return;
       if (ui.view !== "dash") { ui.detail = null; renderDetail(); if (ui.view === "add") resetForm(); setView("dash"); }

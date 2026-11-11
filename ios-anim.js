@@ -3,8 +3,8 @@
    ce module ne fait que poser des classes au bon moment :
    - entrée en scène : à chaque changement d'onglet (événement ios:view), .wrap reçoit .ios-enter et ses panneaux et
      cartes entrent décalés ; pas au retour d'une sous-page (le retour a déjà son animation) ;
-   - réussite : après l'ajout d'une note, un écran plein (hors de .wrap) montre la coche, la note et des confettis,
-     puis revient à l'Accueil ; un toucher le passe.
+   - réussite : après l'ajout d'une note, l'animation d'origine (v39) : cercle et coche qui se dessinent au-dessus du
+     formulaire flouté, confettis, puis retour à l'Accueil ; un toucher la passe (voir plus bas).
    Rien ne joue avec ?noanim=1 (html.noanim) ni avec le réglage « Réduire les animations ». Pas de chiffres qui défilent. */
 (function () {
   "use strict";
@@ -31,34 +31,46 @@
   document.addEventListener("ios:view", enter);
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", enter); else enter();
 
-  /* ---------- Écran de réussite et confettis ---------- */
-  var COLORS = ["blue", "green", "orange", "red"], N = 36, layer = null, timer = null, after = null;
+  /* ---------- Validation d'une note : l'animation d'origine (v39), remise en v45 à la demande de l'utilisateur ----------
+     Au-dessus du formulaire (flouté, classe .glass d'index.html) : un cercle vert se dessine, puis la coche (CSS #done,
+     .done-in, keyframes draw/okIn d'index.html) ; l'icône arrive avec un ressort et 22 confettis de six couleurs
+     partent en couronne (Motion, via IOSMotion.animate). Texte « Note ajoutée : 5 en Mathématiques ». Après 1,5 s,
+     retour à l'Accueil ; un toucher passe l'animation. */
+  var CONF = ["green", "blue", "orange", "purple", "pink", "teal"], N = 22, box = null, panel = null, timer = null, after = null;
   function finish() {
-    if (!layer) return;
-    var l = layer, next = after; layer = null; after = null; clearTimeout(timer);
-    l.classList.add("ios-done-out");
-    setTimeout(function () { l.remove(); }, ms("--ios-dur-fade", 200));
+    if (!box) return;
+    var d = box, next = after; box = null; after = null; clearTimeout(timer);
+    d.hidden = true; d.innerHTML = "";
+    if (panel) { panel.classList.remove("glass"); panel = null; }
     if (next) next();
   }
   // Renvoie false si rien n'est joué (l'appelant change alors de page tout de suite).
   function done(title, value, name, next) {
-    if (!canAnim() || !document.body) return false;
-    if (layer) finish();
-    var bits = "";
-    for (var i = 0; i < N; i++) {
-      var a = Math.random() * Math.PI * 2, d = 90 + Math.random() * 170;
-      bits += '<i class="ios-confetti ios-confetti-' + COLORS[i % COLORS.length] + (i % 3 === 0 ? " ios-confetti-sq" : "") + '" style="--dx:' + Math.round(Math.cos(a) * d) + "px;--dy:" + Math.round(Math.sin(a) * d - 60) +
-        "px;--rot:" + Math.round(Math.random() * 720 - 360) + "deg;animation-delay:" + Math.round(Math.random() * 120) + 'ms"></i>';
+    var d = document.getElementById("done");
+    if (!canAnim() || !d) return false;
+    if (box) finish();
+    var add = document.getElementById("view-add");
+    panel = add && !add.hidden ? add.querySelector(".panel") : null;
+    if (panel) panel.classList.add("glass");
+    d.innerHTML = '<div class="done-in"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M7 12.5l3.2 3.2L17 9"/></svg><span>' +
+      esc(title) + " : " + esc(value) + (name ? " en " + esc(name) : "") + '</span></div>';
+    d.hidden = false; box = d; after = next || null;
+    var IM = window.IOSMotion, inner = d.querySelector(".done-in"), svg = d.querySelector("svg");
+    if (IM) {
+      IM.animate(svg, { scale: [0.4, 1], rotate: [-25, 0] }, { type: "spring", stiffness: 380, damping: 14 });
+      for (var i = 0; i < N; i++) {
+        var dot = document.createElement("i");
+        dot.className = "ios-conf ios-conf-" + CONF[i % CONF.length] + (i % 3 === 0 ? " ios-conf-sq" : "");
+        inner.appendChild(dot);
+        var a = (Math.PI * 2 * i) / N + Math.random() * 0.4, r = 90 + Math.random() * 70;
+        IM.animate(dot, { x: [0, Math.cos(a) * r], y: [0, Math.sin(a) * r + 40], scale: [0, 1.2, 0.6], rotate: [0, Math.random() * 360], opacity: [1, 1, 0] },
+          { duration: 1.1, ease: [0.15, 0.85, 0.3, 1], delay: 0.35 });
+      }
     }
-    layer = document.createElement("div"); layer.className = "ios-done"; layer.setAttribute("role", "status");
-    layer.innerHTML = '<div class="ios-done-in"><span class="ios-done-burst" aria-hidden="true">' + bits + '</span>' + (window.Icons ? Icons.svg("done", "ios-done-ic") : "") +
-      '<p class="ios-done-t">' + esc(title) + '</p><p class="ios-done-s">' + esc(value) + (name ? " en " + esc(name) : "") + '</p></div>';
-    layer.addEventListener("click", finish);
-    after = next || null;
-    document.body.appendChild(layer);
-    timer = setTimeout(finish, ms("--ios-dur-done", 1100));
+    timer = setTimeout(finish, ms("--ios-dur-done", 1500));
     return true;
   }
+  document.addEventListener("click", function (e) { if (box && box.contains(e.target)) finish(); });
 
   window.IOSAnim = { done: done, enter: enter };
 })();

@@ -2,9 +2,6 @@
    dans les sous-pages de Réglages et le détail d'une matière (elle n'est plus cachée). Seuls l'assistant, le guide, les
    écrans plein écran (photos, scanner, réussite) et le clavier ouvert la recouvrent, comme sur iOS.
    Structure : un « dock » fixe (.ios-dock, hors de .wrap, au-dessus des fantômes de ios-nav.js) qui contient :
-   - l'accessoire (.ios-acc, comme le mini-lecteur de Musique sous iOS 26) : la pastille du verdict de l'Accueil (#promo,
-     promotion en 1re-2e, certificat en 3e) et le nombre de branches sous 4 ; toucher = Accueil,
-     défilé jusqu'au verdict. Caché sur l'Accueil tant que le verdict est visible, et tant qu'il n'y a pas de notes ;
    - la pilule d'onglets existante (#tabbar, déplacée ici ; appui long glissé et balayage rapide : fx.js) ;
    - le bouton rond Rechercher (.ios-find-btn), à droite de la pilule comme l'onglet de recherche d'iOS 26 : ouvre la
      recherche des branches (.ios-find) ; toucher une branche ouvre son détail, « + » ouvre Ajouter sur cette branche.
@@ -27,14 +24,13 @@
 
   /* ---------- Dock ---------- */
   var dock = document.createElement("div"); dock.className = "ios-dock";
-  var acc = document.createElement("button"); acc.type = "button"; acc.className = "ios-acc"; acc.hidden = true;
   var row = document.createElement("div"); row.className = "ios-dock-row";
   var find = document.createElement("button"); find.type = "button"; find.className = "ios-find-btn";
   find.setAttribute("aria-label", "Rechercher une branche");
   find.innerHTML = window.Icons ? Icons.svg("search") : "";
   bar.parentNode.insertBefore(dock, bar);
   row.appendChild(bar); row.appendChild(find);
-  dock.appendChild(acc); dock.appendChild(row);
+  dock.appendChild(row);
   document.body.classList.add("ios-has-dock");
 
   /* ---------- Pastilles ---------- */
@@ -65,38 +61,9 @@
     syncBad = !!(window.Sync && Sync.enabled()) && (e.detail === "offline" || e.detail === "badcode"); paintBadges();
   });
 
-  /* ---------- Accessoire : le verdict en une ligne ---------- */
-  var promoSeen = false;
-  function paintAcc() {
-    // Le verdict affiché par l'Accueil fait foi (promotion en 1re et 2e, certificat en 3e : cert.js écrit la même pastille).
-    var pill = document.querySelector("#promo .pill"), has = app().grades().length > 0 || (app().demo && app().demo());
-    var cls = pill ? ((pill.className.match(/\bt-(good|warn|crit|none)\b/) || [])[0] || "t-none") : "t-none";
-    var v = pill ? { cls: cls, label: pill.textContent.trim() } : null;
-    var show = mq.matches && v && v.label && has && !(view() === "dash" && promoSeen && !document.body.classList.contains("ios-detail-open"));
-    if (v) {
-      var n = lows();
-      acc.innerHTML = '<span class="ios-acc-dot ios-acc-' + esc(v.cls) + '" aria-hidden="true"></span><span class="ios-acc-t">' + esc(v.label) + '</span>' +
-        '<span class="ios-acc-s">' + (n ? n + " sous 4" : "aucune sous 4") + '</span>' + (window.Icons ? Icons.svg("chevr", "ios-acc-chev") : "");
-      acc.setAttribute("aria-label", "Verdict : " + v.label + (n ? ", " + n + " branche" + (n > 1 ? "s" : "") + " sous 4" : "") + ". Voir le détail sur l'Accueil.");
-    }
-    if (acc.hidden === !!show) { acc.hidden = !show; document.body.classList.toggle("ios-has-acc", !!show); }
-  }
-  var promo = document.getElementById("promo");
-  if (promo && window.IntersectionObserver) {
-    new IntersectionObserver(function (es) { promoSeen = es[0].isIntersecting; paintAcc(); }, { threshold: 0.2 }).observe(promo);
-  }
-  acc.addEventListener("click", function () {
-    hap("select");
-    function scroll() { var p = document.getElementById("promo"); if (p) p.scrollIntoView({ behavior: "smooth", block: "center" }); }
-    if (window.IOSDetail && IOSDetail.active()) { IOSDetail.back(); setTimeout(scroll, 450); return; }
-    if (view() !== "dash") { tab("dash").click(); setTimeout(scroll, 60); return; }
-    scroll();
-  });
-
-  function paint() { paintBadges(); paintAcc(); }
+  /* La ligne du verdict au-dessus de la barre (v44) a été retirée en v45 à la demande de l'utilisateur. */
+  function paint() { paintBadges(); }
   document.addEventListener("ios:rendered", paint);
-  document.addEventListener("ios:view", function () { setTimeout(paintAcc, 0); });
-  new MutationObserver(paintAcc).observe(document.body, { attributes: true, attributeFilter: ["class"] });
 
   /* ---------- Onglet déjà actif touché ---------- */
   bar.addEventListener("click", function (e) {
