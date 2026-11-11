@@ -15,7 +15,7 @@
   bar.className = "ios-bar"; bar.setAttribute("aria-hidden", "true");
   var back = document.createElement("button");
   back.type = "button"; back.className = "ios-bar-back"; back.setAttribute("aria-label", "Retour");
-  back.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
+  back.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true">' + window.Icons.inner.chevl + '</svg>';
   var label = document.createElement("span");
   label.className = "ios-bar-title";
   bar.appendChild(back); bar.appendChild(label);

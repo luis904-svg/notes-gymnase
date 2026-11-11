@@ -423,7 +423,8 @@ td input[type="date"] { width: auto; }
         <ul>
           <li>Moyenne pondérée de toutes les notes depuis septembre : Σ(note × coef) ÷ Σ coef. L'année est cumulative, pas une moyenne de deux semestres.</li>
           <li>Arrondi au demi-point le plus proche, au demi-point supérieur en cas d'égalité : 4.74 donne 4.5, 4.75 donne 5, 4.25 donne 4.5.</li>
-          <li>TP : le canton n'impose aucune pondération, il exige seulement au moins une note de TP dans les sciences. L'app compte les TP pour 25 % par défaut ; change ce pourcentage dans Réglages si ton prof compte autrement.</li>
+          <li>TA (travail assimilé) : un groupe de petites évaluations (ETA) qui compte comme une seule note de coefficient 1. Sans points, sa note est la moyenne des ETA. En points, le total des points est converti avec le pourcentage qui donne 4 (60 % par défaut) : 0 % donne 1, ce pourcentage donne 4 et 100 % donne 6. La note d'un TA est arrondie au demi-point.</li>
+        <li>TP : le canton n'impose aucune pondération, il exige seulement au moins une note de TP dans les sciences. L'app compte les TP pour 25 % par défaut ; change ce pourcentage dans Réglages si ton prof compte autrement.</li>
           <li>OS composée (physique OS + applications des maths, biologie OS + chimie OS, philosophie + psychologie) : moyenne non arrondie des deux parties, pondérée par leurs périodes, puis arrondie une seule fois.</li>
           <li>Nombre minimum de notes par branche : périodes par semaine + 1.</li>
         </ul>
@@ -459,7 +460,7 @@ td input[type="date"] { width: auto; }
           <input id="f-coef" type="text" inputmode="decimal" autocomplete="off" value="1">
         </div>
         <div class="field"><label for="f-type">Type</label>
-          <select id="f-type"><option value="test">Test</option><option value="tp">TP</option></select>
+          <select id="f-type"><option value="test">Test</option><option value="tp">TP</option><option value="ta">TA</option></select>
         </div>
       </div>
       <div class="chips" aria-label="Coefficients fréquents">
@@ -488,9 +489,9 @@ td input[type="date"] { width: auto; }
 </div>
 
 <nav class="tabbar" id="tabbar" aria-label="Navigation">
-  <button type="button" data-tab="dash" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg><span>Accueil</span></button>
-  <button type="button" data-tab="add"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg><span>Ajouter</span></button>
-  <button type="button" data-tab="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.5"/><circle cx="8" cy="17" r="2.5"/></svg><span>Réglages</span></button>
+  <button type="button" data-tab="dash" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" /><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg><span>Accueil</span></button>
+  <button type="button" data-tab="add"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M8 12h8" /><path d="M12 8v8" /></svg><span>Ajouter</span></button>
+  <button type="button" data-tab="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4" /><line x1="10" x2="3" y1="4" y2="4" /><line x1="21" x2="12" y1="12" y2="12" /><line x1="8" x2="3" y1="12" y2="12" /><line x1="21" x2="16" y1="20" y2="20" /><line x1="12" x2="3" y1="20" y2="20" /><line x1="14" x2="14" y1="2" y2="6" /><line x1="8" x2="8" y1="10" y2="14" /><line x1="16" x2="16" y1="18" y2="22" /></svg><span>Réglages</span></button>
 </nav>
 
 <div class="done" id="done" role="status" hidden></div>
@@ -500,6 +501,7 @@ td input[type="date"] { width: auto; }
   <div class="sheet-box" role="dialog" aria-modal="true" aria-labelledby="sheet-title" id="sheet-box"></div>
 </div>
 
+<script src="icons.js"></script>
 <script src="grid.js"></script>
 <script>
 (function () {
@@ -548,6 +550,7 @@ td input[type="date"] { width: auto; }
     var s = { cfg: { s1End: S1_DEFAULT, profile: prof, subjects: Grid.build(prof) }, grades: [] };
     if (!raw || typeof raw !== "object") return s;
     if (raw.cfg && raw.cfg.s1End) s.cfg.s1End = raw.cfg.s1End;
+    if (raw.cfg && raw.cfg.notifOff) s.cfg.notifOff = true;
     if (raw.cfg && Array.isArray(raw.cfg.archive)) s.cfg.archive = raw.cfg.archive;
     if (raw.cfg && Array.isArray(raw.cfg.subjects)) {
       s.cfg.subjects = s.cfg.subjects.map(function (d) {
@@ -603,7 +606,42 @@ td input[type="date"] { width: auto; }
     if (period === "s2") return all.filter(function (g) { return g.date > e; });
     return all;
   }
-  function currentGrades() { return ui.demo ? demoGrades() : state.grades.filter(function (g) { return !!sub(g.subject); }); }
+  /* Barème en points : p = part des points obtenus (0 à 1), s = part qui donne 4. Ligne droite 1 → 4 → 6. */
+  function taScale(p, s) {
+    p = Math.min(1, Math.max(0, p)); s = Math.min(0.9, Math.max(0.1, s || 0.6));
+    return Math.min(6, Math.max(1, p <= s ? 1 + 3 * p / s : 4 + 2 * (p - s) / (1 - s)));
+  }
+  /* Note d'un TA, arrondie au demi-point (comme la VP) : moyenne des ETA, ou barème sur le total des points. */
+  function taNote(def, etas) {
+    if (!etas.length) return null;
+    if (def && def.points) {
+      var p = 0, m = 0; etas.forEach(function (e) { p += +e.pts || 0; m += +e.max || 0; });
+      if (!(m > 0)) return null;
+      return roundHalf(taScale(p / m, (+def.pct || 60) / 100));
+    }
+    var t = 0; etas.forEach(function (e) { t += e.value; });
+    return roundHalf(t / etas.length);
+  }
+  /* Les ETA d'un même TA deviennent une seule note (date = dernier ETA) ; les définitions de TA disparaissent de la liste. */
+  function collapse(list) {
+    var defs = {}, groups = {}, out = [];
+    list.forEach(function (g) { if (g.kind === "tadef") defs[g.id] = g; });
+    list.forEach(function (g) {
+      if (g.kind === "tadef") return;
+      if (g.ta) { (groups[g.ta] = groups[g.ta] || []).push(g); return; }
+      out.push(g);
+    });
+    Object.keys(groups).forEach(function (tid) {
+      var e = groups[tid].slice().sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : (a.id < b.id ? -1 : 1); });
+      var def = defs[tid] || { id: tid, subject: e[0].subject, label: "TA" }, v = taNote(def, e);
+      if (v == null) return;
+      var key = e.reduce(function (k, x) { return String(x.id) > k ? String(x.id) : k; }, String(def.id));
+      out.push({ id: "ta:" + tid, subject: def.subject, value: v, coef: 1, type: "ta", date: e[e.length - 1].date, label: def.label, sortKey: key, taBlock: { def: def, etas: e } });
+    });
+    return out;
+  }
+  function live() { return collapse(state.grades.filter(function (g) { return !!sub(g.subject); })); }
+  function currentGrades() { return ui.demo ? demoGrades() : live(); }
 
   function evalBulletins(bm) {
     var rows = state.cfg.subjects.filter(function (s) { return s.counts && !s.part; });
@@ -842,12 +880,33 @@ td input[type="date"] { width: auto; }
       '<text class="endlbl" x="' + Math.min(X(last.date), W - R - 4).toFixed(1) + '" y="' + (Y(last.avg) - 11).toFixed(1) + '" text-anchor="' + (X(last.date) > W - R - 30 ? "end" : "middle") + '">' + last.avg.toFixed(2) + '</text>' + xl + "</svg>";
   }
 
+  function phAttr(id) { return window.Photos && Photos.count(id) ? ' data-photos="' + id + '"' : ""; }
+  function phBadge(id) { var n = window.Photos ? Photos.count(id) : 0; return n ? ' · <span class="ios-ph-badge">' + n + ' photo' + (n > 1 ? "s" : "") + '</span>' : ""; }
+  function fmtN(v) { return String(Math.round(v * 100) / 100); }
+  function etaItem(e, def) {
+    var conf = ui.confirmDel === e.id, pts = !!(def && def.points), val = pts ? fmtN(+e.pts) + " / " + fmtN(+e.max) : fmtN(e.value);
+    return '<li class="ios-eta"' + phAttr(e.id) + '><span class="ios-eta-v ' + (!pts && e.value < 4 ? "crit" : "") + '">' + val + '</span><span class="ios-eta-what">' + (e.label ? esc(e.label) : "ETA") + '<span class="muted ios-eta-d">' + fmtDate(e.date) + phBadge(e.id) + '</span></span>' +
+      '<span class="acts"><button class="link" data-edit="' + e.id + '">Modifier</button><button class="link danger" data-del="' + e.id + '">' + (conf ? "Confirmer ?" : "Supprimer") + '</button></span></li>';
+  }
   function noteItem(g) {
-      var s = sub(g.subject), conf = ui.confirmDel === g.id;
-      return '<li><span class="v ' + (g.value < 4 ? "crit" : "") + '">' + g.value + '</span><span class="what">' + esc(s ? s.name : g.subject) + (g.label && g.label !== "Exemple" ? " · " + esc(g.label) : "") + '</span>' +
-        '<span class="acts">' + (ui.demo ? "" : '<button class="link" data-edit="' + g.id + '">Modifier</button><button class="link danger" data-del="' + g.id + '">' + (conf ? "Confirmer ?" : "Supprimer") + '</button>') + '</span>' +
-        '<span class="meta">' + fmtDate(g.date) + " · coef " + fmtCoef(g.coef) + (g.type === "tp" ? " · TP" : "") + '</span></li>';
+    var s = sub(g.subject);
+    if (g.taBlock) {
+      var b = g.taBlock, tid = b.def.id, n = b.etas.length, open = window.TA && TA.isOpen(tid);
+      return '<li class="ios-ta-li"><details class="ios-ta" data-ta="' + tid + '"' + (open ? " open" : "") + '><summary>' +
+        '<span class="v ' + (g.value < 4 ? "crit" : "") + '">' + fmtN(g.value) + '</span>' +
+        '<span class="what">' + esc(s ? s.name : g.subject) + ' · TA ' + esc(b.def.label || "") + '</span>' +
+        '<span class="ios-ta-chev" aria-hidden="true">›</span>' +
+        '<span class="meta">' + n + ' ETA · ' + fmtDate(g.date) + (b.def.points ? ' · en points (' + (+b.def.pct || 60) + ' % = 4)' : '') + '</span></summary>' +
+        '<ul class="ios-eta-list">' + b.etas.slice().reverse().map(function (e) { return etaItem(e, b.def); }).join("") + '</ul>' +
+        '<div class="ios-ta-acts"><button type="button" class="link" data-ta-add="' + tid + '">Ajouter un ETA</button><button type="button" class="link" data-ta-name="' + tid + '">Renommer</button>' +
+        (b.def.points ? '<button type="button" class="link" data-ta-pct="' + tid + '">Modifier le % du 4</button>' : '') +
+        '<button type="button" class="link danger" data-ta-del="' + tid + '">Supprimer le TA</button></div></details></li>';
     }
+    var conf = ui.confirmDel === g.id;
+    return '<li' + phAttr(g.id) + '><span class="v ' + (g.value < 4 ? "crit" : "") + '">' + g.value + '</span><span class="what">' + esc(s ? s.name : g.subject) + (g.label && g.label !== "Exemple" ? " · " + esc(g.label) : "") + '</span>' +
+      '<span class="acts">' + (ui.demo ? "" : '<button class="link" data-edit="' + g.id + '">Modifier</button><button class="link danger" data-del="' + g.id + '">' + (conf ? "Confirmer ?" : "Supprimer") + '</button>') + '</span>' +
+      '<span class="meta">' + fmtDate(g.date) + " · coef " + fmtCoef(g.coef) + (g.type === "tp" ? " · TP" : "") + phBadge(g.id) + '</span></li>';
+  }
 
   function renderNotes(notes) {
     var sorted = notes.slice().sort(function (a, b) { if (a.date !== b.date) return a.date < b.date ? 1 : -1; var x = String(a.sortKey || a.id), y = String(b.sortKey || b.id); return x < y ? 1 : x > y ? -1 : 0; });
@@ -955,6 +1014,7 @@ td input[type="date"] { width: auto; }
     if (window.Onboard) Onboard.refresh();
     if (window.Cert) Cert.render();
     if (window.YearPass) YearPass.refresh();
+    if (window.Notify) Notify.rendered();
   }
 
   /* ---------- Persistance ---------- */
@@ -993,9 +1053,13 @@ td input[type="date"] { width: auto; }
     ui.editing = null; $("#f-val").value = ""; $("#f-label").value = ""; $("#f-coef").value = "1"; $("#f-type").value = "test"; $("#f-date").value = todayISO();
     $("#f-submit").textContent = "Ajouter"; $("#f-cancel").hidden = true; $("#f-msg").textContent = "";
     $("#h-add").textContent = "Ajouter une note";
+    if (window.TA) TA.reset();
+    if (window.Photos) Photos.reset();
   }
   function playDone(title, g) {
     if (window.FX) FX.success();
+    var s = sub(g.subject), shown = g.pts != null && g.max ? fmtN(+g.pts) + " / " + fmtN(+g.max) : fmtN(g.value);
+    if (window.IOSAnim && IOSAnim.done(title, shown, s ? s.name : "", function () { setView("dash"); })) return;
     setView("dash");
   }
   $("#form").addEventListener("submit", function (e) {
@@ -1011,8 +1075,10 @@ td input[type="date"] { width: auto; }
     var g = { id: ui.editing || uid(), subject: $("#f-subj").value, value: Math.round(v * 100) / 100, coef: c, type: $("#f-type").value, date: d, label: $("#f-label").value.trim() };
     if (ui.editing) state.grades = state.grades.map(function (x) { return x.id === ui.editing ? g : x; });
     else state.grades.push(g);
+    if (window.Photos) Photos.commit(g.id);
     ui.flash = g.subject;
     resetForm(); persist(); render();
+    if (!wasEdit && window.Notify) Notify.added(g);
     playDone(wasEdit ? "Note modifiée" : "Note ajoutée", g);
   });
   $("#f-cancel").addEventListener("click", function () { resetForm(); setView("dash"); });
@@ -1025,7 +1091,7 @@ td input[type="date"] { width: auto; }
     var t = e.target;
     if (t.id === "demo-on") { ui.demo = true; render(); return; }
     if (t.dataset.del) {
-      if (ui.confirmDel === t.dataset.del) { state.grades = state.grades.filter(function (g) { return g.id !== t.dataset.del; }); ui.confirmDel = null; persist(); if (window.FX) FX.haptic("heavy"); }
+      if (ui.confirmDel === t.dataset.del) { if (window.Photos) Photos.drop([t.dataset.del]); var gone = state.grades.filter(function (g) { return g.id === t.dataset.del; })[0]; state.grades = state.grades.filter(function (g) { return g.id !== t.dataset.del; }); if (gone && gone.ta && !state.grades.some(function (g) { return g.ta === gone.ta; })) state.grades = state.grades.filter(function (g) { return g.id !== gone.ta; }); ui.confirmDel = null; persist(); if (window.FX) FX.haptic("heavy"); }
       else { ui.confirmDel = t.dataset.del; if (window.FX) FX.haptic("warn"); }
       render();
     }
@@ -1033,7 +1099,9 @@ td input[type="date"] { width: auto; }
       var g = state.grades.filter(function (x) { return x.id === t.dataset.edit; })[0]; if (!g) return;
       ui.editing = g.id; $("#f-subj").value = g.subject; $("#f-val").value = g.value; $("#f-date").value = g.date; $("#f-coef").value = fmtCoef(g.coef);
       $("#f-type").value = g.type || "test"; $("#f-label").value = g.label || "";
-      $("#f-submit").textContent = "Enregistrer"; $("#f-cancel").hidden = false; $("#h-add").textContent = "Modifier la note";
+      $("#f-submit").textContent = "Enregistrer"; $("#f-cancel").hidden = false; $("#h-add").textContent = g.ta ? "Modifier l'ETA" : "Modifier la note";
+      if (window.TA) TA.onEdit(g);
+      if (window.Photos) Photos.onEdit(g);
       ui.detail = null; renderDetail(); setView("add");
     }
   }
@@ -1090,11 +1158,24 @@ td input[type="date"] { width: auto; }
     profile: function () { return state.cfg.profile; },
     grades: function () { return state.grades.slice(); },
     subjectsAll: function () { return state.cfg.subjects.slice(); },
-    annualAvg: function (id) { return sub(id) ? subjAvg(id, state.grades.filter(function (g) { return !!sub(g.subject); })).avg : null; },
+    annualAvg: function (id) { return sub(id) ? subjAvg(id, live()).avg : null; },
+    // TA (ta.js)
+    records: function () { return state.grades.slice(); },
+    collapse: function (list) { return collapse(list || []); },
+    editing: function () { return ui.editing; },
+    demo: function () { return !!ui.demo; },
+    taNote: taNote, taScale: taScale,
+    goAdd: function () { ui.detail = null; renderDetail(); resetForm(); setView("add"); },
+    upsert: function (recs, title) {
+      recs.forEach(function (r) { var k = -1; state.grades.forEach(function (x, i) { if (x.id === r.id) k = i; }); if (k >= 0) state.grades[k] = r; else state.grades.push(r); });
+      var last = recs[recs.length - 1]; ui.flash = last.subject;
+      if (title) { resetForm(); persist(); render(); playDone(title, last); } else { persist(); render(); }
+    },
+    remove: function (ids) { if (window.Photos) Photos.drop(ids); state.grades = state.grades.filter(function (g) { return ids.indexOf(g.id) < 0; }); persist(); render(); },
     redraw: function () { render(); },
     archive: function () { return (state.cfg.archive || []).slice(); },
     verdict: function () {
-      var r = promotion(state.grades.filter(function (g) { return !!sub(g.subject); })), st = STATUS[r.status] || STATUS.none;
+      var r = promotion(live()), st = STATUS[r.status] || STATUS.none;
       return { status: r.status, cls: st[0], label: st[1] };
     },
     // Classe l'année dans l'archive (notes + profil + réglages), repart de zéro avec le profil suivant, dates décalées d'un an.
@@ -1103,14 +1184,14 @@ td input[type="date"] { width: auto; }
       var entry = { year: pr.year, label: (y - 1) + "\u2013" + y, profile: clone(pr), s1End: state.cfg.s1End, subjects: clone(state.cfg.subjects),
         grades: clone(state.grades), verdict: v.status === "none" ? "" : v.label, at: Date.now() };
       var np = Object.assign({}, pr, { year: nextYear, classe: bumpClasse(pr.classe, pr.year, nextYear) });
-      state = normalize({ cfg: { s1End: String(y + 1) + state.cfg.s1End.slice(4), profile: np, subjects: state.cfg.subjects, archive: (state.cfg.archive || []).concat([entry]) }, grades: [] });
+      state = normalize({ cfg: { notifOff: state.cfg.notifOff, s1End: String(y + 1) + state.cfg.s1End.slice(4), profile: np, subjects: state.cfg.subjects, archive: (state.cfg.archive || []).concat([entry]) }, grades: [] });
       ui.period = "year"; ui.chartSubj = "__all"; ui.detail = null;
       fillSelects(); renderSettings(); persist(); render();
     },
     undoPass: function () {
       var a = state.cfg.archive || []; if (!a.length) return false;
       var e = a[a.length - 1];
-      state = normalize({ cfg: { s1End: e.s1End, profile: e.profile, subjects: e.subjects, archive: a.slice(0, -1) }, grades: e.grades });
+      state = normalize({ cfg: { notifOff: state.cfg.notifOff, s1End: e.s1End, profile: e.profile, subjects: e.subjects, archive: a.slice(0, -1) }, grades: e.grades });
       ui.period = "year"; ui.chartSubj = "__all"; ui.detail = null;
       fillSelects(); renderSettings(); persist(); render();
       return true;
@@ -1119,7 +1200,7 @@ td input[type="date"] { width: auto; }
     archiveStats: function (e) {
       var keep = state.cfg.subjects; state.cfg.subjects = e.subjects;
       try {
-        var all = e.grades.filter(function (g) { return !!sub(g.subject); });
+        var all = collapse(e.grades.filter(function (g) { return !!sub(g.subject); }));
         return e.subjects.filter(function (s) { return !s.part; }).map(function (s) {
           var a = subjAvg(s.id, all);
           return { id: s.id, ids: s.parts || [s.id], name: s.name, avg: a.avg, bulletin: a.avg == null ? null : roundHalf(a.avg), n: a.n, counts: s.counts !== false };
@@ -1128,10 +1209,10 @@ td input[type="date"] { width: auto; }
     },
     storedAvg: function (id, tpShare) {
       // Notes d'une branche qui n'est plus enseignée cette année (reprises de 2e) : gardées dans les données, masquées ailleurs.
-      var mine = state.grades.filter(function (g) { return g.subject === id; });
+      var mine = collapse(state.grades).filter(function (g) { return g.subject === id; });
       if (!mine.length) {
         var arch = state.cfg.archive || [];
-        for (var i = arch.length - 1; i >= 0 && !mine.length; i--) if (arch[i].year === 2) mine = arch[i].grades.filter(function (g) { return g.subject === id; });
+        for (var i = arch.length - 1; i >= 0 && !mine.length; i--) if (arch[i].year === 2) mine = collapse(arch[i].grades).filter(function (g) { return g.subject === id; });
       }
       if (!mine.length) return null;
       var tests = mine.filter(function (g) { return g.type !== "tp"; }), tps = mine.filter(function (g) { return g.type === "tp"; });
@@ -1139,9 +1220,9 @@ td input[type="date"] { width: auto; }
       if (share > 0 && tests.length && tps.length) return (1 - share) * wavg(tests) + share * wavg(tps);
       return wavg(mine);
     },
-    setProfile: function (prof) {
+    setProfile: function (prof, forget) {
       prof = Object.assign({}, prof, { classe: bumpClasse(prof.classe, state.cfg.profile ? state.cfg.profile.year : null, prof.year) });
-      state = normalize({ cfg: { s1End: state.cfg.s1End, profile: prof, subjects: state.cfg.subjects, archive: state.cfg.archive }, grades: state.grades });
+      state = normalize({ cfg: { notifOff: state.cfg.notifOff, s1End: state.cfg.s1End, profile: prof, subjects: state.cfg.subjects.filter(function (s) { return !(forget && forget.indexOf(s.id) >= 0); }), archive: state.cfg.archive }, grades: state.grades });
       ui.chartSubj = "__all"; ui.detail = null; fillSelects(); renderSettings(); persist(); render();
     },
     // Réglages à la iOS (ios-settings.js) : mêmes règles que le tableau des branches.
@@ -1154,6 +1235,8 @@ td input[type="date"] { width: auto; }
       s.verify = false; persist(); render(); renderSettings();
     },
     closeDetail: function () { closeDetail(); },
+    detailId: function () { return ui.detail; },
+    setNotifOff: function (v) { if (v) state.cfg.notifOff = true; else delete state.cfg.notifOff; persist(); },
     setS1End: function (v) { if (v) { state.cfg.s1End = v; persist(); render(); renderSettings(); } },
     replace: function (raw) { state = normalize(raw); fillSelects(); renderSettings(); persist(); render(); }
   };
@@ -1186,7 +1269,12 @@ td input[type="date"] { width: auto; }
 <script src="ios-title.js"></script>
 <script src="ios-settings.js"></script>
 <script src="ios-detail.js"></script>
+<script src="ios-anim.js"></script>
+<script src="ta.js"></script>
+<script src="scan.js"></script>
+<script src="photos.js"></script>
 <script src="cert.js"></script>
+<script src="notify.js"></script>
 <script src="sync.js"></script>
 <script src="onboard.js"></script>
 <script src="guide.js"></script>

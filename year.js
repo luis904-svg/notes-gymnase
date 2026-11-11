@@ -69,13 +69,13 @@
 
   /* ---------- Années précédentes ---------- */
   function rowHtml(e, r) {
-    var notes = e.grades.filter(function (g) { return r.ids.indexOf(g.subject) >= 0; }).sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
+    var notes = (app().collapse ? app().collapse(e.grades) : e.grades).filter(function (g) { return r.ids.indexOf(g.subject) >= 0; }).sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
     var sub = (r.avg != null ? "moy. exacte " + r.avg.toFixed(2) + " · " : "") + r.n + " note" + (r.n > 1 ? "s" : "") + (r.counts ? "" : " · ne compte pas");
     var head = '<span class="ob-txt"><span class="ob-n">' + esc(r.name) + '</span><span class="ob-s">' + esc(sub) + '</span></span><span class="yp-b ' + (r.bulletin != null && r.bulletin < 4 ? "crit" : "") + '">' + fmtB(r.bulletin) + '</span>';
     if (!notes.length) return '<div class="yp-br yp-empty"><div class="yp-sum">' + head + '</div></div>';
     return '<details class="yp-br"><summary class="yp-sum">' + head + '</summary><ul class="yp-notes">' + notes.map(function (g) {
       var s = (g.label && g.label !== "Exemple" ? esc(g.label) : "note");
-      return '<li><span>' + fmtDate(g.date) + ' · ' + s + (g.type === "tp" ? ' · TP' : '') + (g.coef && g.coef !== 1 ? ' · coef ' + g.coef : '') + '</span><span class="mono ' + (g.value < 4 ? "crit" : "") + '">' + g.value + '</span></li>';
+      return '<li><span>' + fmtDate(g.date) + ' · ' + s + (g.type === "tp" ? ' · TP' : '') + (g.taBlock ? ' · TA (' + g.taBlock.etas.length + ' ETA)' : '') + (g.coef && g.coef !== 1 ? ' · coef ' + g.coef : '') + '</span><span class="mono ' + (g.value < 4 ? "crit" : "") + '">' + g.value + '</span></li>';
     }).join("") + '</ul></details>';
   }
   function openHistory() {

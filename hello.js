@@ -1,4 +1,5 @@
-/* Notes — animation « Hello World » après la première configuration.
+/* Notes — animation « Hello World » après la première configuration (refaite pour l'objectif 10 : fond et bleu de l'app,
+   ligne de texte sous le lettrage, sortie en fondu court comme les autres écrans). Couleurs et tailles : ios.css.
    Le lettrage s'écrit trait par trait en suivant le chemin de la plume, comme l'écran « hello » d'Apple.
    Tracés : lignes de plume extraites de la police « Macintosh Skeletal Variable » (npwitk), dérivée de
    Macintosh Skeletal d'Apple Inc. Usage personnel et non commercial : voir NOTICE-Macintosh-Skeletal.txt. */
@@ -47,10 +48,10 @@
     el.className = "hl"; el.setAttribute("role", "status"); el.setAttribute("aria-label", "Hello World");
     el.innerHTML = "<div class='hl-ink'><svg viewBox='" + VB + "' aria-hidden='true' focusable='false'><defs>" +
       "<linearGradient id='hl-g' gradientUnits='userSpaceOnUse' x1='" + X0 + "' y1='0' x2='" + X1 + "' y2='0'>" +
-      "<stop offset='0' stop-color='#5AB4FF'/><stop offset='.5' stop-color='#0A6CFF'/><stop offset='1' stop-color='#3F49D8'/></linearGradient></defs>" +
+      "<stop offset='0' class='hl-s1'/><stop offset='.55' class='hl-s2'/><stop offset='1' class='hl-s3'/></linearGradient></defs>" +
       "<g fill='none' stroke='url(#hl-g)' stroke-width='" + PEN + "' stroke-linecap='round' stroke-linejoin='round'>" +
       STROKES.map(function (s) { return "<path d='" + s[0] + "' pathLength='1' stroke-dasharray='1 1' stroke-dashoffset='1' opacity='0'/>"; }).join("") +
-      "</g></svg></div>";
+      "</g></svg></div><p class='hl-sub' aria-hidden='true'>Ton tableau de bord est prêt</p>";
     document.body.appendChild(el);
     document.body.classList.add("hl-open");
     var ink = el.firstChild, paths = el.querySelectorAll("path");
@@ -80,7 +81,7 @@
       if (leaving) return; leaving = true;
       cover();
       if (o.onReveal) o.onReveal();
-      if (animated) { M.animate(el, { opacity: [1, 0], scale: [1, 1.04] }, { duration: 0.6, ease: [0.4, 0, 0.2, 1] }).then(end, end); later(end, 1000); }
+      if (animated) { M.animate(el, { opacity: [1, 0] }, { duration: 0.35, ease: [0.32, 0.72, 0, 1] }).then(end, end); later(end, 800); }
       else { el.style.transition = "opacity .3s"; el.style.opacity = "0"; later(end, 320); }
     }
 
@@ -88,13 +89,14 @@
     el.addEventListener("click", function () { if (!leaving) { draw(1); if (window.FX) window.FX.haptic("tap"); leave(); } });
     later(leave, 10000); // sécurité : l'animation ne peut jamais rester bloquée
 
-    if (!animated) { draw(1); cover(); later(leave, 1500); return; }
+    if (!animated) { draw(1); el.classList.add("hl-written"); cover(); later(leave, 1500); return; }
     // 1) fondu d'entrée, 2) la plume écrit chaque trait à son tour, 3) pause, 4) fondu de sortie
     M.animate(el, { opacity: [0, 1] }, { duration: 0.35, ease: "easeOut" }).then(function () {
       cover();
       M.animate(ink, { scale: [0.97, 1] }, { duration: 3.4, ease: [0.25, 0.1, 0.25, 1] });
       M.animate(0, 1, { duration: 3.2, ease: [0.42, 0, 0.3, 1], onUpdate: draw }).then(function () {
         draw(1);
+        el.classList.add("hl-written");   // la ligne « Ton tableau de bord est prêt » apparaît (fondu CSS)
         if (window.FX) window.FX.haptic("success");
         later(leave, 1100);
       });

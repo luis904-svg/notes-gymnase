@@ -26,7 +26,7 @@
     var on = p[field] === value, dis = !!block;
     return '<button type="button" class="ob-row' + (on ? " on" : "") + '" data-f="' + field + '" data-v="' + esc(value) + '"' + (dis ? " disabled" : "") + ' role="radio" aria-checked="' + on + '">' +
       '<span class="ob-txt"><span class="ob-n">' + esc(name) + '</span>' + (block ? '<span class="ob-s ob-why">' + esc(block) + '</span>' : (sub ? '<span class="ob-s">' + esc(sub) + '</span>' : "")) + '</span>' +
-      (extra || "") + '<svg class="ob-chk" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"/></svg></button>';
+      (extra || "") + '<svg class="ob-chk" viewBox="0 0 24 24" aria-hidden="true">' + window.Icons.inner.check + '</svg></button>';
   }
   function list(items, field, blockFn) {
     return '<div class="ob-list" role="radiogroup">' + items.map(function (it) {
@@ -59,15 +59,16 @@
   function body(s) {
     if (s.id === "welcome") {
       return '<div class="ob-hero"><img src="icon-180.png" alt="" class="ob-icon"><h1>Bienvenue</h1>' +
-        '<p>Réponds à quelques questions sur ton cursus pour créer ton tableau de bord. Tes réponses et tes notes restent sur cet appareil.</p>' +
+        '<p>Tes notes, tes moyennes et ta promotion au gymnase, calculées pour toi. Réponds à quelques questions sur ton cursus : tout reste sur cet appareil.</p>' +
         '<p class="ob-fine">École de maturité vaudoise · règles 2026-2027</p>' +
         '<p class="ob-fine ob-disc">' + esc(window.Guide ? Guide.disclaimer : "Application non officielle. Résultats indicatifs : seul ton bulletin fait foi.") + '</p>' +
-        (window.Sync && Sync.available() ? '<button type="button" class="link ob-sync" id="ob-sync">J\'ai déjà mes notes sur un autre appareil</button>' : '') + '</div>';
+        (window.Sync && Sync.available() ? '<button type="button" class="link ob-sync" id="ob-sync">J\'ai déjà mes notes sur un autre appareil</button>' +
+          '<p class="ob-fine ob-parent">Parent d\'élève ? Touche cette ligne et entre le code de synchronisation de ton enfant.</p>' : '') + '</div>';
     }
     if (s.id === "guide") {
-      return '<div class="ob-hero"><div class="ob-gi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19v-3M9 7.5h6M9 11h6"/></svg></div>' +
-        '<h1>Un guide en 4 chapitres</h1>' +
-        '<p>Une formation d\'environ 10 minutes : ajouter tes notes, lire le tableau de bord, comprendre les règles de calcul et sauvegarder tes données.</p>' +
+      return '<div class="ob-hero"><div class="ob-gi">' + window.Icons.svg("book") + '</div>' +
+        '<h1>Un guide en 5 chapitres</h1>' +
+        '<p>Environ 15 minutes : ajouter tes notes, tes TA et les photos de tes tests, lire le tableau de bord, comprendre le calcul, régler l\'app et prévenir tes parents.</p>' +
         '<p class="ob-fine">Tu peux la suivre maintenant ou plus tard, dans Réglages → Guide d\'utilisation.</p></div>';
     }
     var h = '<h1 class="ob-title">' + esc(s.title) + '</h1>' + (s.sub ? '<p class="ob-sub">' + esc(s.sub) + '</p>' : "");
@@ -95,7 +96,7 @@
           fmtP(x.periods) + " par semaine" + (x.tpShare ? " · TP 25 %" : "") + (parts ? " · " + esc(parts) : "") + (x.counts ? "" : " · ne compte pas pour la promotion") + '</span></span></div>';
       }).join("") + '</div>';
       h += '<p class="ob-tip"><b>TP à 25 %.</b> Dans les branches avec des travaux pratiques, les TP comptent pour 25 % de la moyenne et les tests pour 75 %. Si ton prof compte autrement, tu peux changer ce pourcentage pour chaque branche dans Réglages.</p>';
-      h += '<p class="ob-fine">Objectifs et périodes restent aussi modifiables dans Réglages. Vérifie les règles avec le vade-mecum de ton gymnase.</p>';
+      h += '<p class="ob-fine">Tes choix, tes objectifs et les périodes restent modifiables dans Réglages → Profil et Réglages → Branches. Vérifie les règles avec le vade-mecum de ton gymnase.</p>';
     }
     return h;
   }
@@ -165,7 +166,7 @@
         e.target.textContent = "Récupération…";
         window.Sync.join(code).then(function (ok) {
           if (ok) { hap("success"); close(); }
-          else { e.target.textContent = "J'ai déjà mes notes sur un autre appareil"; window.alert("Aucune note trouvée pour ce code. Vérifie-le, ou continue la configuration."); }
+          else { e.target.textContent = "J'ai déjà mes notes sur un autre appareil"; window.alert("Aucune note trouvée pour ce code. Vérifie-le (16 lettres ou chiffres), ou continue la configuration."); }
         });
         return;
       }
@@ -230,9 +231,9 @@
     var b = document.getElementById("inst-btn"); if (b) b.hidden = false;
   });
 
-  var ICON_SHARE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5"/><path d="M6 11H5v9h14v-9h-1"/></svg>';
-  var ICON_ADD = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8.5v7M8.5 12h7"/></svg>';
-  var ICON_DOTS = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18" cy="12" r="1.3"/></svg>';
+  var ICON_SHARE = window.Icons.svg("share");
+  var ICON_ADD = window.Icons.svg("addhome");
+  var ICON_DOTS = window.Icons.svg("dots");
   var ICON_HOME = '<img src="icon-180.png" alt="">';
 
   function steps() {
@@ -254,7 +255,7 @@
     el.className = "ob ob-install"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Installer l'app");
     el.innerHTML =
       '<div class="ob-body"><div class="ob-hero"><img src="icon-180.png" alt="" class="ob-icon"><h1>' + (inApp ? "Ouvre l\'app dans " + (isIOS ? "Safari" : "ton navigateur") : "Installe l\'app") + '</h1>' +
-      '<p>' + (inApp ? "Cette fenêtre" + (isMoodle ? " (l\'app Moodle)" : "") + " ne permet pas d\'installer l\'app. Ouvre le lien dans " + (isIOS ? "Safari" : "ton navigateur") + " puis installe-la depuis là : tu ne feras la configuration qu\'une fois." : "Ajoute Notes à ton écran d\'accueil avant de commencer. Elle s\'ouvrira en plein écran, marchera sans connexion, et tu ne feras la configuration qu\'une fois.") + '</p></div>' +
+      '<p>' + (inApp ? "Cette fenêtre" + (isMoodle ? " (l\'app Moodle)" : "") + " ne permet pas d\'installer l\'app. Ouvre le lien dans " + (isIOS ? "Safari" : "ton navigateur") + " puis installe-la depuis là : tu ne feras la configuration qu\'une fois." : "Ajoute Notes à ton écran d\'accueil avant de commencer : elle s\'ouvre en plein écran, marche sans connexion et peut envoyer des notifications. Tu ne feras la configuration qu\'une fois.") + '</p></div>' +
       '<ol class="inst-steps">' + steps().map(function (s, i) {
         return '<li><span class="inst-ic' + (s[0] === "!" ? " warn" : "") + '">' + (s[0] === "!" ? "!" : s[0]) + '</span><span class="ob-txt"><span class="ob-n">' + (steps().length > 1 ? (i + 1) + ". " : "") + esc(s[1]) + '</span><span class="ob-s">' + esc(s[2]) + '</span></span></li>';
       }).join("") + '</ol>' +
@@ -263,7 +264,7 @@
       '<div class="ob-foot">' + (inApp ? '<button type="button" class="btn ob-next" id="inst-copy">Copier le lien</button>' : '') +
       '<button type="button" class="btn ob-next" id="inst-btn"' + (deferredPrompt && !inApp ? "" : " hidden") + '>Installer l\'app</button>' +
       '<button type="button" class="link inst-skip" id="inst-skip">Continuer dans le navigateur</button>' +
-      (isIOS && !inApp ? '<div class="inst-arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v15M6 13l6 6 6-6"/></svg></div>' : "") + '</div>';
+      (isIOS && !inApp ? '<div class="inst-arrow" aria-hidden="true">' + window.Icons.svg("down") + '</div>' : "") + '</div>';
     document.body.appendChild(el);
     document.body.classList.add("ob-open");
     var cp = el.querySelector("#inst-copy");

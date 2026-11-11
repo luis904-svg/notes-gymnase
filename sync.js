@@ -145,7 +145,7 @@
   function schedule(ms) { clearTimeout(pushTimer); pushTimer = setTimeout(cycle, ms == null ? 1500 : ms); }
 
   /* ---------- Interface (Réglages) ---------- */
-  var ui = null, lastStatus = "";
+  var ui = null, lastStatus = "", notifBox = null;
   function status(s) { lastStatus = s; paint(); }
   function ago(t) {
     if (!t) return "jamais";
@@ -166,6 +166,8 @@
       '<div class="sy-code mono" id="sy-code">' + meta.code + '</div>' +
       '<p class="small ' + (lastStatus === "offline" || lastStatus === "badcode" ? "" : "muted") + '" id="sy-status">' + txt + '</p>' +
       '<div class="btns"><button type="button" class="btn-ghost" id="sy-copy">Copier le code</button><button type="button" class="btn-ghost" id="sy-now">Synchroniser</button><button type="button" class="link danger" id="sy-off">Désactiver sur cet appareil</button></div>';
+    // Bloc « Notifications » (notify.js) : gardé d'un rendu à l'autre pour ne pas perdre ses écouteurs.
+    if (window.Notify) { notifBox = notifBox || document.createElement("div"); notifBox.id = "notif"; ui.appendChild(notifBox); Notify.mount(notifBox); }
   }
   function mount() {
     var host = document.getElementById("set-block"); if (!host || ui) return;
@@ -178,7 +180,8 @@
       if (t.id === "sy-copy") { if (navigator.clipboard) navigator.clipboard.writeText(meta.code).then(function () { t.textContent = "Copié"; }); }
       if (t.id === "sy-now") cycle();
       if (t.id === "sy-off" && window.confirm("Arrêter la synchronisation sur cet appareil ? Tes notes restent ici et en ligne ; tu pourras reprendre avec le même code.")) {
-        meta = {}; store(); cryptoKey = null; vaultId = null; paint();
+        var bye = window.Notify ? Notify.stop() : Promise.resolve();
+        bye.then(function () { meta = {}; store(); cryptoKey = null; vaultId = null; paint(); });
       }
     });
     paint();
@@ -202,6 +205,10 @@
   /* ---------- Démarrage ---------- */
   window.Sync = {
     changed: function () { if (!applying && meta.code) schedule(); },
+    // Pour notify.js : coffre et clé du code, chiffrement d'un message, et « en train d'appliquer un changement reçu ».
+    ctx: function () { return cryptoKey && vaultId ? { id: vaultId, key: cryptoKey, url: SYNC_URL } : null; },
+    seal: function (obj) { return seal(obj); },
+    applying: function () { return applying; },
     join: join, enabled: function () { return !!meta.code && !!SYNC_URL; }, available: function () { return !!SYNC_URL; }
   };
   var looping = false;

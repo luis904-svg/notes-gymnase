@@ -138,6 +138,77 @@
   var placeSeg = indicator($(".seg"), '[aria-pressed="true"]');
   window.addEventListener("resize", function () { placeTab(); placeSeg(); });
 
+  /* ---------- Barre du bas : appui long, la pastille suit le doigt ----------
+     Appui court : rien ne change (clic habituel). Appui long (250 ms sans bouger) : la pastille grossit un peu et suit le
+     doigt ; la page ne change qu'au relâchement, sur l'onglet le plus proche. Doigt remonté de 60 px au-dessus de la
+     barre au relâchement : annulation. Le zoom ne touche que la pastille (jetons --ios-scrub-scale, --ios-dur-scrub). */
+  (function () {
+    var bar = $("#tabbar"), ind = bar && $(".ind", bar);
+    if (!bar || !ind) return;
+    var HOLD = 250, SLOP = 10, CANCEL = 60;
+    var timer = null, pid = null, sx = 0, sy = 0, scrub = false, over = null, swallowUntil = 0, own = false;
+    function tabs() { return [].slice.call(bar.querySelectorAll("[data-tab]")).filter(function (b) { return b.offsetWidth; }); }
+    function nearest(x) {
+      var best = null, d = Infinity;
+      tabs().forEach(function (b) { var r = b.getBoundingClientRect(), k = Math.abs(x - (r.left + r.width / 2)); if (k < d) { d = k; best = b; } });
+      return best;
+    }
+    function follow(x) {
+      var r = bar.getBoundingClientRect(), w = ind.offsetWidth, list = tabs();
+      var min = list.length ? list[0].offsetLeft : 0, max = list.length ? list[list.length - 1].offsetLeft : r.width - w;
+      ind.style.left = Math.min(max, Math.max(min, x - r.left - w / 2)) + "px";
+      var b = nearest(x);
+      if (b !== over) { if (over) haptic("select"); over = b; }
+    }
+    function settle() {
+      bar.classList.remove("ios-scrub"); bar.classList.add("ios-scrub-settle");
+      setTimeout(function () { bar.classList.remove("ios-scrub-settle"); }, 400);
+    }
+    function stop() { clearTimeout(timer); timer = null; pid = null; scrub = false; over = null; }
+    bar.addEventListener("pointerdown", function (e) {
+      if (pid != null || (e.pointerType === "mouse" && e.button !== 0)) return;
+      pid = e.pointerId; sx = e.clientX; sy = e.clientY;
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        timer = null; if (pid == null) return;
+        scrub = true; over = null;
+        release();                                   // l'interrupteur haptique ne doit pas relayer ce geste comme un clic
+        try { bar.setPointerCapture(pid); } catch (x) {}
+        bar.classList.remove("ios-scrub-settle"); bar.classList.add("ios-scrub");
+        haptic("select"); follow(sx);
+      }, HOLD);
+    });
+    bar.addEventListener("pointermove", function (e) {
+      if (e.pointerId !== pid) return;
+      if (scrub) { follow(e.clientX); return; }
+      if (timer && Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy) > SLOP) { clearTimeout(timer); timer = null; }
+    });
+    function end(e, cancelled) {
+      if (e.pointerId !== pid) return;
+      var was = scrub, target = was && !cancelled && e.clientY >= bar.getBoundingClientRect().top - CANCEL ? nearest(e.clientX) : null;
+      stop();
+      if (!was) return;
+      swallowUntil = Date.now() + 500;               // le clic natif qui suit le relâchement est ignoré
+      settle();
+      if (target && target.getAttribute("aria-current") !== "page") { own = true; try { target.click(); } finally { own = false; } }
+      else placeTab();                               // annulation ou même onglet : la pastille revient
+    }
+    bar.addEventListener("pointerup", function (e) { end(e, false); });
+    bar.addEventListener("pointercancel", function (e) { end(e, true); });
+    bar.addEventListener("click", function (e) { if (!own && Date.now() < swallowUntil) { e.preventDefault(); e.stopPropagation(); } }, true);
+    bar.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+  })();
+
+  /* ---------- Téléphone en paysage : écran « Tourne ton téléphone » ----------
+     L'app est faite pour la verticale. L'écran est toujours dans la page (hors de .wrap) ; ios.css ne l'affiche que sur un
+     téléphone couché (paysage, peu de hauteur, écran tactile). Aucun script ne suit l'orientation. */
+  (function () {
+    var r = document.createElement("div"); r.className = "ios-rotate"; r.setAttribute("role", "alert");
+    r.innerHTML = window.Icons.svg("phone") +
+      '<p class="ios-rotate-t">Tourne ton téléphone</p><p class="ios-rotate-s">Notes s\'utilise à la verticale.</p>';
+    document.body.appendChild(r);
+  })();
+
   /* ---------- Erreur dans le formulaire : vibration seulement ---------- */
   var msg = $("#f-msg");
   if (msg && window.MutationObserver) {
@@ -185,7 +256,7 @@
     var div = document.createElement("div"); div.className = "backup"; div.id = "backup";
     div.innerHTML =
       '<h3>Sauvegarde</h3>' +
-      '<p class="muted small">Tes notes restent sur ce téléphone. Exporte-les de temps en temps (Fichiers, AirDrop) pour ne rien perdre.</p>' +
+      '<p class="muted small">Tes notes restent sur ce téléphone. Exporte-les de temps en temps (Fichiers, AirDrop) pour ne rien perdre. Les photos des tests ne sont ni dans la sauvegarde ni synchronisées : changer d\'iPhone ou supprimer l\'icône de l\'app les fait perdre.</p>' +
       '<div class="btns"><button type="button" class="btn" id="bk-export">Exporter</button>' +
       '<button type="button" class="btn-ghost" id="bk-import">Importer un fichier</button></div>' +
       '<input type="file" id="bk-file" accept="application/json,.json">' +
@@ -209,7 +280,7 @@
     var dismissed = false; try { dismissed = localStorage.getItem("notes2m01.tip") === "off"; } catch (e) {}
     if (!ios || standalone || dismissed) return;
     var tip = document.createElement("div"); tip.className = "install-tip";
-    tip.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>' +
+    tip.innerHTML = window.Icons.svg("share") +
       '<p>Installe l\'app : touche <b>Partager</b>, puis <b>Sur l\'écran d\'accueil</b>.</p><button type="button" class="link" id="tip-x">OK</button>';
     var wrap = $(".wrap"); wrap.insertBefore(tip, $("#demo"));
     $("#tip-x").addEventListener("click", function () {

@@ -30,7 +30,7 @@
     void n.offsetWidth;                       // relance l'animation même si la classe vient d'être retirée
     n.classList.add(dir === "pop" ? "ios-nav-pop" : "ios-nav-push");
     animated = n;
-    setTimeout(function () { if (animated === n) clear(); }, 600);   // si animationend n'arrive pas (app en arrière-plan)
+    setTimeout(function () { if (animated === n) clear(); }, 900);   // si animationend n'arrive pas (app en arrière-plan)
   }
   document.addEventListener("animationend", function (e) { if (e.target === animated) clear(); });
 

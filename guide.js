@@ -13,18 +13,9 @@
   var DISCLAIMER = "Application non officielle. Résultats indicatifs : seul ton bulletin fait foi.";
 
   /* ---------- Icônes ---------- */
-  var IC = {
-    share: "<svg viewBox='0 0 24 24'><path d='M12 3v12M7.5 7.5 12 3l4.5 4.5'/><path d='M6 11H5v9h14v-9h-1'/></svg>",
-    add: "<svg viewBox='0 0 24 24'><rect x='4' y='4' width='16' height='16' rx='4'/><path d='M12 8.5v7M8.5 12h7'/></svg>",
-    home: "<svg viewBox='0 0 24 24'><path d='M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z'/></svg>",
-    plus: "<svg viewBox='0 0 24 24'><circle cx='12' cy='12' r='9'/><path d='M12 8v8M8 12h8'/></svg>",
-    sliders: "<svg viewBox='0 0 24 24'><path d='M4 7h9M19 7h1M4 17h1M11 17h9'/><circle cx='16' cy='7' r='2.5'/><circle cx='8' cy='17' r='2.5'/></svg>",
-    check: "<svg viewBox='0 0 24 24'><path d='M5 12.5l4.2 4.2L19 7'/></svg>",
-    doc: "<svg viewBox='0 0 24 24'><path d='M7 3h7l4 4v14H7z'/><path d='M14 3v4h4M9.5 13h5M9.5 17h5'/></svg>",
-    refresh: "<svg viewBox='0 0 24 24'><path d='M20 12a8 8 0 1 1-2.5-5.8'/><path d='M20 4v5h-5'/></svg>",
-    wifi: "<svg viewBox='0 0 24 24'><path d='M3 9a14 14 0 0 1 18 0M6 12.5a9.5 9.5 0 0 1 12 0M9 16a5 5 0 0 1 6 0'/><circle cx='12' cy='19' r='.8'/><path d='M4 4l16 16'/></svg>",
-    wave: "<svg viewBox='0 0 24 24'><path d='M3 9v6M7 6v12M12 3v18M17 6v12M21 9v6'/></svg>"
-  };
+  function lu(n) { return window.Icons.svg(n); }   // banque d'icônes (icons.js, Lucide)
+  var IC = { share: lu("share"), add: lu("addhome"), home: lu("home"), plus: lu("add"), sliders: lu("settings"), check: lu("check"), doc: lu("doc"),
+    refresh: lu("sync"), wifi: lu("wifioff"), wave: lu("wave"), camera: lu("camera"), bell: lu("bell"), people: lu("people"), phone: lu("phone") };
   function ic(k) { return "<i class='gd-ic'>" + IC[k] + "</i>"; }
   function tabs(active) {
     return "<div class='gd-tabs'>" + [["dash", "Accueil", "home"], ["add", "Ajouter", "plus"], ["set", "Réglages", "sliders"]].map(function (t) {
@@ -106,8 +97,50 @@
         row("count", "Compte pour la promotion", "<i class='gd-sw'><u></u></i>") + "</div>";
     },
     profil: function () {
-      return "<div class='gd-set gd-pad'><b class='gd-h'>Mon cursus</b><small class='gd-mut'>2e année · L2 Allemand · L3 Anglais · OS Économie et droit · maths standard</small>" +
-        "<span class='gd-btn ghost'>Modifier mon profil</span></div>";
+      var r = function (l, v) { return "<div class='gd-r'><b>" + l + "</b><small class='gd-val'>" + v + " ›</small></div>"; };
+      return "<div class='gd-list'>" + r("Gymnase", "Bugnon") + r("Classe", "2M01") + r("Troisième langue", "Anglais") + r("Option spécifique", "Économie et droit") + r("Mathématiques", "Standard") + "</div>" +
+        "<p class='gd-cap'>Chaque ligne s'enregistre tout de suite</p>";
+    },
+    year: function () {
+      return "<div class='gd-set gd-pad'><b class='gd-h'>Année scolaire</b><small class='gd-mut'>Tes notes de l'année sont classées, rien n'est supprimé</small>" +
+        "<span class='gd-btn'>Passer en 3e année</span></div>";
+    },
+    ta: function () {
+      return "<div class='gd-notes'><div class='gd-n'><b>4.5</b><span>TA Vocabulaire · 3 ETA · en points</span></div>" +
+        "<div class='gd-n gd-sub'><b>12 / 20</b><span>Chapitre 1</span></div><div class='gd-n gd-sub'><b>20 / 20</b><span>Chapitre 2</span></div><div class='gd-n gd-sub'><b>4 / 10</b><span>Chapitre 3</span></div></div>" +
+        "<p class='gd-cap'>Un TA compte comme une seule note de coefficient 1</p>";
+    },
+    tapts: function () {
+      var it = [["0 %", "1"], ["60 %", "4"], ["80 %", "5"], ["100 %", "6"]];
+      return "<div class='gd-rd'>" + it.map(function (x) { return "<div><b>" + x[0] + "</b><i>→</i><span>" + x[1] + "</span></div>"; }).join("") + "</div>" +
+        "<p class='gd-cap'>Exemple avec 60 % des points pour avoir 4</p>";
+    },
+    photos: function () {
+      return "<div class='gd-form'><div class='gd-thumbs'><i></i><i></i><i></i></div><span class='gd-btn ghost'>" + "Ajouter une page</span></div>" +
+        "<div class='gd-tips'><div class='gd-tp'>" + ic("camera") + "<span>Les photos restent sur cet appareil</span></div></div>";
+    },
+    detail: function () {
+      return "<div class='gd-card gd-wide'><div class='gd-cb'><span class='big'>4.5</span>" +
+        "<svg viewBox='0 0 96 36' width='120' height='44'><line x1='0' x2='96' y1='20' y2='20' class='thr'/><path d='M4 28 L26 22 L50 24 L72 12 L92 9' class='ln'/><circle cx='92' cy='9' r='3' class='pt'/></svg></div>" +
+        "<small><b>Moyenne de l'année</b></small><small>exacte 4.67 · 4 notes</small><small>Objectif 5.5 : <b>−0.83</b></small></div>" +
+        "<div class='gd-notes'><div class='gd-n'><b>5</b><span>Test chap. 3 · 06.11.2026 · coef 1 · 2 photos</span></div></div>";
+    },
+    scrub: function () {
+      return tabs("add") + "<p class='gd-cap'>Appui long, glisse, relâche sur l'onglet voulu</p>";
+    },
+    notif: function () {
+      return "<div class='gd-banner'><img src='icon-180.png' alt=''><span><b>Nouvelle note · Français</b><small>Note : 4.5 · Moyenne : 4.17</small></span></div>" +
+        "<div class='gd-tips'><div class='gd-tp'>" + ic("bell") + "<span>Réglages → Synchronisation → Activer les notifications</span></div></div>";
+    },
+    parents: function () {
+      return "<div class='gd-flow'><div class='gd-tile'><img src='icon-180.png' alt=''><b>Installer Notes</b></div><span class='gd-arrow'>›</span>" +
+        "<div class='gd-tile pulse'>" + ic("people") + "<b>Entrer le code</b></div><span class='gd-arrow'>›</span>" +
+        "<div class='gd-tile'>" + ic("bell") + "<b>Activer les notifications</b></div></div>" +
+        "<p class='gd-cap'>Même app, même code que l'élève</p>";
+    },
+    mute: function () {
+      return "<div class='gd-set'><div class='gd-sf gd-hl'><span>Tout couper</span><i class='gd-sw'><u></u></i></div></div>" +
+        "<div class='gd-sy'><div class='code'><span class='gd-lock'>message chiffré avec le code</span></div></div>";
     },
     semestre: function () {
       return "<div class='gd-set gd-pad'><small class='gd-mut'>Fin du semestre 1</small><div class='gd-f gd-hl'><span>22.01.2027</span></div></div>" +
@@ -129,69 +162,93 @@
 
   /* ---------- Contenu ---------- */
   var CH = [
-    { t: "Prise en main", d: "3 min", s: [
+    { t: "Prise en main", d: "4 min", s: [
       { t: "Installe l'app", v: "install", p: [
         "Ouvre le lien dans <b>Safari</b>, touche <b>Partager</b>, puis <b>Sur l'écran d'accueil</b> et <b>Ajouter</b>.",
-        "Utilise ensuite toujours l'icône <b>Notes</b> : les notes saisies dans Safari ne se retrouvent pas dans l'app installée."] },
+        "Ouvre ensuite toujours l'app par son icône <b>Notes</b> : ce que tu saisis dans Safari ne se retrouve pas dans l'app installée."] },
       { t: "Fais la configuration", v: "config", p: [
         "Choisis ton gymnase, ton année, tes langues, ton option spécifique, ton niveau de maths et ta discipline artistique (et l'option complémentaire en 3e).",
-        "L'app crée tes branches avec leurs périodes. Un choix impossible est grisé, avec la raison."] },
+        "L'app crée tes branches avec leurs périodes. Un choix impossible est grisé, avec la raison. Tu pourras tout changer plus tard dans <b>Réglages → Profil</b>."] },
       { t: "Ajoute une note", v: "add", p: [
         "Touche <b>Ajouter</b> en bas, choisis la branche, tape la note (de 1 à 6, par exemple 4.75) et la date.",
-        "Règle le <b>coefficient</b> (boutons × 1, × 0.5, × 1/3, × 0.25, ou tape-le), le type <b>Test</b> ou <b>TP</b>, puis touche <b>Ajouter</b>."] },
+        "Règle le <b>coefficient</b> (boutons × 1, × 0.5, × 1/3, × 0.25, ou tape-le) et le type <b>Test</b>, <b>TP</b> ou <b>TA</b>, puis touche <b>Ajouter</b>. Un court écran confirme la note, puis tu reviens à l'Accueil."] },
+      { t: "Un TA et ses ETA", v: "ta", p: [
+        "Un <b>TA</b> (travail assimilé) regroupe des petites évaluations, les <b>ETA</b>. Choisis le type <b>TA</b>, puis un TA existant ou <b>+ Nouveau TA…</b>, et saisis l'ETA.",
+        "À la création, <b>Noter en points</b> te fait saisir des points obtenus et des points max au lieu d'une note. Dans la liste, le TA se déplie : tu y ajoutes un ETA, tu le renommes ou tu le supprimes."] },
+      { t: "Photographie ton test", v: "photos", p: [
+        "Dans le formulaire, <b>Photographier le test</b> ouvre le scanner : cadre la feuille entière, l'app repère ses bords et prend la page toute seule quand tu ne bouges plus, puis la redresse. Présente la page suivante, ou touche <b>Terminé</b>. Le bouton rond prend la page à la main, et <b>Choisir une photo</b> passe par ta photothèque.",
+        "Ensuite, touche la note dans le détail de la branche pour revoir les pages en plein écran, en ajouter ou en supprimer.",
+        "<span class='note'>Les photos restent sur cet appareil : elles ne sont ni synchronisées ni dans la sauvegarde. Changer d'iPhone ou supprimer l'icône de l'app les fait perdre. La note, elle, est toujours tapée à la main.</span>"] },
       { t: "Corrige ou supprime", v: "edit", p: [
-        "Dans <b>Dernières notes</b> ou dans le détail d'une branche : <b>Modifier</b> rouvre la note, <b>Supprimer</b> demande une seconde touche (« Confirmer ? »)."] }
+        "Dans <b>Dernières notes</b> ou dans le détail d'une branche : <b>Modifier</b> rouvre la note, <b>Supprimer</b> demande une seconde touche (« Confirmer ? »). Supprimer une note supprime aussi ses photos."] }
     ] },
-    { t: "Lire le tableau de bord", d: "2 min", s: [
+    { t: "Lire le tableau de bord", d: "3 min", s: [
       { t: "Le verdict de promotion", v: "promo", p: [
         "Le verdict (<b>Promotion assurée</b>, <b>Marge faible</b>, <b>Cas limite</b> ou <b>En danger</b>) vérifie trois règles : total des notes, groupe français + L2/L3 + maths + OS d'au moins 16, et 4 notes sous 4 au maximum. Tant qu'une branche n'a aucune note, il reste sur <b>Verdict incomplet</b>.",
         "<span class='note'>En 3e année, ce verdict est remplacé par celui du certificat de maturité (étape suivante).</span>"] },
       { t: "En 3e : le certificat de maturité", v: "promo", p: [
-        "En 3e, le tableau de bord est le même qu'en 2e. L'en-tête montre une pastille (<b>Bonne voie</b>, <b>Serré</b> ou <b>Compliqué</b>, puis <b>Maturité réussie</b> ou <b>non réussie</b> quand tous les examens sont saisis) et trois jauges : le <b>total des 14 notes avec double compensation</b> (seuil 56), le <b>total des examens</b> (seuil 38.5) et les <b>notes sous 4</b> (4 au maximum).",
-        "Les examens se saisissent dans le <b>détail de chaque branche</b> : touche la carte de français, L2, L3, maths, option spécifique ou option complémentaire, entre l'écrit et l'oral, et lis la <b>note minimale</b> à viser pour avoir 4 dans la branche.",
-        "Chimie, physique et la discipline artistique ont leur carte avec la <b>note de 2e reprise</b>. Pour la corriger, va dans <b>Réglages → Notes reprises de 2e</b>."] },
+        "En 3e, l'en-tête montre une pastille (<b>Bonne voie</b>, <b>Serré</b> ou <b>Compliqué</b>, puis <b>Maturité réussie</b> ou <b>non réussie</b> quand tous les examens sont saisis) et trois jauges : le <b>total des 14 notes avec double compensation</b> (seuil 56), le <b>total des examens</b> (seuil 38.5) et les <b>notes sous 4</b> (4 au maximum).",
+        "Les examens se saisissent dans le <b>détail de chaque branche</b> : entre l'écrit et l'oral, et lis la <b>note minimale</b> à viser pour avoir 4 dans la branche.",
+        "Chimie, physique et la discipline artistique gardent leur <b>note de 2e</b>. Pour la corriger, va dans <b>Réglages → Notes reprises de 2e</b>."] },
       { t: "Tes branches", v: "bars", p: [
-        "Chaque barre et chaque carte montrent la <b>note de bulletin</b>, arrondie : <b>vert</b> dès 4.5, <b>orange</b> pour 4, <b>rouge</b> sous 4.",
-        "Touche une branche pour son détail : année et semestres, courbe, toutes les notes et, sous 4, la note à viser au prochain test."] },
+        "Chaque barre et chaque carte montrent la <b>note de bulletin</b>, arrondie : <b>vert</b> dès 4.5, <b>orange</b> pour 4, <b>rouge</b> sous 4. Touche une branche pour ouvrir son détail."] },
+      { t: "Le détail d'une branche", v: "detail", p: [
+        "En haut : la <b>moyenne de l'année</b> en grand, ton écart à l'objectif (ou ta position par rapport au seuil de 4) et la <b>courbe</b> de la moyenne au fil des notes.",
+        "Dessous : les semestres, puis toutes les notes de la plus récente à la plus ancienne, avec leur date et leur coefficient. Un TA se déplie pour montrer ses ETA, et une note avec photos les ouvre quand tu la touches."] },
       { t: "Alertes et périodes", v: "watch", p: [
-        "<b>À surveiller</b> liste les branches en difficulté. Les boutons <b>Année</b>, <b>Semestre 1</b> et <b>Semestre 2</b> filtrent tout le tableau de bord."] }
+        "<b>À surveiller</b> liste les branches en difficulté. Les boutons <b>Année</b>, <b>Semestre 1</b> et <b>Semestre 2</b> filtrent tout le tableau de bord."] },
+      { t: "La barre du bas", v: "scrub", p: [
+        "Un appui court change d'onglet. Un <b>appui long</b> fait grossir la pastille : glisse-la sans lever le doigt et relâche sur l'onglet voulu.",
+        "Si tu relâches le doigt bien au-dessus de la barre, rien ne change."] }
     ] },
-    { t: "Règles de calcul", d: "1 min", s: [
+    { t: "Règles de calcul", d: "2 min", s: [
       { t: "Moyenne et arrondi", v: "round", p: [
         "La moyenne est <b>cumulée depuis septembre</b>. La note de bulletin est arrondie au <b>demi-point</b>, vers le haut dès x,25 et x,75."] },
       { t: "TP et options à deux parties", v: "tp", p: [
         "Les <b>TP</b> comptent pour 25 % par défaut. Une option à deux parties (par exemple physique et applications des maths) mélange ses parties selon leurs périodes, puis arrondit une seule fois.",
-        "<span class='note'>Le détail est dans « Comment les moyennes sont calculées », en bas du tableau de bord.</span>"] }
+        "<span class='note'>Le détail est dans Réglages → Comment les moyennes sont calculées.</span>"] },
+      { t: "La note d'un TA", v: "tapts", p: [
+        "Un TA compte comme <b>une seule note de coefficient 1</b>, quel que soit le nombre d'ETA. Sans points, sa note est la moyenne des ETA, arrondie au demi-point.",
+        "En points, l'app additionne tous les points et applique le <b>% du 4</b> du TA (60 % par défaut, de 10 à 90) : 0 % donne 1, ce pourcentage donne 4, 100 % donne 6, en ligne droite entre ces repères."] }
     ] },
-    { t: "Les réglages, option par option", d: "4 min", s: [
-      { t: "Mon cursus", v: "profil", p: [
-        "<b>Réglages → Mon cursus → Modifier mon profil</b> rouvre la configuration déjà remplie : change d'année, de langue ou d'option à tout moment.",
-        "Tes notes sont gardées. Celles d'une branche qui n'existe plus sont seulement masquées."] },
-      { t: "Passer à l'année suivante", v: "profil", p: [
-        "Quand ton année est terminée, ne change pas ton année à la main : touche <b>Réglages → Année scolaire → Passer en 2e (ou 3e) année</b>.",
-        "Tes notes de l'année sont <b>classées dans « Années précédentes »</b> (rien n'est supprimé), les moyennes repartent de zéro, tes choix (langues, option, maths) sont conservés et les dates de semestre avancent d'un an. En passant en 3e, tu choisis ton option complémentaire, et les notes de 2e de chimie, physique et arts sont reprises pour le certificat.",
-        "<b>Années précédentes</b> te laisse relire les notes et les moyennes de chaque année. <b>Annuler le dernier passage</b> remet tout comme avant."] },
+    { t: "Les réglages", d: "4 min", s: [
+      { t: "Ton profil", v: "profil", p: [
+        "<b>Réglages → Profil</b> : chaque ligne (gymnase, classe, langues, option spécifique, maths, discipline artistique, et option complémentaire en 3e) ouvre une liste et <b>s'enregistre tout de suite</b>.",
+        "Changer de langue, d'option ou de discipline artistique <b>supprime les notes de l'ancienne branche</b> : l'app te le demande d'abord et te propose d'exporter une sauvegarde. Changer de niveau de maths garde tes notes."] },
+      { t: "Passer à l'année suivante", v: "year", p: [
+        "L'année ne se change pas dans le profil : touche <b>Réglages → Année scolaire → Passer en 2e (ou 3e) année</b>.",
+        "Tes notes de l'année sont <b>classées dans « Années précédentes »</b> (rien n'est supprimé), les moyennes repartent de zéro et les dates de semestre avancent d'un an. En passant en 3e, tu choisis ton option complémentaire, et les notes de 2e de chimie, physique et arts sont reprises pour le certificat.",
+        "<b>Annuler le dernier passage</b> remet tout comme avant."] },
       { t: "Objectif", v: "settings:goal", p: [
-        "Dans <b>Réglages</b>, touche une branche, puis règle son <b>Objectif</b> : la moyenne que tu vises.",
-        "Le tableau de bord affiche alors ton écart, une barre grise en pointillés dans l'histogramme, et une alerte si tu es nettement en dessous."] },
-      { t: "Part des TP", v: "settings:tp", p: [
-        "<b>Part des TP (%)</b> : la part des travaux pratiques dans la moyenne de la branche. 25 par défaut ; mets la valeur de ton prof, ou 0 pour que les TP comptent comme des notes ordinaires."] },
-      { t: "Périodes", v: "settings:per", p: [
-        "<b>Périodes</b> : le nombre de périodes par semaine. Il fixe le minimum de notes conseillé (périodes + 1) et le poids de chaque partie dans une option à deux parties.",
-        "Corrige-le seulement si ton horaire est différent de la grille officielle."] },
+        "Dans <b>Réglages → Branches</b>, touche une branche, puis règle son <b>Objectif</b> : la moyenne que tu vises.",
+        "Le tableau de bord et le détail de la branche affichent alors ton écart, et une alerte apparaît si tu es nettement en dessous."] },
+      { t: "Part des TP et périodes", v: "settings:tp", p: [
+        "<b>Part des TP (%)</b> : 25 par défaut ; mets la valeur de ton prof, ou 0 pour que les TP comptent comme des notes ordinaires.",
+        "<b>Périodes</b> : le nombre de périodes par semaine. Il fixe le minimum de notes conseillé (périodes + 1) et le poids de chaque partie dans une option à deux parties. Corrige-le seulement si ton horaire diffère de la grille officielle."] },
       { t: "Compte pour la promotion", v: "settings:count", p: [
         "Cet interrupteur ajoute ou retire la branche du verdict de promotion. Utile si ton gymnase ne compte pas une branche, par exemple l'informatique en 2e."] },
       { t: "Fin du semestre 1", v: "semestre", p: [
         "Indique la date de fin du semestre 1 de ton gymnase. Elle sépare les notes des boutons <b>Semestre 1</b> et <b>Semestre 2</b>."] },
       { t: "Sauvegarde", v: "backup", p: [
-        "<b>Exporter</b> crée un fichier de toutes tes notes et réglages (Fichiers, AirDrop). <b>Importer un fichier</b> remplace ce qu'il y a sur l'appareil.",
-        "<b>Supprimer l'icône efface les notes</b> : exporte régulièrement."] },
+        "<b>Exporter</b> crée un fichier de toutes tes notes, TA et réglages (Fichiers, AirDrop). <b>Importer un fichier</b> remplace ce qu'il y a sur l'appareil.",
+        "<b>Supprimer l'icône efface les notes</b> : exporte régulièrement. Les photos des tests ne sont pas dans la sauvegarde."] },
       { t: "Synchronisation", v: "sync", p: [
         "<b>Activer la synchronisation</b> donne un code de 16 caractères. Sur ton autre appareil, touche <b>J'ai déjà un code</b> et tape-le.",
-        "Les notes sont chiffrées avec ce code : garde-le secret, il ne peut pas être récupéré."] },
+        "Les notes sont chiffrées avec ce code : garde-le précieusement, il ne peut pas être récupéré. Toute personne qui a le code voit et peut modifier les notes."] },
       { t: "Vibrations et dépannage", v: "tips", p: [
         "<b>Retours haptiques</b> active ou coupe les vibrations. Si l'app ne semble pas à jour, ferme-la complètement et rouvre-la deux fois.",
-        "« Hors connexion » : tes notes restent sur le téléphone et se synchroniseront plus tard."] }
+        "« Hors connexion » : tes notes restent sur le téléphone et se synchroniseront plus tard. Téléphone couché : l'app demande de le remettre à la verticale."] }
+    ] },
+    { t: "Avec tes parents", d: "2 min", s: [
+      { t: "Les notifications", v: "notif", p: [
+        "Les appareils reliés au même code peuvent recevoir une <b>notification</b> quand une note (ou un ETA) est ajoutée, et à chaque changement de verdict. Elle indique la branche, la note et la moyenne.",
+        "Sur chaque appareil qui veut les recevoir : <b>Réglages → Synchronisation → Activer les notifications</b>. Sur iPhone, l'app doit être sur l'écran d'accueil (iOS 16.4 ou plus). L'appareil qui ajoute la note ne reçoit rien."] },
+      { t: "Installer l'app chez un parent", v: "parents", p: [
+        "Ton parent ouvre le même lien et installe l'app sur son téléphone. À l'écran de bienvenue, il touche <b>J'ai déjà mes notes sur un autre appareil</b> et tape <b>ton code de synchronisation</b>.",
+        "Il active ensuite les notifications dans Réglages → Synchronisation. Il voit les mêmes notes que toi et peut aussi en ajouter : dans ce cas, c'est toi qui es prévenu."] },
+      { t: "Tout couper et confidentialité", v: "mute", p: [
+        "<b>Tout couper</b> (Réglages → Synchronisation) arrête les notifications pour <b>tous</b> les appareils du code, jusqu'à ce que quelqu'un le réactive. <b>Désactiver sur cet appareil</b> ne concerne que le téléphone en main.",
+        "Le message est chiffré avec le code : le serveur ne peut pas le lire. Si un téléphone n'arrive pas à le déchiffrer, la notification dit seulement « Nouvelle note »."] }
     ] }
   ];
 
@@ -207,7 +264,7 @@
     if (view === "list") {
       var n = doneCount(), resume = st.last && !allDone();
       h = "<div class='gd-top'><span></span><button type='button' class='link' data-gd='close'>Fermer</button></div>" +
-        "<div class='gd-body'><h1 class='ob-title'>Guide d'utilisation</h1><p class='ob-sub'>" + CH.length + " chapitres, environ 10 minutes.</p>" +
+        "<div class='gd-body'><h1 class='ob-title'>Guide d'utilisation</h1><p class='ob-sub'>" + CH.length + " chapitres, environ 15 minutes. Tu peux t'arrêter et reprendre quand tu veux.</p>" +
         "<div class='gd-prog'><i style='width:" + Math.round(n / CH.length * 100) + "%'></i></div><p class='gd-count'>" + n + " sur " + CH.length + " chapitres terminés</p>" +
         "<div class='gd-chs'>" + CH.map(function (ch, i) {
           var d = st.done.indexOf(i) >= 0;
@@ -229,7 +286,7 @@
     } else {
       var lastCh = c === CH.length - 1;
       h = "<div class='gd-top'><span></span><button type='button' class='link' data-gd='close'>Fermer</button></div>" +
-        "<div class='gd-body'><div class='gd-done'><svg viewBox='0 0 24 24' aria-hidden='true'><circle cx='12' cy='12' r='10'/><path d='M7 12.5l3.2 3.2L17 9'/></svg>" +
+        "<div class='gd-body'><div class='gd-done'>" + lu("done") + "" +
         "<h1 class='gd-title'>" + (allDone() ? "Formation terminée" : "Chapitre terminé") + "</h1>" +
         "<p class='ob-sub'>" + (allDone() ? "Tu connais maintenant toutes les fonctions de l'app. Tu peux rouvrir ce guide quand tu veux dans Réglages." : "« " + CH[c].t + " » est fait. " + (lastCh ? "" : "Suite : « " + CH[c + 1].t + " ».")) + "</p></div></div>" +
         "<div class='gd-foot'>" + (allDone() ? "<button type='button' class='btn' data-gd='close'>Terminer</button>" :
@@ -288,7 +345,7 @@
   function refreshEntry() {
     var el = document.getElementById("gd-sum"), b = document.getElementById("gd-open"); if (!el || !b) return;
     var n = doneCount();
-    el.textContent = "Une formation en " + CH.length + " chapitres : notes, tableau de bord, règles de calcul, sauvegarde. " + (n ? n + " sur " + CH.length + " terminés." : "");
+    el.textContent = "Une formation en " + CH.length + " chapitres : notes, TA et photos, tableau de bord, règles de calcul, réglages, notifications aux parents. " + (n ? n + " sur " + CH.length + " terminés." : "");
     b.textContent = n === CH.length ? "Revoir le guide" : n || st.last ? "Continuer le guide" : "Ouvrir le guide";
   }
   function mountSettings() {
@@ -303,8 +360,10 @@
       var d = document.createElement("div"); d.className = "backup about"; d.id = "about";
       d.innerHTML = "<h3>À propos</h3>" +
         "<p class='muted small'><b>" + DISCLAIMER.split(". ")[0] + ".</b> " + DISCLAIMER.split(". ")[1] + "</p>" +
-        "<p class='muted small'><b>Tes données.</b> Tes notes et ton profil restent sur ton téléphone : l'app n'a pas de compte et ne collecte aucune donnée personnelle. Si tu supprimes l'icône, ils sont effacés, pense donc à exporter une sauvegarde.</p>" +
-        "<p class='muted small'>La synchronisation est facultative : elle envoie une copie chiffrée avec ton code, que personne d'autre ne peut lire. Cette copie est stockée chez Cloudflare. Le site est hébergé par GitHub, qui peut enregistrer des données techniques de connexion comme tout site web.</p>" +
+        "<p class='muted small'><b>Tes données.</b> Tes notes, tes TA et ton profil restent sur ton téléphone : l'app n'a pas de compte et ne collecte aucune donnée personnelle. Si tu supprimes l'icône, ils sont effacés, pense donc à exporter une sauvegarde.</p>" +
+        "<p class='muted small'><b>Photos des tests.</b> Elles restent sur l'appareil qui les a prises : elles ne sont ni synchronisées ni dans la sauvegarde.</p>" +
+        "<p class='muted small'><b>Synchronisation et notifications.</b> Elles sont facultatives. La synchronisation envoie une copie chiffrée avec ton code, que personne d'autre ne peut lire ; les notifications passent par le même serveur, chiffrées avec le même code, puis par le service de notifications d'Apple ou de Google. La copie est stockée chez Cloudflare. Le site est hébergé par GitHub, qui peut enregistrer des données techniques de connexion comme tout site web.</p>" +
+        "<p class='muted small'><b>Icônes et scanner.</b> Icônes Lucide (licence ISC). Détection de la feuille par Scanic (licence MIT), exécutée sur ton téléphone.</p>" +
         "<p class='gd-copy'>©louis mutter</p>";
       host.appendChild(d);
     }

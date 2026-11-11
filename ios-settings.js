@@ -27,38 +27,9 @@
   function fmtNum(x) { return x == null || x === "" ? "–" : String(Math.round(x * 100) / 100); }
 
   /* ---------- Éléments de liste ---------- */
-  var SVG = {
-    person: '<circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/>',
-    list: '<path d="M8.5 7h10.5M8.5 12h10.5M8.5 17h10.5M4.5 7h.01M4.5 12h.01M4.5 17h.01"/>',
-    calendar: '<rect x="4" y="5.5" width="16" height="14" rx="3"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/>',
-    sync: '<path d="M20 12a8 8 0 1 1-2.5-5.8"/><path d="M20 4v5h-5"/>',
-    save: '<path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19h14"/>',
-    up: '<path d="M12 19V6M7 10.5L12 6l5 4.5"/>',
-    archive: '<rect x="4" y="5" width="16" height="4.5" rx="1.5"/><path d="M5.5 9.5V18a1.5 1.5 0 0 0 1.5 1.5h10a1.5 1.5 0 0 0 1.5-1.5V9.5M10 13h4"/>',
-    book: '<path d="M5 5.5A1.5 1.5 0 0 1 6.5 4H19v14H6.5A1.5 1.5 0 0 0 5 19.5z"/><path d="M5 19.5A1.5 1.5 0 0 0 6.5 21H19"/>',
-    calc: '<rect x="5" y="3.5" width="14" height="17" rx="3"/><path d="M8.5 8h7M8.5 12.5h.01M12 12.5h.01M15.5 12.5h.01M8.5 16.5h.01M12 16.5h.01M15.5 16.5h.01"/>',
-    info: '<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8h.01"/>',
-    building: '<path d="M5 20V8l7-4 7 4v12"/><path d="M3.5 20h17M9.5 20v-5h5v5M9 11h.01M15 11h.01"/>',
-    people: '<circle cx="9" cy="9" r="3"/><path d="M3.5 19c0-3 2.4-5 5.5-5s5.5 2 5.5 5M16 6.5a3 3 0 0 1 0 5.8M17.5 14.3c2 .5 3.5 2.2 3.5 4.7"/>',
-    bubble: '<path d="M5 6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-6l-4 3.5V16H7a2 2 0 0 1-2-2z"/>',
-    star: '<path d="M12 4l2.4 5 5.4.6-4 3.7 1.1 5.4L12 16l-4.9 2.7 1.1-5.4-4-3.7 5.4-.6z"/>',
-    plusminus: '<path d="M12 4v8M8 8h8M8 17h8"/>',
-    palette: '<path d="M12 4a8 8 0 1 0 0 16c1.6 0 2-1.2 1.3-2.2-.7-1 0-2.3 1.4-2.3H17a3 3 0 0 0 3-3c0-4.4-3.6-8.5-8-8.5z"/><path d="M8 11h.01M11 8h.01M15 9h.01"/>',
-    flask: '<path d="M9.5 4h5M10.5 4v5.5L5.5 18a1.8 1.8 0 0 0 1.6 2.7h9.8a1.8 1.8 0 0 0 1.6-2.7l-5-8.5V4M8 15h8"/>',
-    globe: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.4 3.6 5.2 3.6 8.5s-1.1 6.1-3.6 8.5c-2.5-2.4-3.6-5.2-3.6-8.5S9.5 5.9 12 3.5z"/>',
-    terminal: '<path d="M5 8l4 4-4 4M11.5 16.5H19"/>',
-    clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
-    target: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12h.01"/>',
-    check: '<path d="M5 12.5l4.2 4.2L19 7"/>',
-    pencil: '<path d="M5 19l1-4L16.5 4.5a2 2 0 0 1 2.9 2.9L9 18z"/>',
-    doc: '<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M9.5 13h5M9.5 17h5"/>',
-    percent: '<path d="M18 6L6 18"/><circle cx="7.5" cy="7.5" r="2"/><circle cx="16.5" cy="16.5" r="2"/>',
-    times: '<path d="M7 7l10 10M17 7L7 17"/>',
-    tag: '<path d="M4 12V5a1 1 0 0 1 1-1h7l8 8-8 8z"/><path d="M8.5 8.5h.01"/>',
-    chart: '<path d="M4 19V5M4 19h16M8 15l3.5-4 3 2.5L20 7"/>'
-  };
-  var CHEV_L = '<svg class="ios-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
-  var CHEV = '<svg class="ios-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
+  var SVG = window.Icons.inner;   // banque d'icônes (icons.js, Lucide)
+  var CHEV_L = '<svg class="ios-chev" viewBox="0 0 24 24" aria-hidden="true">' + SVG.chevl + '</svg>';
+  var CHEV = '<svg class="ios-chev" viewBox="0 0 24 24" aria-hidden="true">' + SVG.chevr + '</svg>';
   function icon(color, svg) { return '<i class="ios-ic ios-ic-' + color + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + SVG[svg] + '</svg></i>'; }
   /* act : "go:page[:arg]" (pousse une sous-page), "click:id" (déclenche un bouton d'origine), "step:id" (assistant de profil). */
   function row(o) {
@@ -89,6 +60,51 @@
     return DOM[k || "other"];
   }
 
+  /* ---------- Profil modifiable en direct ----------
+     Chaque champ : titre, liste des choix, et `drop` = la branche liée au choix (ses notes sont supprimées si le choix change :
+     l'identifiant de branche « l2 », « os »… reste le même d'un choix à l'autre, les notes ne doivent pas changer de matière). */
+  var pending = null;
+  var FIELDS = {
+    gymnase: { title: "Gymnase", list: function () { return Grid.GYMNASES; } },
+    l2: { title: "Deuxième langue (L2)", list: function () { return Grid.L2; }, drop: "l2" },
+    l3: { title: "Troisième langue (L3)", list: function () { return Grid.L3; }, drop: "l3" },
+    os: { title: "Option spécifique", list: function () { return Grid.OS; }, drop: "os", foot: "L'option physique et applications des maths impose les maths renforcées : le niveau est ajusté automatiquement." },
+    math: { title: "Mathématiques", list: function () { return Grid.MATH; }, foot: "Changer de niveau garde tes notes de mathématiques." },
+    art: { title: "Discipline artistique", list: function () { return Grid.ART; }, drop: "art" },
+    oc: { title: "Option complémentaire", list: function () { return Grid.OC; }, drop: "oc" }
+  };
+  // Profil obtenu en choisissant `id` pour le champ `f` (l'OS PAM impose les maths renforcées).
+  function withChoice(f, id) {
+    var np = Object.assign({}, app().profile()); np[f] = id;
+    if (f === "os" && id === "PAM") np.math = "renf";
+    return np;
+  }
+  // Raison pour laquelle un choix est impossible avec le reste du profil, ou null.
+  function blocked(f, id) {
+    var G = window.Grid, np = withChoice(f, id), why;
+    if (f === "gymnase") return np.os === "GR" && id === "burier" ? "Le grec en option spécifique n'y est pas ouvert" : null;
+    if ((why = G.mathBlock(np.math, np))) return f === "math" ? why : "Incompatible avec ton niveau de maths";
+    if ((why = G.osBlock(np.os, np))) return f === "os" ? why : "Tu as déjà cette langue en option spécifique";
+    if (np.year === 3 && np.oc && (why = G.ocBlock(np.oc, np))) return f === "oc" ? why : "Incompatible avec ton option complémentaire";
+    return null;
+  }
+  // Notes (TA regroupés) de la branche liée au champ, avec ses composantes (OS composée).
+  function branchOf(f) {
+    var id = FIELDS[f].drop; if (!id) return null;
+    var all = app().subjectsAll(), s = all.filter(function (x) { return x.id === id && !x.carried; })[0]; if (!s) return null;
+    var ids = [id].concat(s.parts || []);
+    var recs = app().records().filter(function (r) { return ids.indexOf(r.subject) >= 0; });
+    return { name: s.name, n: app().collapse(recs).length, ids: recs.map(function (r) { return r.id; }), subs: ids };
+  }
+  function pick(f, id) {
+    var pr = app().profile(); if (!pr || !FIELDS[f] || pr[f] === id || blocked(f, id)) return;
+    var np = withChoice(f, id), b = branchOf(f);
+    if (b && b.n) { pending = { field: f, np: np, name: b.name, n: b.n, ids: b.ids, subs: b.subs }; hap("warn"); push("retire"); return; }
+    if (b && b.ids.length) app().remove(b.ids);       // définitions de TA sans ETA, par sécurité
+    app().setProfile(np, b ? b.subs : null); hap("success"); pop();
+  }
+  function hap(k) { if (window.FX) FX.haptic(k); }
+
   /* ---------- Pages ---------- */
   var PAGES = {
     main: {
@@ -102,6 +118,8 @@
         var semestre = row({ ic: "red", svg: "calendar", label: "Fin du semestre 1", act: "go:semestre" });
         var an = [];
         if (pr.year && pr.year < 3) an.push(row({ ic: "orange", svg: "up", label: "Passer en " + ORD[pr.year + 1] + " année", act: "click:yp-next" }));
+        // 3e année : notes de 2e reprises (chimie, physique, art), bloc #carriedset de cert.js.
+        if (pr.year === 3) an.push(row({ ic: "green", svg: "flask", label: "Notes reprises de 2e", act: "go:carried" }));
         if (arch.length) an.push(row({ ic: "gray", svg: "archive", label: "Années précédentes", val: String(arch.length), act: "click:yp-hist" }));
         return '<h1 class="ios-large">Réglages</h1>' + prof +
           '<div class="ios-grp">' + row({ ic: "blue", svg: "list", label: "Branches", act: "go:branches" }) + semestre + '</div>' +
@@ -119,17 +137,52 @@
         var pr = app().profile() || {}, G = window.Grid;
         function nm(list, id) { var it = G.find(list, id); return it ? it.name : "–"; }
         var rows = [
-          row({ ic: "blue", svg: "building", label: "Gymnase", val: G.gymnaseName(pr.gymnase) || "–", act: "step:gymnase" }),
-          row({ ic: "orange", svg: "calendar", label: "Année", val: pr.year ? ORD[pr.year] : "–", act: "step:year" }),
-          row({ ic: "gray", svg: "people", label: "Classe", val: pr.classe || "–", act: "step:year" }),
-          row({ ic: "blue", svg: "bubble", label: "Deuxième langue (L2)", val: nm(G.L2, pr.l2), act: "step:l2" }),
-          row({ ic: "blue", svg: "bubble", label: "Troisième langue (L3)", val: nm(G.L3, pr.l3), act: "step:l3" }),
-          row({ ic: "green", svg: "star", label: "Option spécifique", val: nm(G.OS, pr.os), act: "step:os" }),
-          row({ ic: "orange", svg: "plusminus", label: "Mathématiques", val: pr.math === "renf" ? "Renforcé" : "Standard", act: "step:math" }),
-          row({ ic: "red", svg: "palette", label: "Discipline artistique", val: nm(G.ART, pr.art), act: "step:art" })
+          row({ ic: "blue", svg: "building", label: "Gymnase", val: G.gymnaseName(pr.gymnase) || "Autre", act: "go:choix:gymnase" }),
+          '<div class="ios-row has-ic">' + icon("orange", "calendar") + '<span class="ios-row-l">Année</span><span class="ios-val">' + (pr.year ? ORD[pr.year] : "–") + '</span></div>',
+          row({ ic: "gray", svg: "people", label: "Classe", val: pr.classe || "–", act: "go:classe" }),
+          row({ ic: "blue", svg: "bubble", label: "Deuxième langue (L2)", val: nm(G.L2, pr.l2), act: "go:choix:l2" }),
+          row({ ic: "blue", svg: "bubble", label: "Troisième langue (L3)", val: nm(G.L3, pr.l3), act: "go:choix:l3" }),
+          row({ ic: "green", svg: "star", label: "Option spécifique", val: nm(G.OS, pr.os), act: "go:choix:os" }),
+          row({ ic: "orange", svg: "plusminus", label: "Mathématiques", val: pr.math === "renf" ? "Renforcé" : "Standard", act: "go:choix:math" }),
+          row({ ic: "red", svg: "palette", label: "Discipline artistique", val: nm(G.ART, pr.art), act: "go:choix:art" })
         ];
-        if (pr.year === 3) rows.push(row({ ic: "gray", svg: "star", label: "Option complémentaire", val: nm(G.OC, pr.oc), act: "step:oc" }));
-        return grp(rows, null, "Changer un choix recalcule la liste des branches. Tes notes sont gardées ; les objectifs et réglages des branches qui existent encore sont conservés.");
+        if (pr.year === 3) rows.push(row({ ic: "gray", svg: "star", label: "Option complémentaire", val: nm(G.OC, pr.oc), act: "go:choix:oc" }));
+        return grp(rows, null, "Chaque choix s'enregistre tout de suite et recalcule les branches. L'année se change avec « Passer à l'année suivante ». Changer de langue, d'option ou de discipline artistique supprime les notes de l'ancienne branche, après confirmation.");
+      }
+    },
+    /* Un choix du profil : la liste des possibilités, la valeur actuelle cochée ; toucher enregistre tout de suite. */
+    choix: {
+      title: function (f) { return FIELDS[f] ? FIELDS[f].title : "Profil"; },
+      html: function (f) {
+        var F = FIELDS[f], pr = app().profile() || {}; if (!F) return "";
+        var rows = F.list().map(function (o) {
+          var cur = pr[f] === o.id, why = cur ? null : blocked(f, o.id), sub = why || o.sub || o.city || "";
+          return '<button type="button" class="ios-row ios-opt" data-act="pick:' + f + ':' + o.id + '"' + (why ? " disabled" : "") + '>' +
+            '<span class="ios-row-l">' + esc(o.name) + (sub ? '<small class="ios-row-s">' + esc(sub) + '</small>' : "") + '</span>' +
+            (cur ? '<svg class="ios-check" viewBox="0 0 24 24" aria-label="Choix actuel">' + SVG.check + '</svg>' : "") + '</button>';
+        });
+        return grp(rows, null, F.foot || "");
+      }
+    },
+    classe: {
+      title: "Classe",
+      html: function () {
+        var pr = app().profile() || {};
+        return '<div class="ios-grp"><label class="ios-row"><span class="ios-row-l">Classe</span><input type="text" id="ios-classe" class="ios-input" maxlength="8" autocapitalize="characters" autocomplete="off" value="' + esc(pr.classe || "") + '" placeholder="' + (pr.year || 1) + 'M01"></label></div>' +
+          '<p class="ios-grp-foot">Le nom de ta classe apparaît en haut de l\'Accueil. Il s\'enregistre quand tu quittes le champ. Son premier chiffre suit l\'année au passage d\'année.</p>';
+      }
+    },
+    /* Confirmation avant de retirer une branche qui a des notes (pending est posé par pick()). */
+    retire: {
+      title: "Supprimer des notes ?",
+      html: function () {
+        var q = pending; if (!q) return "";
+        return '<p class="ios-grp-head">' + esc(FIELDS[q.field].title) + '</p><div class="ios-grp ios-warn"><p>Ce changement retire la branche <b>' + esc(q.name) + '</b> et supprime ' +
+          (q.n > 1 ? 'ses <b>' + q.n + ' notes</b>' : 'sa <b>note</b>') + ', avec leurs TA et leurs photos. Les autres branches gardent leurs notes.</p></div>' +
+          '<p class="ios-grp-foot">Pour garder une trace, exporte une sauvegarde avant de supprimer.</p>' +
+          grp([row({ ic: "green", svg: "save", label: "Exporter une sauvegarde", act: "click:bk-export" })]) +
+          '<div class="ios-grp"><button type="button" class="ios-row ios-danger" data-act="retire:oui"><span class="ios-row-l">Supprimer</span></button>' +
+          '<button type="button" class="ios-row" data-act="retire:non"><span class="ios-row-l">Annuler</span></button></div>';
       }
     },
     branches: {
@@ -180,6 +233,7 @@
     },
     sync: { title: "Synchronisation", adopt: "sync", html: function () { return '<div class="ios-slot" data-slot="sync"></div>'; } },
     backup: { title: "Sauvegarde", adopt: "backup", html: function () { return '<div class="ios-slot" data-slot="backup"></div>'; } },
+    carried: { title: "Notes reprises de 2e", adopt: "carriedset", html: function () { return '<div class="ios-slot" data-slot="carriedset"></div>'; } },
     about: { title: "À propos", adopt: "about", html: function () { return '<div class="ios-slot" data-slot="about"></div>'; } },
     rules: {
       title: "Calcul des moyennes",
@@ -248,12 +302,27 @@
       // Un bouton d'origine peut changer l'état tout de suite (ex. « Annuler le dernier passage ») : la page est refaite si aucune fenêtre n'est ouverte.
       if (!document.body.classList.contains("ob-open") && !document.body.classList.contains("gd-open")) show(window.scrollY);
     }
+    else if (kind === "pick") pick(a[1], a[2]);
+    else if (kind === "retire") {
+      var q = pending; pending = null;
+      if (a[1] === "oui" && q) {
+        app().remove(q.ids); app().setProfile(q.np, q.subs); hap("heavy");
+        // Retour à la page Profil (on quitte la confirmation et la liste de choix).
+        run("pop", function () { stack.pop(); stack.pop(); show(scrolls[key(top())] || 0); });
+      } else pop();
+    }
     else if (kind === "step") { if (window.Onboard) Onboard.open(true, a[1]); }
     else if (kind === "cal") { cal.m += a[1] === "next" ? 1 : -1; if (cal.m > 11) { cal.m = 0; cal.y++; } if (cal.m < 0) { cal.m = 11; cal.y--; } show(window.scrollY); }
     else if (kind === "day") { app().setS1End(a[1]); show(window.scrollY); }
   });
   container.addEventListener("change", function (ev) {
     var t = ev.target;
+    if (t.id === "ios-classe") {
+      var pr = app().profile(), c = t.value.trim().toUpperCase().slice(0, 8);
+      if (pr && c && c !== pr.classe) { app().setProfile(Object.assign({}, pr, { classe: c })); hap("success"); }
+      t.value = c || (pr && pr.classe) || "";
+      return;
+    }
     if (t.dataset && t.dataset.k) {
       var v = t.type === "checkbox" ? t.checked : t.value;
       app().setSubj(t.dataset.id, t.dataset.k, v);
