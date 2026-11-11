@@ -22,7 +22,7 @@
   function enter() {
     if (!wrap || !canAnim()) return;
     setTimeout(function () {
-      if (wrap.classList.contains("ios-nav-pop") || wrap.classList.contains("ios-nav-push")) return;
+      if (window.IOSNav && IOSNav.busy && IOSNav.busy()) return;   // un push/pop vient d'avoir lieu : pas d'entrée par-dessus
       wrap.classList.remove("ios-enter"); void wrap.offsetWidth; wrap.classList.add("ios-enter");
       clearTimeout(enterTimer);
       enterTimer = setTimeout(function () { wrap.classList.remove("ios-enter"); }, ms("--ios-dur-enter", 320) + 12 * ms("--ios-enter-step", 40) + 100);

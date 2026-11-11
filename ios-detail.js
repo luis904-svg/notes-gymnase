@@ -15,7 +15,7 @@
   var container = document.createElement("div");
   container.id = "ios-detail"; container.className = "ios-detail";
   wrap.appendChild(container);
-  var active = false, scrollDash = 0;
+  var active = false, scrollDash = 0, shown = {};
 
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function ready() { return mq.matches && window.IOSNav && window.IOSTitle && window.IOSIcons && window.NotesApp; }
@@ -126,6 +126,9 @@
       var y = window.scrollY; container.replaceChildren(page); window.scrollTo(0, y); IOSTitle.set(ctxFor(page)); return true;
     }
     scrollDash = window.scrollY;
+    // Affichage de l'Accueil avant l'ouverture : la copie du balayage de retour le reprend tel quel.
+    shown = {};
+    ["#view-dash", "header.top", "#demo"].forEach(function (q) { var n = document.querySelector(q); if (n) shown[q] = getComputedStyle(n).display; });
     IOSNav.run("push", function () {
       active = true; document.body.classList.add("ios-detail-open");
       container.replaceChildren(page); window.scrollTo(0, 0);
@@ -147,7 +150,19 @@
     IOSNav.run("pop", function () { window.NotesApp.closeDetail(); });
   }
 
-  var provider = { can: function () { return active && mq.matches; }, go: back };
+  var provider = {
+    can: function () { return active && mq.matches; },
+    parent: function (clone) {                      // la copie montre l'Accueil à la place de la page
+      Object.keys(shown).forEach(function (q) { var n = clone.querySelector(q); if (n) n.style.display = shown[q]; });
+      var det = clone.querySelector("#ios-detail"); if (det) det.style.display = "none";
+    },
+    parentScroll: function () { return scrollDash; },
+    parentBar: function () {
+      var h1 = document.querySelector("header.top h1");
+      return { title: h1 ? h1.textContent : "", on: scrollDash >= IOSTitle.threshold("dash", 48), back: false };
+    },
+    go: back
+  };
 
   mq.addEventListener && mq.addEventListener("change", function () { if (!mq.matches && active) window.NotesApp.closeDetail(); });
   window.IOSDetail = { open: open, close: close, back: back, active: function () { return active; } };

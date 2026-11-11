@@ -1,7 +1,10 @@
 /* Notes — guide d'utilisation (formation en chapitres) + « À propos » dans Réglages. */
 (function () {
   "use strict";
-  // Pas d'animation de page : seuls les repères pulsés des illustrations (CSS) montrent où toucher.
+  // Animations d'entrée (remises en v44) : IOSMotion.animate ne fait rien avec ?noanim=1 ou « Réduire les animations ».
+  function A(t, kf, o) { return window.IOSMotion ? window.IOSMotion.animate(t, kf, o) : Promise.resolve(); }
+  function ST(step, o) { return window.IOSMotion ? window.IOSMotion.stagger(step, o) : 0; }
+  function canAnim() { return !!(window.IOSMotion && window.IOSMotion.canAnim()); }
   function $(s, r) { return (r || document).querySelector(s); }
   function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
 
@@ -199,7 +202,8 @@
         "<b>À surveiller</b> liste les branches en difficulté. Les boutons <b>Année</b>, <b>Semestre 1</b> et <b>Semestre 2</b> filtrent tout le tableau de bord."] },
       { t: "La barre du bas", v: "scrub", p: [
         "Un appui court change d'onglet. Un <b>appui long</b> fait grossir la pastille : glisse-la sans lever le doigt et relâche sur l'onglet voulu.",
-        "Si tu relâches le doigt bien au-dessus de la barre, rien ne change."] }
+        "Si tu relâches le doigt bien au-dessus de la barre, rien ne change. Un <b>balayage rapide</b> sur la barre passe à l'onglet voisin, et toucher l'onglet déjà ouvert revient au début (Réglages revient à sa page principale).",
+        "La barre reste toujours en bas, même dans le détail d'une branche. La <b>loupe</b> à droite cherche une branche : touche-la pour ouvrir son détail, ou <b>+</b> pour y ajouter une note. Au-dessus, une ligne rappelle ton <b>verdict</b> (touche-la pour le voir) ; un chiffre rouge sur Accueil compte les branches sous 4 et un point rouge sur Réglages signale une synchronisation en erreur."] }
     ] },
     { t: "Règles de calcul", d: "2 min", s: [
       { t: "Moyenne et arrondi", v: "round", p: [
@@ -295,6 +299,12 @@
     }
     root.innerHTML = h;
     root.scrollTop = 0;
+    b = $(".gd-body", root);
+    if (canAnim() && b) {
+      A(b, { opacity: [0, 1], x: [dir * 34, 0] }, { type: "spring", stiffness: 340, damping: 30 });
+      var kids = $$(".gd-vis > *, .gd-chr, .gd-done > *", b);
+      if (kids.length) A(kids, { opacity: [0, 1], y: [12, 0], scale: [0.96, 1] }, { delay: ST(0.045, { startDelay: 0.08 }), type: "spring", stiffness: 360, damping: 28 });
+    }
   }
 
   function go(v, d) { view = v; dir = d || 1; paint(); }
@@ -326,6 +336,7 @@
       }
       if (a === "nextch") { c++; s = 0; return go("step", 1); }
     });
+    A(root, { opacity: [0, 1], y: [24, 0] }, { type: "spring", stiffness: 320, damping: 30 });
     if (opts.start) {
       var l = st.last && !allDone() ? st.last : { c: 0, s: 0 };
       c = Math.min(CH.length - 1, l.c); s = Math.min(CH[c].s.length - 1, l.s); view = "step";
@@ -337,8 +348,10 @@
     var el = root; if (!el) return;
     var completed = allDone(), cb = onClose;
     root = null; onClose = null;
-    el.remove(); document.body.classList.remove("gd-open"); refreshEntry();
-    if (cb) cb({ completed: completed });
+    var closed = false;
+    function done() { if (closed) return; closed = true; el.remove(); if (!root) document.body.classList.remove("gd-open"); refreshEntry(); if (cb) cb({ completed: completed }); }
+    if (canAnim()) { el.style.pointerEvents = "none"; A(el, { opacity: [1, 0], y: [0, 24] }, { duration: 0.3, ease: [0.2, 0.8, 0.2, 1] }).then(done); setTimeout(done, 450); }
+    else done();
   }
 
   /* ---------- Réglages : entrée du guide + « À propos » ---------- */

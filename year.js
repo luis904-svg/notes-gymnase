@@ -9,6 +9,8 @@
   function hap(k) { if (window.FX) FX.haptic(k); }
   function app() { return window.NotesApp; }
   var ORD = { 1: "1re", 2: "2e", 3: "3e" };
+  // Fondu d'entrée (remis en v44) : rien avec ?noanim=1 ou « Réduire les animations ».
+  function A(t, kf, o) { return window.IOSMotion ? window.IOSMotion.animate(t, kf, o) : Promise.resolve(); }
   var root = null;
 
   function fmtB(b) { return b == null ? "–" : (Number.isInteger(b) ? String(b) : b.toFixed(1)); }
@@ -23,6 +25,7 @@
     root.innerHTML = html;
     document.body.appendChild(root); document.body.classList.add("ob-open");
     root.scrollTop = 0;
+    A(root, { opacity: [0, 1] }, { duration: 0.25 });
     root.addEventListener("click", function (e) {
       if (e.target.closest("[data-yp-close]")) { close(); return; }
       if (wire) wire(e);

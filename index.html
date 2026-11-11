@@ -1236,6 +1236,11 @@ td input[type="date"] { width: auto; }
     },
     closeDetail: function () { closeDetail(); },
     detailId: function () { return ui.detail; },
+    showSubject: function (id) {
+      if (!sub(id)) return;
+      if (ui.view !== "dash") { ui.detail = null; renderDetail(); if (ui.view === "add") resetForm(); setView("dash"); }
+      openDetail(id);
+    },
     setNotifOff: function (v) { if (v) state.cfg.notifOff = true; else delete state.cfg.notifOff; persist(); },
     setS1End: function (v) { if (v) { state.cfg.s1End = v; persist(); render(); renderSettings(); } },
     replace: function (raw) { state = normalize(raw); fillSelects(); renderSettings(); persist(); render(); }
@@ -1265,11 +1270,13 @@ td input[type="date"] { width: auto; }
 </script>
 <script src="motion.js"></script>
 <script src="fx.js"></script>
+<script src="ios-motion.js"></script>
 <script src="ios-nav.js"></script>
 <script src="ios-title.js"></script>
 <script src="ios-settings.js"></script>
 <script src="ios-detail.js"></script>
 <script src="ios-anim.js"></script>
+<script src="ios-tabbar.js"></script>
 <script src="ta.js"></script>
 <script src="scan.js"></script>
 <script src="photos.js"></script>

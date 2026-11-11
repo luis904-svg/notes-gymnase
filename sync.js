@@ -146,7 +146,7 @@
 
   /* ---------- Interface (Réglages) ---------- */
   var ui = null, lastStatus = "", notifBox = null;
-  function status(s) { lastStatus = s; paint(); }
+  function status(s) { lastStatus = s; paint(); document.dispatchEvent(new CustomEvent("sync:status", { detail: s })); }   // pastille de Réglages (ios-tabbar.js)
   function ago(t) {
     if (!t) return "jamais";
     var s = Math.round((Date.now() - t) / 1000);

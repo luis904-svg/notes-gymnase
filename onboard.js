@@ -1,7 +1,11 @@
 /* Notes — configuration au premier lancement (et « Modifier mon profil »). */
 (function () {
   "use strict";
-  var G = window.Grid;   // pas d'animation : chaque étape s'affiche tout de suite
+  var G = window.Grid;
+  // Animations d'entrée (remises en v44) : IOSMotion.animate ne fait rien avec ?noanim=1 ou « Réduire les animations ».
+  function A(t, kf, o) { return window.IOSMotion ? window.IOSMotion.animate(t, kf, o) : Promise.resolve(); }
+  function ST(step, o) { return window.IOSMotion ? window.IOSMotion.stagger(step, o) : 0; }
+  function canAnim() { return !!(window.IOSMotion && window.IOSMotion.canAnim()); }
   function hap(k) { if (window.FX) window.FX.haptic(k); }
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function $(s, r) { return (r || document).querySelector(s); }
@@ -117,6 +121,13 @@
     var input = $("#ob-classe", root);
     if (input) input.addEventListener("input", function () { p.classe = input.value.trim(); });
     root.scrollTop = 0;
+    var b = $("#ob-body", root);
+    if (canAnim()) {
+      A(b, { opacity: [0, 1], x: [dir * 36, 0] }, { type: "spring", stiffness: 340, damping: 30 });
+      var rows = b.querySelectorAll(".ob-row");
+      if (rows.length) A(rows, { opacity: [0, 1], y: [10, 0] }, { delay: ST(0.025, { startDelay: 0.05 }), type: "spring", stiffness: 380, damping: 30 });
+      var bar = $(".ob-prog i", root); if (bar) { var from = Math.round(((step - dir) / (vs.length - 1)) * 100); A(bar, { width: [Math.max(0, from) + "%", pct + "%"] }, { type: "spring", stiffness: 260, damping: 30 }); }
+    }
   }
 
   function go(d) {
@@ -143,8 +154,11 @@
 
   function close() {
     if (!root) return;
-    root.remove(); root = null; document.body.classList.remove("ob-open");
-    if (window.FX) window.FX.view("dash");
+    var el = root, closed = false;
+    function done() { if (closed) return; closed = true; el.remove(); if (root === el) root = null; if (!root) document.body.classList.remove("ob-open"); if (window.FX) window.FX.view("dash"); }
+    root = null;
+    if (canAnim()) { el.style.pointerEvents = "none"; A(el, { opacity: [1, 0], scale: [1, 1.04] }, { duration: 0.35, ease: [0.2, 0.8, 0.2, 1] }).then(done); setTimeout(done, 500); }
+    else done();
   }
 
   function open(edit, startId) {
@@ -180,6 +194,7 @@
         var f = r.dataset.f, v = r.dataset.v;
         p[f] = f === "year" ? parseInt(v, 10) : v;
         sanitize(); hap("select");
+        A(r.querySelector(".ob-chk"), { scale: [0.3, 1] }, { type: "spring", stiffness: 500, damping: 15 });
         root.querySelectorAll('.ob-row[data-f="' + f + '"]').forEach(function (x) { var on = x === r; x.classList.toggle("on", on); x.setAttribute("aria-checked", String(on)); });
         var s = visible()[step];
         if (s.id === "gymnase") {
@@ -196,6 +211,7 @@
     });
     root.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.id === "ob-classe") { e.preventDefault(); go(1); } });
     render();
+    A(root, { opacity: [0, 1] }, { duration: 0.3 });
   }
 
   function mountSettingsButton() {
@@ -267,6 +283,11 @@
       (isIOS && !inApp ? '<div class="inst-arrow" aria-hidden="true">' + window.Icons.svg("down") + '</div>' : "") + '</div>';
     document.body.appendChild(el);
     document.body.classList.add("ob-open");
+    if (canAnim()) {
+      A(el.querySelectorAll(".ob-hero > *, .inst-steps li"), { opacity: [0, 1], y: [16, 0] }, { delay: ST(0.07), type: "spring", stiffness: 300, damping: 26 });
+      var ar = el.querySelector(".inst-arrow svg");
+      if (ar) A(ar, { y: [0, 10, 0] }, { duration: 1.4, repeat: Infinity, ease: "easeInOut" });
+    }
     var cp = el.querySelector("#inst-copy");
     if (cp) cp.addEventListener("click", function () {
       var url = location.origin + location.pathname, u = el.querySelector("#inst-url");

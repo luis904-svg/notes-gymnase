@@ -35,8 +35,10 @@
   --ios-dur-press-out: 250ms;
   --ios-dur-highlight-out: 300ms;
   --ios-ease-out: cubic-bezier(0.32, 0.72, 0, 1);
-  /* Navigation (push/pop) : courte entrée de la page qui apparaît, sans copie ni ressort */
-  --ios-nav-shift: 28px;       /* décalage de départ de la page qui entre */
+  /* Navigation (push/pop, ios-nav.js v44) : ressort « dialog » d'UIKit, valeurs de la communauté, à régler à l'œil */
+  --ios-nav-parallax: 0.3;     /* l'écran qui part recule de 30 % de la largeur */
+  --ios-nav-dim-max: 0.1;      /* voile noir sur l'écran du dessous */
+  --ios-nav-shift: 28px;       /* décalage de départ de la page qui entre (repli CSS) */
   --ios-dur-nav: 320ms;        /* poussée et retour de page (repère : 300 à 350 ms, à régler à l'écran par pas de 50 ms) */
   --ios-nav-edge: 24;          /* zone de bord du retour par balayage, en px */
   --ios-dur-seg: 200ms;        /* pastille du sélecteur de période */
@@ -100,6 +102,16 @@
   /* Photos des tests : vignette du formulaire, visionneuse au-dessus de tout */
   --ios-ph-thumb: 72px;
   --ios-ph-z: 1000;
+  /* Barre du bas v44 (ios-tabbar.js) : dock toujours en bas, accessoire du verdict, bouton Rechercher, pastilles */
+  --ios-dock-gap: 8px;
+  --ios-acc-h: 44px;
+  --ios-find-z: 60;
+  --ios-badge: 18px;
+  --ios-badge-dot: 10px;
+  --ios-shake: 10px;
+  --ios-tab-pop: 0.78;
+  --ios-tab-pop-up: 1.16;
+  --ios-pulse: 1.14;
 
   /* Variables historiques de l'app, réaffectées à iOS */
   --bg: var(--ios-bg);
@@ -187,10 +199,6 @@ header.top.scrolled { border-bottom-color: var(--ios-bar-hairline); box-shadow: 
     background: var(--ios-pill); box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none;
     transition: transform var(--ios-dur-pill) var(--ios-ease-out), visibility 0s;
   }
-  body.ios-pill-hidden .tabbar {
-    transform: translateY(calc(100% + var(--ios-pill-bottom) + env(safe-area-inset-bottom, 0px) + 8px)); visibility: hidden;
-    transition: transform var(--ios-dur-pill) var(--ios-ease-out), visibility 0s var(--ios-dur-pill);
-  }
   .tabbar button { position: relative; flex: 1; min-height: var(--ios-tab-h); border-radius: 999px; padding: 0; justify-content: center; color: var(--ink); }
   .tabbar button[aria-current="page"] { background: var(--ios-clear); color: var(--ink); }
   .tabbar svg { width: var(--ios-pill-icon); height: var(--ios-pill-icon); }
@@ -201,13 +209,12 @@ header.top.scrolled { border-bottom-color: var(--ios-bar-hairline); box-shadow: 
   .sheet-box { border-radius: var(--ios-r-sheet) var(--ios-r-sheet) 0 0; }
 }
 
-/* ---------- Animations retirées (décoratives) ----------
-   Feuille de détail (grand écran) : apparaît sans rebond. Histogramme : plus de barres qui poussent ni de chiffre qui
-   gonfle après un ajout. Seul reste le surlignage de la carte de la branche modifiée (cardFlash), qui montre où la note est allée. */
+/* ---------- Feuille de détail (grand écran) et histogramme ----------
+   La feuille s'ouvre avec le ressort ; après un ajout, les barres de l'histogramme poussent et la valeur gonfle (index.html,
+   #bars.anim), en plus du surlignage de la carte de la branche modifiée. */
 .sheet:not([hidden]) .sheet-box { animation: iosSheetIn var(--ios-dur-spring) var(--ios-spring); }
 .sheet:not([hidden]) .sheet-bg { animation: iosFadeIn var(--ios-dur-fade) ease-out; }
 @media (prefers-reduced-motion: reduce) { .sheet:not([hidden]) .sheet-box, .sheet:not([hidden]) .sheet-bg { animation: none; } }
-#bars.anim .bar rect, #bars.anim .bar.flash .val { animation: none; }
 .seg .ind { transition: left var(--ios-dur-seg) var(--ios-ease-out), width var(--ios-dur-seg) var(--ios-ease-out); }
 
 /* ---------- Appuis : sans rebond ni échelle exagérée ----------
@@ -463,8 +470,6 @@ html.noanim .tabbar .ind { transition: none; }
 @keyframes iosDonePop { from { opacity: 0; transform: scale(0.6); } }
 @keyframes iosConfetti { from { opacity: 1; transform: translate3d(0, 0, 0) rotate(0deg); } 70% { opacity: 1; } to { opacity: 0; transform: translate3d(var(--dx), var(--dy), 0) rotate(var(--rot)); } }
 @media (prefers-reduced-motion: no-preference) {
-  /* Détail d'une matière : la page entre avec le ressort (même classe que la navigation, autre courbe). */
-  body.ios-detail-open .wrap.ios-nav-push { animation: iosNavPush var(--ios-dur-spring) var(--ios-spring); }
   .wrap.ios-enter .v-dash:not([hidden]) > *, .wrap.ios-enter .v-add:not([hidden]) > *, .wrap.ios-enter .ios-page > *, .wrap.ios-enter #subjects .card {
     animation: iosEnter var(--ios-dur-enter) var(--ios-ease-out) backwards;
   }
@@ -600,3 +605,100 @@ body.ios-scan-open { overflow: hidden; }
 /* Notes reprises de 2e (page de Réglages) : lignes avec la saisie à droite. */
 #carriedset .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: var(--ios-row-h); border-top: var(--ios-hair) solid var(--ios-sep); }
 #carriedset input { width: 7.5em; flex: none; text-align: right; background: var(--ios-fill); border: 0; }
+
+/* ---------- v44 : navigation à ressorts (ios-nav.js) ----------
+   Fantômes (copies statiques de .wrap) pendant un push, un pop ou un balayage de retour. Ils laissent passer les touchers
+   et restent sous la barre du bas (dock, z-index 40). */
+.ios-nav-ghost { position: fixed; inset: 0; overflow: hidden; background: var(--bg); pointer-events: none; }
+.ios-nav-under { z-index: 26; }
+.ios-nav-top { z-index: 28; }
+.ios-nav-dim { position: fixed; inset: 0; z-index: 27; background: var(--ios-label); opacity: 0; pointer-events: none; }
+.ios-nav-ghost, .ios-nav-ghost *, .ios-nav-ghost *::before, .ios-nav-ghost *::after { animation: none !important; transition: none !important; }
+.ios-nav-ghost .ios-bar { z-index: 1; transition: none; }
+
+/* ---------- v44 : petites animations remises ----------
+   Pastille de la barre du bas : glisse avec le ressort (pas pendant l'appui long glissé, où elle suit le doigt).
+   Icône d'onglet touchée : rebond. Formulaire en erreur : tremblement. Verdict qui change : pulsation.
+   Bandeau d'installation : se replie. Tout est coupé par html.noanim (plus haut) et par « Réduire les animations ». */
+@keyframes iosTabPop { 0% { transform: scale(1); } 35% { transform: scale(var(--ios-tab-pop)) rotate(-6deg); } 70% { transform: scale(var(--ios-tab-pop-up)) rotate(4deg); } 100% { transform: scale(1); } }
+@keyframes iosShake { 0%, 100% { transform: translate3d(0, 0, 0); } 15% { transform: translate3d(calc(-1 * var(--ios-shake)), 0, 0); } 30% { transform: translate3d(var(--ios-shake), 0, 0); }
+  45% { transform: translate3d(calc(-0.7 * var(--ios-shake)), 0, 0); } 60% { transform: translate3d(calc(0.5 * var(--ios-shake)), 0, 0); } 80% { transform: translate3d(calc(-0.25 * var(--ios-shake)), 0, 0); } }
+@keyframes iosPulse { 40% { transform: scale(var(--ios-pulse)); } }
+@media (prefers-reduced-motion: no-preference) {
+  .tabbar .ind.ios-ind-ready { transition: transform var(--ios-dur-scrub) var(--ios-ease-out), left var(--ios-dur-spring) var(--ios-spring), width var(--ios-dur-spring) var(--ios-spring); }
+  .tabbar.ios-scrub .ind.ios-ind-ready { transition: transform var(--ios-dur-scrub) var(--ios-ease-out); }
+  .tabbar svg.ios-tab-pop { animation: iosTabPop 550ms var(--ios-ease-out); }
+  .ios-shake { animation: iosShake 500ms var(--ios-ease-out); }
+  #promo .pill.ios-pulse { display: inline-block; animation: iosPulse var(--ios-dur-spring) var(--ios-spring); }
+  .install-tip.ios-tip-out { overflow: hidden; opacity: 0; transform: scale(0.95); height: 0 !important; margin-bottom: -20px; padding-top: 0; padding-bottom: 0;
+    transition: opacity 300ms ease, transform 300ms ease, height 300ms var(--ios-ease-out), margin 300ms var(--ios-ease-out), padding 300ms var(--ios-ease-out); }
+}
+html.noanim .tabbar .ind.ios-ind-ready { transition: none; }
+
+/* ---------- v44 : barre du bas toujours en bas (ios-tabbar.js) ----------
+   Le dock est fixe en bas de l'écran (zone sûre comprise) et porte la pilule, le bouton Rechercher et l'accessoire.
+   Seuls l'assistant, le guide, la recherche et le clavier ouvert le recouvrent. */
+.ios-dock { display: none; }
+@media (max-width: 700px) {
+  .ios-dock {
+    display: flex; flex-direction: column; align-items: center; gap: var(--ios-dock-gap);
+    position: fixed; left: 0; right: 0; bottom: calc(var(--ios-pill-bottom) + env(safe-area-inset-bottom, 0px)); z-index: 40;
+    padding: 0 max(var(--ios-pill-side), env(safe-area-inset-right, 0px)) 0 max(var(--ios-pill-side), env(safe-area-inset-left, 0px));
+    pointer-events: none; transition: transform var(--ios-dur-pill) var(--ios-ease-out), visibility 0s;
+  }
+  .ios-dock > * { pointer-events: auto; }
+  .ios-dock-row { display: flex; align-items: center; gap: var(--ios-dock-gap); width: 100%; max-width: calc(var(--ios-pill-w) + var(--ios-dock-gap) + var(--ios-tab-h) + 2 * var(--ios-pill-pad)); }
+  .ios-dock .tabbar { position: relative; left: auto; right: auto; bottom: auto; margin: 0; width: auto; flex: 1; min-width: 0; }
+  body.ob-open .ios-dock, body.gd-open .ios-dock, body.ios-find-open .ios-dock, body.ios-scan-open .ios-dock { display: none; }
+  body.ios-kb .ios-dock { transform: translate3d(0, calc(100% + var(--ios-pill-bottom) + env(safe-area-inset-bottom, 0px) + 8px), 0); visibility: hidden;
+    transition: transform var(--ios-dur-pill) var(--ios-ease-out), visibility 0s var(--ios-dur-pill); }
+  /* Bouton Rechercher : rond séparé, à droite de la pilule (onglet de recherche d'iOS 26). */
+  .ios-find-btn { flex: none; width: calc(var(--ios-tab-h) + 2 * var(--ios-pill-pad)); height: calc(var(--ios-tab-h) + 2 * var(--ios-pill-pad)); padding: 0;
+    border-radius: 50%; border: var(--ios-hair) solid var(--ios-bar-hairline); background: var(--ios-pill); color: var(--ios-label);
+    display: flex; align-items: center; justify-content: center; }
+  .ios-find-btn svg { width: var(--ios-pill-icon); height: var(--ios-pill-icon); }
+  .ios-find-btn:active, .ios-find-btn.is-pressed { transform: none; background: var(--ios-pill-active); }
+  /* Pastilles des onglets */
+  .ios-badge { position: absolute; top: 4px; left: calc(50% + 6px); min-width: var(--ios-badge); height: var(--ios-badge); padding: 0 5px; border-radius: 999px;
+    background: var(--ios-red); color: var(--ios-white); font-size: 12px; font-style: normal; font-weight: 600; line-height: var(--ios-badge); text-align: center;
+    font-variant-numeric: tabular-nums; pointer-events: none; }
+  .ios-badge[hidden] { display: none; }
+  .ios-badge.ios-badge-dot { min-width: 0; width: var(--ios-badge-dot); height: var(--ios-badge-dot); padding: 0; top: 10px; left: calc(50% + 8px); }
+  /* Accessoire : le verdict en une ligne, au-dessus de la pilule */
+  .ios-acc { display: flex; align-items: center; gap: 8px; width: 100%; max-width: calc(var(--ios-pill-w) + var(--ios-dock-gap) + var(--ios-tab-h) + 2 * var(--ios-pill-pad));
+    min-height: var(--ios-acc-h); padding: 0 14px 0 16px; border-radius: 999px; border: var(--ios-hair) solid var(--ios-bar-hairline);
+    background: var(--ios-pill); color: var(--ios-label); font-size: 15px; text-align: left; }
+  .ios-acc[hidden] { display: none; }
+  .ios-acc:active, .ios-acc.is-pressed { transform: none; background: var(--ios-pill-active); }
+  .ios-acc-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--ios-gray); }
+  .ios-acc-t-good { background: var(--ios-green); } .ios-acc-t-warn { background: var(--ios-orange); } .ios-acc-t-crit { background: var(--ios-red); }
+  .ios-acc-t { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ios-acc-s { margin-left: auto; flex: none; color: var(--ios-label-2); font-size: 13px; }
+  .ios-acc-chev { flex: none; width: 16px; height: 16px; color: var(--ios-chev); }
+  @media (prefers-reduced-motion: no-preference) { .ios-acc:not([hidden]) { animation: iosEnter var(--ios-dur-enter) var(--ios-ease-out); } }
+  body.ios-has-acc { padding-bottom: calc(var(--ios-tab-h) + 2 * var(--ios-pill-pad) + var(--ios-pill-bottom) + var(--ios-acc-h) + var(--ios-dock-gap) + 24px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* ---------- v44 : recherche des branches (bouton Rechercher de la barre du bas) ---------- */
+body.ios-find-open { overflow: hidden; }
+.ios-find { position: fixed; inset: 0; z-index: var(--ios-find-z); background: var(--ios-bg); display: flex; flex-direction: column;
+  padding: env(safe-area-inset-top, 0px) max(16px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(16px, env(safe-area-inset-left, 0px)); }
+.ios-find-out { opacity: 0; transform: translate3d(0, 16px, 0); pointer-events: none; transition: opacity var(--ios-dur-fade) ease-out, transform var(--ios-dur-fade) ease-out; }
+@media (prefers-reduced-motion: no-preference) { .ios-find { animation: iosEnter var(--ios-dur-enter) var(--ios-ease-out); } }
+.ios-find-top { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
+.ios-find-field { flex: 1; display: flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 10px; border-radius: 10px; background: var(--ios-fill); color: var(--ios-label-2); }
+.ios-find-field svg { flex: none; width: 18px; height: 18px; }
+.ios-find-field input { flex: 1; min-width: 0; border: 0; background: var(--ios-clear); font: inherit; font-size: var(--ios-title-inline); color: var(--ios-label); padding: 0; outline: none; box-shadow: none; min-height: 0; }
+.ios-find-x { flex: none; font-size: var(--ios-title-inline); }
+.ios-find-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 8px 0 24px; }
+.ios-find-list { background: var(--ios-cell); border-radius: var(--ios-r-group); overflow: hidden; }
+.ios-find-row { display: flex; align-items: stretch; }
+.ios-find-row + .ios-find-row { box-shadow: inset 0 var(--ios-hair) 0 var(--ios-sep); }
+.ios-find-go { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; min-height: var(--ios-row-h); padding: 0 8px 0 var(--ios-pad);
+  border: 0; border-radius: 0; background: var(--ios-clear); color: var(--ios-label); font-size: var(--ios-title-inline); text-align: left; }
+.ios-find-n { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ios-find-v { flex: none; font-variant-numeric: tabular-nums; font-weight: 600; }
+.ios-find-add { flex: none; width: var(--ios-row-h); border: 0; border-radius: 0; background: var(--ios-clear); color: var(--ios-blue); display: flex; align-items: center; justify-content: center; padding: 0; }
+.ios-find-add svg { width: 22px; height: 22px; }
+.ios-find-go:active, .ios-find-go.is-pressed, .ios-find-add:active, .ios-find-add.is-pressed { transform: none; background: var(--ios-press-row); }
+.ios-find-none { text-align: center; color: var(--ios-label-2); padding: 32px 0; margin: 0; }

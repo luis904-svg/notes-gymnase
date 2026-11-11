@@ -290,7 +290,24 @@
     if (stack.length < 2) return;
     run("pop", function () { stack.pop(); show(scrolls[key(top())] || 0); });
   }
-  var provider = { can: function () { return active && stack.length > 1 && settingsVisible(); }, go: pop };
+  // Onglet Réglages touché alors qu'une sous-page est ouverte : retour à la page principale (comme iOS).
+  function root() {
+    if (stack.length < 2) return false;
+    run("pop", function () { stack = [stack[0]]; show(scrolls[key(top())] || 0); });
+    return true;
+  }
+  var provider = {
+    can: function () { return active && stack.length > 1 && settingsVisible(); },
+    parent: function (clone) {                    // la copie montre la page du dessous
+      var c = clone.querySelector("#ios-set"); if (c) c.replaceChildren(build(stack[stack.length - 2]));
+    },
+    parentScroll: function () { return scrolls[key(stack[stack.length - 2])] || 0; },
+    parentBar: function () {
+      var pe = stack[stack.length - 2], p = PAGES[pe.id], y = scrolls[key(pe)] || 0;
+      return { title: titleOf(pe), on: p.large ? y >= window.IOSTitle.threshold("set-" + key(pe), 48) : true, back: stack.length - 2 > 0 };
+    },
+    go: pop
+  };
 
   /* ---------- Interactions ---------- */
   container.addEventListener("click", function (ev) {
@@ -356,6 +373,6 @@
   // Les autres modules montent leurs blocs dans #set-block pendant le chargement : on démarre une fois la page chargée.
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", sync); else sync();
 
-  window.IOSSettings = { push: push, pop: pop };
+  window.IOSSettings = { push: push, pop: pop, root: root, depth: function () { return active ? stack.length : 1; } };
   window.IOSIcons = { SVG: SVG, icon: icon, domain: domain };
 })();

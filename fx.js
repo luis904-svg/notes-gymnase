@@ -1,5 +1,7 @@
-/* Notes — couche app : haptique, indicateurs, sauvegarde, installation.
-   Aucune animation décorative : les écrans et les chiffres s'affichent tout de suite. */
+/* Notes — couche app : haptique, indicateurs, petites animations iOS, sauvegarde, installation.
+   v44 : les animations retirées en v40 reviennent, en CSS (ios.css) : la pastille de la barre du bas glisse avec un
+   ressort, l'icône d'onglet rebondit, le formulaire tremble sur une erreur, le verdict pulse quand il change, le bandeau
+   d'installation se replie. Tout est coupé par ?noanim=1 (html.noanim) et par « Réduire les animations ». */
 (function () {
   "use strict";
   function $(s, r) { return (r || document).querySelector(s); }
@@ -7,6 +9,14 @@
   document.documentElement.classList.add("fx");
   // ?noanim=1 : plus aucune animation ni transition CSS (voir ios.css, html.noanim).
   if (/[?&]noanim=1/.test(location.search)) document.documentElement.classList.add("noanim");
+  var reduceMq = window.matchMedia("(prefers-reduced-motion: reduce)");
+  function canAnim() { return !document.documentElement.classList.contains("noanim") && !reduceMq.matches; }
+  // Rejoue une animation CSS : retire la classe, force le calcul, la remet ; elle part seule à la fin.
+  function replay(node, cls, ms) {
+    if (!node || !canAnim()) return;
+    node.classList.remove(cls); void node.offsetWidth; node.classList.add(cls);
+    clearTimeout(node["_t" + cls]); node["_t" + cls] = setTimeout(function () { node.classList.remove(cls); }, ms || 700);
+  }
 
   /* ---------- Haptique ----------
      Android : API Vibration. iPhone (iOS 18+) : Safari n'a pas d'API, mais basculer un
@@ -123,7 +133,8 @@
   }
 
   /* ---------- Pastilles des onglets et du sélecteur de période ----------
-     Placées sans animation (le segment glisse par une simple transition CSS, voir ios.css). */
+     La pastille glisse d'un onglet à l'autre par une transition CSS à ressort (ios.css, classe .ios-ind-ready posée
+     après le premier placement pour ne pas animer l'arrivée). */
   function indicator(container, activeSel) {
     if (!container) return function () {};
     var ind = document.createElement("span"); ind.className = "ind"; ind.setAttribute("aria-hidden", "true");
@@ -132,6 +143,7 @@
       var b = $(activeSel, container);
       if (!b || !b.offsetWidth) { ind.style.opacity = "0"; return; }
       ind.style.left = b.offsetLeft + "px"; ind.style.width = b.offsetWidth + "px"; ind.style.opacity = "1";
+      if (!ind.classList.contains("ios-ind-ready")) requestAnimationFrame(function () { ind.classList.add("ios-ind-ready"); });
     };
   }
   var placeTab = indicator($("#tabbar"), '[aria-current="page"]');
@@ -146,7 +158,8 @@
     var bar = $("#tabbar"), ind = bar && $(".ind", bar);
     if (!bar || !ind) return;
     var HOLD = 250, SLOP = 10, CANCEL = 60;
-    var timer = null, pid = null, sx = 0, sy = 0, scrub = false, over = null, swallowUntil = 0, own = false;
+    var timer = null, pid = null, sx = 0, sy = 0, st = 0, scrub = false, over = null, swallowUntil = 0, own = false;
+    var FLICK = 36, FLICK_MS = 450;
     function tabs() { return [].slice.call(bar.querySelectorAll("[data-tab]")).filter(function (b) { return b.offsetWidth; }); }
     function nearest(x) {
       var best = null, d = Infinity;
@@ -167,7 +180,7 @@
     function stop() { clearTimeout(timer); timer = null; pid = null; scrub = false; over = null; }
     bar.addEventListener("pointerdown", function (e) {
       if (pid != null || (e.pointerType === "mouse" && e.button !== 0)) return;
-      pid = e.pointerId; sx = e.clientX; sy = e.clientY;
+      pid = e.pointerId; sx = e.clientX; sy = e.clientY; st = Date.now();
       clearTimeout(timer);
       timer = setTimeout(function () {
         timer = null; if (pid == null) return;
@@ -187,7 +200,16 @@
       if (e.pointerId !== pid) return;
       var was = scrub, target = was && !cancelled && e.clientY >= bar.getBoundingClientRect().top - CANCEL ? nearest(e.clientX) : null;
       stop();
-      if (!was) return;
+      if (!was) {
+        // Balayage rapide sur la barre (sans appui long) : onglet voisin, dans le sens du doigt.
+        var dx = e.clientX - sx, dy = e.clientY - sy;
+        if (!cancelled && Math.abs(dx) > FLICK && Math.abs(dx) > 2 * Math.abs(dy) && Date.now() - st < FLICK_MS) {
+          var list = tabs(), cur = bar.querySelector('[aria-current="page"]'), i = list.indexOf(cur), next = list[i + (dx > 0 ? 1 : -1)];
+          swallowUntil = Date.now() + 400;
+          if (i >= 0 && next) { haptic("select"); own = true; try { next.click(); } finally { own = false; } }
+        }
+        return;
+      }
       swallowUntil = Date.now() + 500;               // le clic natif qui suit le relâchement est ignoré
       settle();
       if (target && target.getAttribute("aria-current") !== "page") { own = true; try { target.click(); } finally { own = false; } }
@@ -197,6 +219,8 @@
     bar.addEventListener("pointercancel", function (e) { end(e, true); });
     bar.addEventListener("click", function (e) { if (!own && Date.now() < swallowUntil) { e.preventDefault(); e.stopPropagation(); } }, true);
     bar.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+    // Icône de l'onglet touché : petit rebond (comme les symboles animés d'iOS).
+    bar.addEventListener("click", function (e) { var b = e.target.closest("[data-tab]"); if (b) replay(b.querySelector("svg"), "ios-tab-pop", 600); });
   })();
 
   /* ---------- Téléphone en paysage : écran « Tourne ton téléphone » ----------
@@ -209,10 +233,10 @@
     document.body.appendChild(r);
   })();
 
-  /* ---------- Erreur dans le formulaire : vibration seulement ---------- */
+  /* ---------- Erreur dans le formulaire : vibration et le formulaire tremble ---------- */
   var msg = $("#f-msg");
   if (msg && window.MutationObserver) {
-    new MutationObserver(function () { if (msg.textContent.trim()) haptic("error"); })
+    new MutationObserver(function () { if (msg.textContent.trim()) { haptic("error"); replay($("#view-add .panel"), "ios-shake", 600); } })
       .observe(msg, { childList: true, characterData: true, subtree: true });
   }
 
@@ -285,14 +309,28 @@
     var wrap = $(".wrap"); wrap.insertBefore(tip, $("#demo"));
     $("#tip-x").addEventListener("click", function () {
       try { localStorage.setItem("notes2m01.tip", "off"); } catch (e) {}
-      tip.remove();
+      if (!canAnim()) { tip.remove(); return; }
+      tip.style.height = tip.offsetHeight + "px"; void tip.offsetHeight; tip.classList.add("ios-tip-out");
+      setTimeout(function () { tip.remove(); }, 400);
     });
+  }
+
+  /* ---------- Changement de verdict : la pastille pulse ---------- */
+  var lastPill = null;
+  function pulsePill() {
+    var p = $("#promo .pill"); if (!p) return;
+    var t = p.textContent;
+    if (lastPill !== null && t !== lastPill) replay(p, "ios-pulse", 700);
+    lastPill = t;
   }
 
   /* ---------- Branchements ---------- */
   window.FX = {
     haptic: haptic,
-    rendered: function () { placeSeg(); },
+    rendered: function () {
+      placeSeg(); pulsePill();
+      document.dispatchEvent(new CustomEvent("ios:rendered"));   // barre du bas (ios-tabbar.js) : pastilles et verdict
+    },
     view: function () { placeTab(); },
     success: function () { haptic("success"); }
   };
