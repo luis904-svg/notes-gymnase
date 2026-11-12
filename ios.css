@@ -728,7 +728,10 @@ body.ios-find-open { overflow: hidden; }
   .ios-erange button[aria-pressed="true"] { background: var(--ios-back-bg); color: var(--ios-label); }
   .ios-erange button:active, .ios-erange button.is-pressed { transform: none; opacity: 0.6; }
   .ios-eempty { margin: 18px 0 6px; font-size: 15px; color: var(--ios-label-2); }
-  .ios-echart { position: relative; margin-top: 12px; }
+  /* v48 : on glisse un doigt sur la courbe (ios-detail.js) ; la page défile toujours à la verticale. */
+  .ios-echart { position: relative; margin-top: 12px; touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; cursor: crosshair; border-radius: 12px; }
+  .ios-echart:focus-visible { outline: 2px solid var(--ios-blue); outline-offset: 4px; }
+  .ios-echart.is-live .ios-echart-cross { stroke: var(--ios-label); }
   .ios-echart-svg { display: block; width: 100%; height: auto; overflow: visible; }
   .ios-echart-grid { stroke: var(--ios-fill); }
   .ios-echart-thr { stroke: var(--ios-chev); stroke-dasharray: 2 4; }
@@ -737,11 +740,9 @@ body.ios-find-open { overflow: hidden; }
   .ios-echart-line { fill: none; stroke: var(--ios-green); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
   .ios-echart-line.is-down { stroke: var(--ios-red); }
   .ios-echart-cross { stroke: var(--ios-gray); stroke-width: 1; }
-  .ios-echart-dot { position: absolute; width: 32px; height: 32px; margin: -16px 0 0 -16px; padding: 0; border: 0; background: var(--ios-clear); display: flex; align-items: center; justify-content: center; }
-  .ios-echart-dot i { width: 8px; height: 8px; border-radius: 50%; background: var(--ios-chev); box-shadow: 0 0 0 2px var(--ios-bg); }
-  .ios-echart-dot.is-sel i { width: 14px; height: 14px; background: var(--ios-green); }
-  .ios-echart-dot.is-sel.is-down i { background: var(--ios-red); }
-  .ios-echart-dot:active, .ios-echart-dot.is-pressed { transform: none; }
+  .ios-echart-dot { position: absolute; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: var(--ios-chev); box-shadow: 0 0 0 2px var(--ios-bg); pointer-events: none; }
+  .ios-echart-dot.is-sel { width: 14px; height: 14px; margin: -7px 0 0 -7px; background: var(--ios-green); }
+  .ios-echart-dot.is-sel.is-down { background: var(--ios-red); }
   .ios-esel { display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 12px 14px; border-radius: 14px; background: var(--ios-cell); }
   .ios-esel-v { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; flex: none; }
   .ios-esel-v.ios-tone-none, .ios-esel-v.ios-tone-warn { color: var(--ios-label); }
