@@ -723,7 +723,15 @@ body.ios-find-open { overflow: hidden; }
   .ios-evalue-d { font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }
   .ios-evalue-d.is-up { color: var(--ios-green-text); } .ios-evalue-d.is-down { color: var(--ios-red-text); }
   .ios-ecap { margin: 2px 0 0; font-size: 13px; color: var(--ios-label-2); }
-  .ios-erange { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin-top: 14px; }
+  /* v49 : pendant le glissement, la barre « date · moyenne » prend la place des boutons, comme dans Bourse. */
+  .ios-etop { position: relative; margin-top: 14px; }
+  .ios-escrub { position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 12px;
+    border-radius: 8px; background: var(--ios-back-bg); visibility: hidden; }
+  .ios-escrub-d { font-size: 13px; font-weight: 600; color: var(--ios-label-2); }
+  .ios-escrub-v { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .ios-etop.is-live .ios-escrub { visibility: visible; }
+  .ios-etop.is-live .ios-erange { visibility: hidden; }
+  .ios-erange { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
   .ios-erange button { border: 0; border-radius: 8px; padding: 7px 0; background: var(--ios-clear); color: var(--ios-label-2); font: inherit; font-size: 13px; font-weight: 600; }
   .ios-erange button[aria-pressed="true"] { background: var(--ios-back-bg); color: var(--ios-label); }
   .ios-erange button:active, .ios-erange button.is-pressed { transform: none; opacity: 0.6; }
@@ -731,7 +739,11 @@ body.ios-find-open { overflow: hidden; }
   /* v48 : on glisse un doigt sur la courbe (ios-detail.js) ; la page défile toujours à la verticale. */
   .ios-echart { position: relative; margin-top: 12px; touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; cursor: crosshair; border-radius: 12px; }
   .ios-echart:focus-visible { outline: 2px solid var(--ios-blue); outline-offset: 4px; }
-  .ios-echart.is-live .ios-echart-cross { stroke: var(--ios-label); }
+  .ios-echart-cross { opacity: 0; }
+  .ios-echart.is-live .ios-echart-cross { opacity: 1; stroke: var(--ios-label); }
+  .ios-echart-knob { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: var(--ios-green); box-shadow: 0 0 0 2.5px var(--ios-bg); pointer-events: none; }
+  .ios-echart-knob.is-down { background: var(--ios-red); }
+  .ios-echart.is-live .ios-echart-knob { width: 16px; height: 16px; margin: -8px 0 0 -8px; }
   .ios-echart-svg { display: block; width: 100%; height: auto; overflow: visible; }
   .ios-echart-grid { stroke: var(--ios-fill); }
   .ios-echart-thr { stroke: var(--ios-chev); stroke-dasharray: 2 4; }
@@ -741,14 +753,7 @@ body.ios-find-open { overflow: hidden; }
   .ios-echart-line.is-down { stroke: var(--ios-red); }
   .ios-echart-cross { stroke: var(--ios-gray); stroke-width: 1; }
   .ios-echart-dot { position: absolute; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: var(--ios-chev); box-shadow: 0 0 0 2px var(--ios-bg); pointer-events: none; }
-  .ios-echart-dot.is-sel { width: 14px; height: 14px; margin: -7px 0 0 -7px; background: var(--ios-green); }
-  .ios-echart-dot.is-sel.is-down { background: var(--ios-red); }
-  .ios-esel { display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 12px 14px; border-radius: 14px; background: var(--ios-cell); }
-  .ios-esel-v { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; flex: none; }
-  .ios-esel-v.ios-tone-none, .ios-esel-v.ios-tone-warn { color: var(--ios-label); }
-  .ios-esel-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-  .ios-esel-t b { font-size: 15px; font-weight: 600; }
-  .ios-esel-t span { font-size: 13px; color: var(--ios-label-2); }
+  .ios-echart.is-live .ios-echart-dot.is-near { background: var(--ios-label-2); }
   .ios-estats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; margin-top: 18px; }
   .ios-estat { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 9px 0; border-top: var(--ios-hair) solid var(--ios-sep); min-width: 0; }
   .ios-estat span { font-size: 13px; color: var(--ios-label-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -771,4 +776,29 @@ body.ios-find-open { overflow: hidden; }
   .ios-enotes .notes > li.ios-erow > .acts { display: none; grid-area: acts; margin: 6px 0 0 -8px; }
   .ios-enotes .notes > li.ios-erow.ios-open > .acts { display: flex; flex-wrap: wrap; gap: 4px 12px; }
   .ios-enotes .notes > li.ios-erow:active { background: var(--ios-press-row); }
+}
+
+/* ---------- v50 : liste des branches de l'Accueil façon Bourse (ios-home.js) ----------
+   Une ligne par branche, séparée par un filet : nom et petite ligne, mini-courbe, moyenne arrondie et pastille de l'effet
+   de la dernière note. La carte du moteur garde son rôle de bouton (toucher = détail). */
+@media (max-width: 700px) {
+  #subjects:has(.ios-srow) { display: flex; flex-direction: column; gap: 0; }
+  #subjects .card.ios-srow { display: grid; grid-template-columns: minmax(0, 1fr) 64px 76px; align-items: center; gap: 12px; min-height: 64px; margin: 0; padding: 10px 0;
+    background: var(--ios-clear); border: 0; border-radius: 0; box-shadow: inset 0 var(--ios-hair) 0 var(--ios-sep); cursor: pointer; }
+  #subjects .card.ios-srow:first-child { box-shadow: none; }
+  #subjects .card.ios-srow:active, #subjects .card.ios-srow.is-pressed { box-shadow: inset 0 var(--ios-hair) 0 var(--ios-sep), inset 0 0 0 100vmax var(--ios-press-card); }
+  .ios-srow-l { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .ios-srow-l b { color: var(--ios-label); font-size: var(--ios-title-inline); font-weight: 700; line-height: 1.25; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .ios-srow-l > span { font-size: 13px; color: var(--ios-label-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ios-srow-l > span.ios-srow-need { color: var(--ios-red-text); white-space: normal; }
+  .ios-srow-spark { display: block; width: 64px; height: 28px; overflow: visible; }
+  .ios-srow-spark polyline { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; stroke: var(--ios-gray); }
+  .ios-srow-spark circle { fill: var(--ios-gray); }
+  .ios-srow-spark.is-up polyline { stroke: var(--ios-green); } .ios-srow-spark.is-down polyline { stroke: var(--ios-red); }
+  .ios-srow-r { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .ios-srow-v { font-size: var(--ios-title-inline); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .ios-srow-v.ios-srow-crit { color: var(--ios-red-text); } .ios-srow-v.ios-srow-none { color: var(--ios-label-2); }
+  .ios-srow-p { min-width: 58px; box-sizing: border-box; text-align: center; font-size: 13px; font-weight: 700; color: var(--ios-white); border-radius: 6px; padding: 3px 6px;
+    font-variant-numeric: tabular-nums; background: var(--ios-gray); white-space: nowrap; }
+  .ios-srow-p.is-up { background: var(--ios-green); } .ios-srow-p.is-down { background: var(--ios-red); }
 }

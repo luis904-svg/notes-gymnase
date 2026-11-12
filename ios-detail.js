@@ -40,8 +40,8 @@
      1. en-tête : nom de la branche, périodes et objectif ;
      2. panneau (.ios-epanel, redessiné sur place quand on change de période ou de point) : moyenne exacte de la période,
         variation depuis la première note de la période (en points et en %), boutons S1 / S2 / Année, grande courbe de la
-        moyenne cumulée (échelle fixe jusqu'à 6, seuil 4 en pointillé) qu'on parcourt en glissant le doigt (v48, voir
-        plus bas) ; la carte sous la courbe décrit la note (intitulé, date, moyenne avant → après) ; chiffres clés ;
+        moyenne cumulée (échelle fixe jusqu'à 6, seuil 4 en pointillé) qu'on parcourt en glissant le doigt (v49, voir
+        plus bas : barre « date · moyenne » au-dessus de la courbe, comme Bourse) ; chiffres clés ;
      3. le bloc « Prochain test » et le certificat (3e) tels quels ;
      4. les notes (liste du moteur, avec son écouteur), de la plus récente à la plus ancienne : date et coef en petites
         capitales, intitulé, note à droite et pastille de son effet sur la moyenne de l'année (+0.17, −0.30…). Toucher une
@@ -67,17 +67,21 @@
     return r ? r.date : null;
   }
 
-  /* Courbe (v48) : comme dans Bourse, on glisse un doigt dessus. La ligne verticale suit le doigt et s'accroche à chaque
-     point (petit retour haptique à chaque changement) ; pendant le geste, le grand chiffre devient la moyenne de ce point,
-     la variation est celle depuis le début de la période et la légende donne la date et la note ; la carte sous la courbe
-     décrit la note. Doigt levé : retour à la dernière valeur. touch-action: pan-y (ios.css) laisse défiler la page à la
-     verticale ; le navigateur annule alors le geste (pointercancel). Clavier : flèches gauche / droite sur la courbe. */
+  /* Courbe (v49), comme dans Bourse : on glisse un doigt le long de la moyenne. Le point glisse en continu sur la ligne
+     (position interpolée entre deux notes) avec une ligne verticale ; pendant le geste, une barre remplace les boutons
+     S1 / S2 / Année au-dessus de la courbe et donne la date et la moyenne de la note la plus proche (petit retour haptique
+     quand elle change). Le grand chiffre en haut ne bouge pas. Doigt levé : la barre disparaît, les boutons reviennent.
+     touch-action: pan-y (ios.css) laisse défiler la page à la verticale ; le navigateur annule alors le geste
+     (pointercancel). Clavier : flèches gauche / droite de note en note, Échap pour revenir. */
   var CW = 358, CH = 220, CL = 4, CR = 40, CT = 10, CB = 30;
+  var FULLM = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+  function fmtLong(iso) { return parseInt(iso.slice(8, 10), 10) + " " + FULLM[parseInt(iso.slice(5, 7), 10) - 1] + " " + iso.slice(0, 4); }
   function chartX(i, n) { return n === 1 ? (CL + CW - CR) / 2 : CL + 12 + i * (CW - CL - CR - 24) / (n - 1); }
   function chartHtml(pts, up) {
     var n = pts.length, last = n - 1;
     var lo = Math.max(1, Math.min(3, Math.floor(Math.min.apply(null, pts.map(function (p) { return p.avg; }))))), hi = 6;
     function Y(v) { return CT + (hi - v) / (hi - lo) * (CH - CT - CB); }
+    cur.Y = Y;
     var g = "", v;
     for (v = lo; v <= hi; v++) g += '<line class="' + (v === 4 ? "ios-echart-thr" : "ios-echart-grid") + '" x1="0" x2="' + (CW - CR + 4) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '"/>' +
       '<text class="ios-echart-y" x="' + CW + '" y="' + (Y(v) + 4).toFixed(1) + '" text-anchor="end">' + v + (v === 4 ? " · seuil" : "") + '</text>';
@@ -85,16 +89,17 @@
     var area = n > 1 ? '<polygon class="ios-echart-area' + (up ? "" : " is-down") + '" points="' + line + " " + chartX(last, n).toFixed(1) + "," + (CH - CB) + " " + chartX(0, n).toFixed(1) + "," + (CH - CB) + '"/>' : "";
     var svg = '<svg class="ios-echart-svg" viewBox="0 0 ' + CW + " " + CH + '" aria-hidden="true">' + g + area +
       (n > 1 ? '<polyline class="ios-echart-line' + (up ? "" : " is-down") + '" points="' + line + '"/>' : "") +
-      '<line class="ios-echart-cross" x1="' + chartX(last, n).toFixed(1) + '" x2="' + chartX(last, n).toFixed(1) + '" y1="0" y2="' + (CH - CB) + '"/>' +
+      '<line class="ios-echart-cross" x1="0" x2="0" y1="0" y2="' + (CH - CB) + '"/>' +
       '<text class="ios-echart-x" x="' + chartX(0, n).toFixed(1) + '" y="' + (CH - 8) + '" text-anchor="' + (n > 1 ? "start" : "middle") + '">' + fmtDay(pts[0].date) + '</text>' +
       (n > 1 ? '<text class="ios-echart-x" x="' + chartX(last, n).toFixed(1) + '" y="' + (CH - 8) + '" text-anchor="end">' + fmtDay(pts[last].date) + '</text>' : "") + '</svg>';
     var dots = pts.map(function (p, i) {
-      return '<i class="ios-echart-dot' + (i === last ? " is-sel" + (up ? "" : " is-down") : "") + '" style="left:' + (chartX(i, n) / CW * 100).toFixed(2) + '%;top:' + (Y(p.avg) / CH * 100).toFixed(2) + '%"></i>';
+      return '<i class="ios-echart-dot" style="left:' + (chartX(i, n) / CW * 100).toFixed(2) + '%;top:' + (Y(p.avg) / CH * 100).toFixed(2) + '%"></i>';
     }).join("");
-    return '<div class="ios-echart" tabindex="0" role="slider" aria-label="Courbe de la moyenne : glisse le doigt pour voir chaque note" aria-valuemin="1" aria-valuemax="6">' + svg + dots + '</div>';
+    return '<div class="ios-echart" tabindex="0" role="slider" aria-label="Courbe de la moyenne : glisse le doigt le long de la ligne" aria-valuemin="1" aria-valuemax="6">' + svg + dots +
+      '<i class="ios-echart-knob' + (up ? "" : " is-down") + '"></i></div>';
   }
 
-  // Panneau : dessiné une fois par période ; showPoint() ne fait que changer les textes et la position de la ligne.
+  // Panneau : dessiné une fois par période ; le geste ne change que la barre, la ligne verticale et le point.
   function paintPanel(panel) {
     var A = window.NotesApp, c = cur; if (!panel || !c) return;
     var pts = A.series ? A.series(c.id, range) : [], s1End = A.get().cfg.s1End;
@@ -103,13 +108,13 @@
     var btns = '<div class="ios-erange" role="group" aria-label="Période">' + [["s1", "S1"], ["s2", "S2"], ["year", "Année"]].map(function (r) {
       return '<button type="button" data-erange="' + r[0] + '" aria-pressed="' + (r[0] === range) + '">' + r[1] + '</button>';
     }).join("") + '</div>';
-    c.pts = pts; c.notes = notes; c.shown = null;
+    c.pts = pts; c.notes = notes; c.live = false; c.near = null;
     if (!pts.length) {
       panel.innerHTML = '<div class="ios-evalue"><span class="ios-evalue-n">–</span></div><p class="ios-ecap">' + LAB[range] + ' · pas encore de note</p>' + btns +
         '<p class="ios-eempty">' + (range === "year" ? "La courbe apparaît dès la première note de cette branche." : "Aucune note dans ce semestre.") + '</p>';
       return;
     }
-    var n = pts.length, first = pts[0].avg, last = pts[n - 1].avg, up = last - first >= -1e-9;
+    var n = pts.length, first = pts[0].avg, last = pts[n - 1].avg, d = last - first, up = d >= -1e-9;
     c.up = up;
     var vals = notes.map(function (g) { return g.value; });
     var hiV = vals.length ? Math.max.apply(null, vals) : null, loV = vals.length ? Math.min.apply(null, vals) : null;
@@ -124,81 +129,82 @@
     if (goal) { stats.push(["Objectif", fmtN(goal), ""]); stats.push(["Écart", yearAvg == null ? "–" : signed(yearAvg - goal), yearAvg == null ? "" : yearAvg >= goal ? "good" : "crit"]); }
     c.extra.forEach(function (x) { stats.push([x.k, x.v, ""]); });
     panel.innerHTML =
-      '<div class="ios-evalue"><span class="ios-evalue-n"></span><span class="ios-evalue-d"></span></div>' +
-      '<p class="ios-ecap"></p>' + btns + chartHtml(pts, up) +
-      '<div class="ios-esel"><span class="ios-esel-v"></span><span class="ios-esel-t"><b></b><span></span></span></div>' +
+      '<div class="ios-evalue"><span class="ios-evalue-n">' + fmt2(last) + '</span>' +
+      (n > 1 ? '<span class="ios-evalue-d ' + (up ? "is-up" : "is-down") + '">' + signed(d) + " (" + (d >= 0 ? "+" : "−") + Math.abs(first ? d / first * 100 : 0).toFixed(1) + ' %)</span>' : "") + '</div>' +
+      '<p class="ios-ecap">' + LAB[range] + ' · moyenne exacte, bulletin ' + roundHalf(last) + '</p>' +
+      '<div class="ios-etop">' + btns + '<div class="ios-escrub" aria-live="polite"><span class="ios-escrub-d"></span><b class="ios-escrub-v"></b></div></div>' +
+      chartHtml(pts, up) +
       '<div class="ios-estats">' + stats.map(function (st) { return '<div class="ios-estat"><span>' + st[0] + '</span><b' + (st[2] ? ' class="ios-tone-' + st[2] + '"' : "") + '>' + st[1] + '</b></div>'; }).join("") + '</div>';
-    showPoint(panel, n - 1, false);
+    rest(panel);
   }
 
-  // Met le point i en avant. live = doigt posé (Bourse : le grand chiffre suit le doigt) ; sinon, état de repos.
-  function showPoint(panel, i, live) {
+  // Repos : boutons visibles, point sur la dernière note, pas de ligne verticale.
+  function rest(panel) {
     var c = cur; if (!panel || !c || !c.pts || !c.pts.length) return;
-    var pts = c.pts, n = pts.length, p = pts[i], first = pts[0].avg, last = pts[n - 1].avg, before = i > 0 ? pts[i - 1].avg : null;
-    var key = i + (live ? "L" : "R"); if (c.shown === key) return; c.shown = key;
-    var onDay = c.notes.filter(function (g) { return g.date === p.date; });
-    var val = live ? p.avg : last, d = val - first, up = d >= -1e-9;
-    var q = function (s) { return panel.querySelector(s); };
-    q(".ios-evalue-n").textContent = fmt2(val);
-    var dEl = q(".ios-evalue-d");
-    if (n > 1 && (!live || i > 0)) { dEl.textContent = signed(d) + " (" + (d >= 0 ? "+" : "−") + Math.abs(first ? d / first * 100 : 0).toFixed(1) + " %)"; dEl.className = "ios-evalue-d " + (up ? "is-up" : "is-down"); }
-    else { dEl.textContent = live ? "début de la période" : ""; dEl.className = "ios-evalue-d"; }
-    q(".ios-ecap").textContent = live ? fmtDay(p.date) + " · après " + (onDay.map(noteName).join(", ") || "la note") : LAB[range] + " · moyenne exacte, bulletin " + roundHalf(last);
-    var x = chartX(i, n).toFixed(1), cross = q(".ios-echart-cross");
-    if (cross) { cross.setAttribute("x1", x); cross.setAttribute("x2", x); }
-    var chartEl = q(".ios-echart");
-    if (chartEl) { chartEl.classList.toggle("is-live", !!live); chartEl.setAttribute("aria-valuenow", p.avg.toFixed(2)); chartEl.setAttribute("aria-valuetext", fmtDay(p.date) + " : moyenne " + fmt2(p.avg)); }
-    [].forEach.call(panel.querySelectorAll(".ios-echart-dot"), function (dot, k) {
-      dot.className = "ios-echart-dot" + (k === i ? " is-sel" + (c.up ? "" : " is-down") : "");
-    });
-    var v = q(".ios-esel-v");
-    v.textContent = onDay.length === 1 ? fmtN(onDay[0].value) : onDay.map(function (g) { return fmtN(g.value); }).join(" · ");
-    v.className = "ios-esel-v ios-tone-" + (onDay.length === 1 ? toneV(onDay[0].value) : "none");
-    q(".ios-esel-t b").textContent = onDay.map(noteName).join(", ") || "Note";
-    q(".ios-esel-t span").textContent = fmtDay(p.date) + (onDay.length === 1 ? (onDay[0].type === "tp" ? " · TP" : onDay[0].type === "ta" ? "" : " · coef " + fmtN(onDay[0].coef)) : "") +
-      " · moyenne " + (before == null ? fmt2(p.avg) : fmt2(before) + " → " + fmt2(p.avg));
+    c.live = false; c.near = null;
+    var n = c.pts.length; placeKnob(panel, chartX(n - 1, n), c.pts[n - 1].avg);
+    var top = panel.querySelector(".ios-etop"), ch = panel.querySelector(".ios-echart");
+    if (top) top.classList.remove("is-live");
+    if (ch) { ch.classList.remove("is-live"); ch.setAttribute("aria-valuenow", c.pts[n - 1].avg.toFixed(2)); ch.setAttribute("aria-valuetext", "Aujourd'hui : moyenne " + fmt2(c.pts[n - 1].avg)); }
+  }
+  function placeKnob(panel, x, avg) {
+    var k = panel.querySelector(".ios-echart-knob"); if (!k) return;
+    k.style.left = (x / CW * 100).toFixed(2) + "%"; k.style.top = (cur.Y(avg) / CH * 100).toFixed(2) + "%";
+  }
+  // Doigt à l'abscisse x (repère du dessin) : point interpolé sur la ligne, barre = note la plus proche.
+  function scrubTo(panel, x, fromKey) {
+    var c = cur, pts = c.pts, n = pts.length; if (!n) return;
+    var x0 = chartX(0, n), x1 = chartX(n - 1, n);
+    x = Math.max(x0, Math.min(x1, x));
+    var i = 0, t = 0;
+    if (n > 1) { var step = (x1 - x0) / (n - 1); i = Math.min(n - 2, Math.floor((x - x0) / step)); t = (x - chartX(i, n)) / step; }
+    var avg = n > 1 ? pts[i].avg + (pts[i + 1].avg - pts[i].avg) * t : pts[0].avg, near = n > 1 ? (t < 0.5 ? i : i + 1) : 0;
+    placeKnob(panel, x, avg);
+    var cross = panel.querySelector(".ios-echart-cross"); if (cross) { cross.setAttribute("x1", x.toFixed(1)); cross.setAttribute("x2", x.toFixed(1)); }
+    if (!c.live) { c.live = true; panel.querySelector(".ios-etop").classList.add("is-live"); panel.querySelector(".ios-echart").classList.add("is-live"); }
+    if (near !== c.near) {
+      c.near = near;
+      if (!fromKey && window.FX) FX.haptic("select");
+      var p = pts[near];
+      panel.querySelector(".ios-escrub-d").textContent = fmtLong(p.date);
+      panel.querySelector(".ios-escrub-v").textContent = "moy. " + fmt2(p.avg);
+      var ch = panel.querySelector(".ios-echart"); ch.setAttribute("aria-valuenow", p.avg.toFixed(2)); ch.setAttribute("aria-valuetext", fmtLong(p.date) + " : moyenne " + fmt2(p.avg));
+      [].forEach.call(panel.querySelectorAll(".ios-echart-dot"), function (dot, k) { dot.classList.toggle("is-near", k === near); });
+    }
   }
 
-  // Point le plus proche du doigt (abscisse à l'écran ramenée au repère du dessin).
-  function nearest(chartEl, clientX) {
-    var c = cur, r = chartEl.getBoundingClientRect(), n = c.pts.length, x = (clientX - r.left) / r.width * CW, best = 0, bd = Infinity;
-    for (var i = 0; i < n; i++) { var dd = Math.abs(chartX(i, n) - x); if (dd < bd) { bd = dd; best = i; } }
-    return best;
-  }
+  function viewX(chartEl, clientX) { var r = chartEl.getBoundingClientRect(); return (clientX - r.left) / r.width * CW; }
   var scrub = null;
   container.addEventListener("pointerdown", function (e) {
     var ch = e.target.closest(".ios-echart"); if (!ch || !cur || !cur.pts || !cur.pts.length) return;
     if (e.pointerType === "mouse" && e.button !== 0) return;
-    var panel = ch.closest(".ios-epanel"), i = nearest(ch, e.clientX);
-    scrub = { id: e.pointerId, ch: ch, panel: panel, i: i };
+    scrub = { id: e.pointerId, ch: ch, panel: ch.closest(".ios-epanel") };
     try { ch.setPointerCapture(e.pointerId); } catch (x) {}
-    if (window.FX) FX.haptic("select");
-    showPoint(panel, i, true);
+    scrubTo(scrub.panel, viewX(ch, e.clientX));
   });
   container.addEventListener("pointermove", function (e) {
     if (!scrub || e.pointerId !== scrub.id) return;
-    var i = nearest(scrub.ch, e.clientX);
-    if (i !== scrub.i) { scrub.i = i; if (window.FX) FX.haptic("select"); showPoint(scrub.panel, i, true); }
+    scrubTo(scrub.panel, viewX(scrub.ch, e.clientX));
   });
   function endScrub(e) {
     if (!scrub || e.pointerId !== scrub.id) return;
-    var s = scrub; scrub = null;
-    showPoint(s.panel, cur && cur.pts ? cur.pts.length - 1 : 0, false);
+    var s = scrub; scrub = null; rest(s.panel);
   }
   container.addEventListener("pointerup", endScrub);
   container.addEventListener("pointercancel", endScrub);
   container.addEventListener("keydown", function (e) {
     var ch = e.target.closest && e.target.closest(".ios-echart"); if (!ch || !cur || !cur.pts || !cur.pts.length) return;
-    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight" && e.key !== "Escape") return;
-    var n = cur.pts.length, k = cur.shown ? parseInt(cur.shown, 10) : n - 1, live = !!cur.shown && cur.shown.slice(-1) === "L";
-    // Échap : d'abord retour à la dernière valeur ; au repos, il ferme la page comme ailleurs (index.html).
-    if (e.key === "Escape") { if (live) { e.preventDefault(); e.stopPropagation(); showPoint(ch.closest(".ios-epanel"), n - 1, false); } return; }
+    var panel = ch.closest(".ios-epanel"), n = cur.pts.length;
+    // Échap : d'abord retour au repos ; au repos, il ferme la page comme ailleurs (index.html).
+    if (e.key === "Escape") { if (cur.live) { e.preventDefault(); e.stopPropagation(); rest(panel); } return; }
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
     e.preventDefault();
+    var k = cur.live && cur.near != null ? cur.near : n - 1;
     k = Math.max(0, Math.min(n - 1, k + (e.key === "ArrowRight" ? 1 : -1)));
-    showPoint(ch.closest(".ios-epanel"), k, k !== n - 1 || cur.shown.slice(-1) === "L");
+    scrubTo(panel, chartX(k, n), true);
   });
   container.addEventListener("focusout", function (e) {
-    if (e.target.classList && e.target.classList.contains("ios-echart") && cur && cur.pts && cur.pts.length) showPoint(e.target.closest(".ios-epanel"), cur.pts.length - 1, false);
+    if (e.target.classList && e.target.classList.contains("ios-echart") && cur && cur.live && !scrub) rest(e.target.closest(".ios-epanel"));
   });
 
   function buildPage() {
