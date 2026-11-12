@@ -1236,8 +1236,10 @@ td input[type="date"] { width: auto; }
     },
     closeDetail: function () { closeDetail(); },
     detailId: function () { return ui.detail; },
-    // Page de détail (ios-detail.js, maquette F) : moyenne cumulée au fil des notes d'une branche.
-    series: function (id) { return sub(id) ? subjSeries(id, currentGrades()).filter(function (p) { return p.avg != null; }) : []; },
+    // Page de détail (ios-detail.js, maquette E « Bourse ») : moyenne cumulée au fil des notes d'une branche, sur l'année
+    // ou un semestre (period : "year" | "s1" | "s2"), et notes de la branche (TA regroupés, mode exemple compris).
+    series: function (id, period) { return sub(id) ? subjSeries(id, periodNotes(currentGrades(), period || "year")).filter(function (p) { return p.avg != null; }) : []; },
+    subjNotes: function (id) { var s = sub(id); if (!s) return []; var ids = s.parts || [id]; return currentGrades().filter(function (g) { return ids.indexOf(g.subject) >= 0; }); },
     showSubject: function (id) {
       if (!sub(id)) return;
       if (ui.view !== "dash") { ui.detail = null; renderDetail(); if (ui.view === "add") resetForm(); setView("dash"); }

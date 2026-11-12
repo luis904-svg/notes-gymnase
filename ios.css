@@ -26,10 +26,6 @@
   --ios-red: #FF383C;
   --ios-red-soft: rgba(255, 56, 60, 0.12);
   --ios-red-text: #D70015;     /* texte rouge sur fond clair (contraste) */
-  /* Détail d'une matière, maquette F (v46) : anneau de la moyenne */
-  --ios-ring-track: #E3E3E8;
-  --ios-ring-num: 66px;
-  --ios-nbadge: 44px;
   /* Confettis de la validation d'une note (couleurs de la v39) */
   --ios-purple: #AF52DE;
   --ios-pink: #FF2D55;
@@ -705,76 +701,73 @@ body.ios-find-open { overflow: hidden; }
 .ios-conf-green { background: var(--ios-green); } .ios-conf-blue { background: var(--ios-blue); } .ios-conf-orange { background: var(--ios-orange); }
 .ios-conf-purple { background: var(--ios-purple); } .ios-conf-pink { background: var(--ios-pink); } .ios-conf-teal { background: var(--ios-teal); }
 
-/* ---------- v46 : détail d'une matière, maquette F (ios-detail.js, design/maquettes-detail/Mix.dc.html) ----------
-   En-tête centré avec « + », anneau de la moyenne, tuiles des semestres, carte « Évolution » (courbe simple),
-   notes groupées par semestre en lignes à pastille ; actions d'une note au toucher. La barre du bas sort de l'écran. */
+/* ---------- v47 : détail d'une matière, maquette E « façon Bourse » (ios-detail.js, design/maquettes-detail/Bourse.dc.html) ----------
+   En-tête aligné à gauche, moyenne exacte et variation, S1 / S2 / Année, grande courbe à points touchables, carte du point
+   choisi, chiffres clés sur deux colonnes, notes avec pastille d'effet ; actions d'une note au toucher.
+   La barre du bas sort de l'écran pendant la page ; le « + » est dans la barre de titre. */
 @media (max-width: 700px) {
   body.ios-detail-open .ios-dock { transform: translate3d(0, calc(100% + var(--ios-pill-bottom) + env(safe-area-inset-bottom, 0px) + 8px), 0); visibility: hidden;
     transition: transform var(--ios-dur-pill) var(--ios-ease-out), visibility 0s var(--ios-dur-pill); }
   body.ios-detail-open { padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
-  .ios-fpage { gap: 0; }
-  .ios-fhead { text-align: center; }
-  .ios-fpage .ios-fhead .ios-large { font-size: 28px; margin: 0; }
-  .ios-fpage .ios-fhead .ios-sub { margin: 2px 0 0; }
   .ios-fadd { display: none; position: absolute; pointer-events: auto; right: max(var(--ios-pill-side), env(safe-area-inset-right, 0px)); top: calc((var(--ios-bar-h) - var(--ios-back)) / 2);
-    width: var(--ios-back); height: var(--ios-back); padding: 0; border: 0; border-radius: 50%; background: var(--ios-blue); color: var(--ios-white); align-items: center; justify-content: center; }
-  body.ios-detail-open .ios-bar:not(.ios-bar-ghost) .ios-fadd { display: flex; }
+    width: var(--ios-back); height: var(--ios-back); padding: 0; border: 0; border-radius: 50%; background: var(--ios-back-bg); color: var(--ios-blue); align-items: center; justify-content: center; }
   .ios-fadd svg { width: 20px; height: 20px; stroke-width: 2.4; }
-  .ios-ring { position: relative; width: 220px; height: 220px; margin: 18px auto 0; }
-  .ios-ring-svg { display: block; }
-  .ios-ring-track, .ios-ring-val { fill: none; stroke-width: 18; }
-  .ios-ring-track { stroke: var(--ios-ring-track); }
-  .ios-ring-val { stroke-linecap: round; stroke: var(--ios-gray); }
-  .ios-ring-good { stroke: var(--ios-green); } .ios-ring-warn { stroke: var(--ios-orange); } .ios-ring-crit { stroke: var(--ios-red); }
-  .ios-ring-t4, .ios-ring-tg { stroke-width: 3; stroke-linecap: round; }
-  .ios-ring-t4 { stroke: var(--ios-label); } .ios-ring-tg { stroke: var(--ios-blue); }
-  .ios-ring-lbl { position: absolute; transform: translate(-50%, -50%); font-size: 12px; font-weight: 600; }
-  .ios-ring-l4 { color: var(--ios-label); } .ios-ring-lg { color: var(--ios-blue); }
-  .ios-ring-in { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
-  .ios-ring-k { font-size: 13px; font-weight: 600; color: var(--ios-label-2); text-transform: uppercase; letter-spacing: 0.03em; }
-  .ios-ring-num { font-size: var(--ios-ring-num); font-weight: 800; line-height: 1; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
-  .ios-ring-s { font-size: 14px; color: var(--ios-label-2); }
-  .ios-ring-st { margin: 8px 0 0; text-align: center; font-size: 15px; font-weight: 600; }
-  .ios-ftiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 22px; }
-  .ios-ftile { background: var(--ios-cell); border-radius: 22px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
-  .ios-ftile-k, .ios-ftile-s { font-size: 13px; color: var(--ios-label-2); }
-  .ios-ftile-v { font-size: 30px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; }
-  .ios-ftile-v.ios-tone-none { color: var(--ios-label); }
-  .ios-fpage > .ios-need, .ios-fpage > .ios-cert { margin-top: 12px; }
-  .ios-fchart { margin-top: 12px; padding: 18px 18px 16px; }
-  .ios-fchart-h { display: flex; align-items: baseline; justify-content: space-between; }
-  .ios-fchart-h > span:first-child { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
-  .ios-fchart-r { font-size: 13px; color: var(--ios-label-2); }
-  .ios-chart { display: block; width: 100%; height: auto; margin-top: 12px; overflow: visible; }
-  .ios-chart-grid { stroke: var(--ios-fill); }
-  .ios-chart-y, .ios-chart-x { font-size: 11px; fill: var(--ios-label-2); }
-  .ios-chart-line { fill: none; stroke: var(--ios-green); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
-  .ios-chart-end { fill: var(--ios-green); stroke: var(--ios-cell); stroke-width: 2.5; }
-  .ios-chart-empty { margin: 14px 0 0; font-size: 15px; color: var(--ios-label-2); }
-  .ios-fchart-rows { margin-top: 12px; border-top: var(--ios-hair) solid var(--ios-sep); }
-  .ios-fchart-row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0 0; font-size: 15px; }
-  .ios-fchart-row .mono { font-variant-numeric: tabular-nums; font-weight: 600; }
-  /* Notes : une liste (celle du moteur), titres de semestre et lignes blanches arrondies par groupe. */
-  .ios-fnotes { margin-top: 8px; }
-  .ios-fnotes .notes { gap: 0; }
-  .ios-fnotes .notes > li.ios-nsem { display: block; border: 0; padding: 22px var(--ios-pad) 7px; background: var(--ios-clear); font-size: 13px; color: var(--ios-label-2); text-transform: uppercase; letter-spacing: 0.02em; }
-  .ios-fnotes .notes > li.ios-nrow, .ios-fnotes .notes > li.ios-ta-li { background: var(--ios-cell); border-top: 0; box-shadow: inset 0 var(--ios-hair) 0 var(--ios-sep); }
-  .ios-fnotes .notes > li.ios-nfirst { box-shadow: none; border-radius: var(--ios-r-group) var(--ios-r-group) 0 0; }
-  .ios-fnotes .notes > li.ios-nlast { border-radius: 0 0 var(--ios-r-group) var(--ios-r-group); }
-  .ios-fnotes .notes > li.ios-nfirst.ios-nlast { border-radius: var(--ios-r-group); }
-  .ios-fnotes .notes > li.ios-ta-li { padding: 0 14px; }
-  .ios-fnotes .notes > li.ios-nrow { display: grid; grid-template-columns: var(--ios-nbadge) minmax(0, 1fr) 14px; gap: 2px 12px; align-items: center; padding: 10px 14px 10px 12px; min-height: 64px; box-sizing: border-box; cursor: pointer; }
-  .ios-fnotes .notes > li.ios-nrow > .v { grid-column: 1; grid-row: 1 / span 2; width: var(--ios-nbadge); height: var(--ios-nbadge); border-radius: 12px; display: flex; align-items: center; justify-content: center;
-    font-family: inherit; font-size: 17px; font-weight: 700; letter-spacing: 0; font-variant-numeric: tabular-nums; }
-  .ios-nv-good { background: var(--ios-green-soft); color: var(--ios-green-text); }
-  .ios-nv-mid { background: var(--ios-bg); color: var(--ios-label); }
-  .ios-nv-crit, .ios-fnotes .notes .v.ios-nv-crit { background: var(--ios-red-soft); color: var(--ios-red-text); }
-  .ios-fnotes .notes > li.ios-nrow > .what { grid-column: 2; grid-row: 1; font-size: var(--ios-title-inline); color: var(--ios-label); }
-  .ios-fnotes .notes > li.ios-nrow > .meta { grid-column: 2; grid-row: 2; font-size: 13px; color: var(--ios-label-2); }
-  .ios-fnotes .notes > li.ios-nrow::after { content: ""; grid-column: 3; grid-row: 1 / span 2; width: 8px; height: 8px; border-right: 2.5px solid var(--ios-chev); border-bottom: 2.5px solid var(--ios-chev);
-    transform: rotate(-45deg); transition: transform var(--ios-dur-seg) var(--ios-ease-out); justify-self: center; }
-  .ios-fnotes .notes > li.ios-nrow.ios-open::after { transform: rotate(45deg); }
-  .ios-fnotes .notes > li.ios-nrow > .acts { display: none; grid-column: 2 / span 2; grid-row: 3; margin: 6px 0 0 -8px; }
-  .ios-fnotes .notes > li.ios-nrow.ios-open > .acts { display: flex; flex-wrap: wrap; gap: 4px 12px; }
-  .ios-fnotes .notes > li.ios-nrow:active { background: var(--ios-press-row); }
+  body.ios-detail-open .ios-bar:not(.ios-bar-ghost) .ios-fadd { display: flex; }
+
+  .ios-epage { gap: 0; }
+  .ios-epage .ios-large { font-size: 28px; font-weight: 800; margin: 0; }
+  .ios-epage > .ios-sub { margin: 2px 0 0; padding-bottom: 12px; border-bottom: var(--ios-hair) solid var(--ios-sep); }
+  .ios-epanel { display: flex; flex-direction: column; }
+  .ios-evalue { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; margin-top: 12px; }
+  .ios-evalue-n { font-size: 34px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .ios-evalue-d { font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .ios-evalue-d.is-up { color: var(--ios-green-text); } .ios-evalue-d.is-down { color: var(--ios-red-text); }
+  .ios-ecap { margin: 2px 0 0; font-size: 13px; color: var(--ios-label-2); }
+  .ios-erange { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin-top: 14px; }
+  .ios-erange button { border: 0; border-radius: 8px; padding: 7px 0; background: var(--ios-clear); color: var(--ios-label-2); font: inherit; font-size: 13px; font-weight: 600; }
+  .ios-erange button[aria-pressed="true"] { background: var(--ios-back-bg); color: var(--ios-label); }
+  .ios-erange button:active, .ios-erange button.is-pressed { transform: none; opacity: 0.6; }
+  .ios-eempty { margin: 18px 0 6px; font-size: 15px; color: var(--ios-label-2); }
+  .ios-echart { position: relative; margin-top: 12px; }
+  .ios-echart-svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .ios-echart-grid { stroke: var(--ios-fill); }
+  .ios-echart-thr { stroke: var(--ios-chev); stroke-dasharray: 2 4; }
+  .ios-echart-y, .ios-echart-x { font-size: 11px; fill: var(--ios-label-2); }
+  .ios-echart-area { fill: var(--ios-green-soft); } .ios-echart-area.is-down { fill: var(--ios-red-soft); }
+  .ios-echart-line { fill: none; stroke: var(--ios-green); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+  .ios-echart-line.is-down { stroke: var(--ios-red); }
+  .ios-echart-cross { stroke: var(--ios-gray); stroke-width: 1; }
+  .ios-echart-dot { position: absolute; width: 32px; height: 32px; margin: -16px 0 0 -16px; padding: 0; border: 0; background: var(--ios-clear); display: flex; align-items: center; justify-content: center; }
+  .ios-echart-dot i { width: 8px; height: 8px; border-radius: 50%; background: var(--ios-chev); box-shadow: 0 0 0 2px var(--ios-bg); }
+  .ios-echart-dot.is-sel i { width: 14px; height: 14px; background: var(--ios-green); }
+  .ios-echart-dot.is-sel.is-down i { background: var(--ios-red); }
+  .ios-echart-dot:active, .ios-echart-dot.is-pressed { transform: none; }
+  .ios-esel { display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 12px 14px; border-radius: 14px; background: var(--ios-cell); }
+  .ios-esel-v { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; flex: none; }
+  .ios-esel-v.ios-tone-none, .ios-esel-v.ios-tone-warn { color: var(--ios-label); }
+  .ios-esel-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .ios-esel-t b { font-size: 15px; font-weight: 600; }
+  .ios-esel-t span { font-size: 13px; color: var(--ios-label-2); }
+  .ios-estats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; margin-top: 18px; }
+  .ios-estat { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 9px 0; border-top: var(--ios-hair) solid var(--ios-sep); min-width: 0; }
+  .ios-estat span { font-size: 13px; color: var(--ios-label-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ios-estat b { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ios-estat b.ios-tone-warn { color: var(--ios-label); }
+  .ios-epage > .ios-need, .ios-epage > .ios-cert { margin-top: 16px; }
+  .ios-enotes-h { display: flex; align-items: baseline; justify-content: space-between; margin: 26px 0 8px; }
+  .ios-enotes-h span { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+  .ios-enotes-h small { font-size: 13px; color: var(--ios-label-2); }
+  /* Notes : liste du moteur ; chaque ligne = date et coef, intitulé, note et effet sur la moyenne. */
+  .ios-enotes .notes > li { border-top: var(--ios-hair) solid var(--ios-sep); }
+  .ios-enotes .notes > li.ios-ta-li { padding: 0; }
+  .ios-enotes .notes > li.ios-erow { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "meta v" "what eff" "acts acts"; gap: 2px 12px; align-items: center; padding: 12px 0; cursor: pointer; }
+  .ios-enotes .notes > li.ios-erow > .meta { grid-area: meta; font-size: 12px; font-weight: 600; color: var(--ios-label-2); text-transform: uppercase; letter-spacing: 0.02em; }
+  .ios-enotes .notes > li.ios-erow > .what { grid-area: what; font-size: var(--ios-title-inline); font-weight: 600; color: var(--ios-label); }
+  .ios-enotes .notes > li.ios-erow > .v { grid-area: v; justify-self: end; font-family: inherit; font-size: 20px; font-weight: 700; letter-spacing: 0; font-variant-numeric: tabular-nums; color: var(--ios-label); }
+  .ios-enotes .notes > li.ios-erow > .v.crit { color: var(--ios-red-text); }
+  .ios-eff { grid-area: eff; justify-self: end; font-size: 12px; font-weight: 700; color: var(--ios-white); border-radius: 6px; padding: 2px 7px; font-variant-numeric: tabular-nums; background: var(--ios-gray); }
+  .ios-eff.is-up { background: var(--ios-green); } .ios-eff.is-down { background: var(--ios-red); }
+  .ios-enotes .notes > li.ios-erow > .acts { display: none; grid-area: acts; margin: 6px 0 0 -8px; }
+  .ios-enotes .notes > li.ios-erow.ios-open > .acts { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+  .ios-enotes .notes > li.ios-erow:active { background: var(--ios-press-row); }
 }

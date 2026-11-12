@@ -1,8 +1,9 @@
 /* ios-detail.js : détail d'une matière en PAGE ENTIÈRE sur téléphone (≤ 700 px), à la place de la feuille. Spécification :
    design/SPEC-reglages.md (« Additions »). Sur grand écran, rien ne change : la feuille (#sheet) reste, sans animation.
    Principe : renderDetail (index.html) construit toujours son contenu dans #sheet-box ; sur téléphone, IOSDetail.open() prend
-   ce contenu et en fait la page #ios-detail, mise en page de la maquette F (v46) : anneau de la moyenne, tuiles des
-   semestres, courbe simple de la moyenne, notes groupées par semestre (voir buildPage). Chaque nouveau rendu (note supprimée…) refait
+   ce contenu et en fait la page #ios-detail, mise en page de la maquette E « façon Bourse » (v47, à la place de F) :
+   moyenne et variation, S1 / S2 / Année, grande courbe à points touchables, chiffres clés, notes avec leur effet
+   (voir buildPage). Chaque nouveau rendu (note supprimée…) refait
    la page en gardant le défilement. L'affichage de la page est piloté par une classe sur <body> (ios-detail-open) :
    l'Accueil et son en-tête disparaissent, la page apparaît ; aucune bascule de `hidden`, donc aucun conflit avec setView.
    Entrée : push (IOSNav.run), sortie : chevron, balayage du bord gauche, onglet Accueil, ou autre onglet (instantané).
@@ -34,62 +35,31 @@
   function toneOf(el) { var k = ["good", "warn", "crit"].filter(function (c) { return el && el.classList.contains(c); })[0]; return k || "none"; }
   function el(tag, cls, html) { var n = document.createElement(tag); if (cls) n.className = cls; if (html != null) n.innerHTML = html; return n; }
 
-  /* Page de détail, maquette F (v46, design/maquettes-detail/Mix.dc.html). Le moteur écrit toujours dans #sheet-box ;
-     on en reprend les morceaux et les données de NotesApp :
-     1. en-tête centré (nom, périodes, objectif) avec le bouton « + » (Ajouter une note dans cette branche) ;
-     2. l'anneau de la moyenne de l'année (échelle 1 à 6, repères 4 et objectif), le bulletin au centre, une ligne d'état ;
-     3. les tuiles Semestre 1 / Semestre 2 ; le bloc « Prochain test » et le certificat (3e) tels quels ;
-     4. la carte « Évolution » : la courbe simple de la moyenne (NotesApp.series) ; dessous, s'il y en a, le détail
-        tests / TP ou les parties d'une branche composée ;
-     5. les notes groupées par semestre, une ligne par note (valeur dans une pastille colorée, intitulé, date et coef,
-        chevron). Toucher une ligne montre ses actions (Modifier, Supprimer, Photos) ; un TA reste dépliable. La liste
-        reste celle du moteur (#sheet-notes, avec son écouteur) : on n'y ajoute que des titres de semestre. */
+  /* Page de détail, maquette E « façon Bourse » (v47, design/maquettes-detail/Bourse.dc.html), choisie par l'utilisateur
+     à la place de F. Le moteur écrit toujours dans #sheet-box ; on en reprend les morceaux et les données de NotesApp :
+     1. en-tête : nom de la branche, périodes et objectif ;
+     2. panneau (.ios-epanel, redessiné sur place quand on change de période ou de point) : moyenne exacte de la période,
+        variation depuis la première note de la période (en points et en %), boutons S1 / S2 / Année, grande courbe de la
+        moyenne cumulée (échelle fixe jusqu'à 6, seuil 4 en pointillé) dont chaque point se touche ; la carte sous la
+        courbe décrit le point choisi (note, intitulé, date, moyenne avant → après) ; tableau des chiffres clés ;
+     3. le bloc « Prochain test » et le certificat (3e) tels quels ;
+     4. les notes (liste du moteur, avec son écouteur), de la plus récente à la plus ancienne : date et coef en petites
+        capitales, intitulé, note à droite et pastille de son effet sur la moyenne de l'année (+0.17, −0.30…). Toucher une
+        ligne montre ses actions (Modifier, Supprimer, Photos) ; un TA reste dépliable. */
   var MONTHS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+  var LAB = { year: "Année", s1: "Semestre 1", s2: "Semestre 2" };
   var openRow = null;                       // note dont les actions sont montrées (gardée d'un rendu à l'autre)
+  var range = "year", sel = null, cur = null;   // période et point choisis (remis à zéro à l'ouverture d'une branche)
   function fmt2(v) { return v == null ? "–" : v.toFixed(2); }
+  function fmtN(v) { return String(Math.round(v * 100) / 100); }
+  function roundHalf(x) { return x == null ? null : Math.floor(x * 2 + 0.5 + 1e-9) / 2; }
+  function fmtDay(iso) { return parseInt(iso.slice(8, 10), 10) + " " + MONTHS[parseInt(iso.slice(5, 7), 10) - 1]; }
+  function toneV(v) { return v == null ? "none" : v < 4 ? "crit" : v < 4.5 ? "warn" : "good"; }
   function subjOf(id) { return window.NotesApp.subjectsAll().filter(function (x) { return x.id === id; })[0] || null; }
+  function noteName(g) { return g.type === "ta" ? "TA" + (g.label ? " · " + g.label : "") : g.label && g.label !== "Exemple" ? g.label : g.type === "tp" ? "TP" : "Test"; }
+  function signed(d) { return (d >= 0 ? "+" : "−") + Math.abs(d).toFixed(2); }
 
-  function ringSvg(avg, goal, tone) {
-    var R = 88, C = 2 * Math.PI * R, frac = avg == null ? 0 : Math.max(0, Math.min(1, (avg - 1) / 5));
-    function tick(v, cls) {
-      var a = (-90 + (v - 1) / 5 * 360) * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
-      return '<line class="' + cls + '" x1="' + (110 + 76 * c).toFixed(1) + '" y1="' + (110 + 76 * s).toFixed(1) + '" x2="' + (110 + 100 * c).toFixed(1) + '" y2="' + (110 + 100 * s).toFixed(1) + '"/>';
-    }
-    function lbl(v, cls) {
-      var a = (-90 + (v - 1) / 5 * 360) * Math.PI / 180;
-      return '<span class="ios-ring-lbl ' + cls + '" style="left:' + (110 + 116 * Math.cos(a)).toFixed(0) + 'px;top:' + (110 + 116 * Math.sin(a)).toFixed(0) + 'px">' + v + '</span>';
-    }
-    return '<svg class="ios-ring-svg" width="220" height="220" viewBox="0 0 220 220" aria-hidden="true">' +
-      '<circle class="ios-ring-track" cx="110" cy="110" r="' + R + '"/>' +
-      (frac > 0 ? '<circle class="ios-ring-val ios-ring-' + tone + '" cx="110" cy="110" r="' + R + '" stroke-dasharray="' + (frac * C).toFixed(1) + " " + C.toFixed(1) + '" transform="rotate(-90 110 110)"/>' : "") +
-      tick(4, "ios-ring-t4") + (goal && goal !== 4 ? tick(goal, "ios-ring-tg") : "") + '</svg>' +
-      lbl(4, "ios-ring-l4") + (goal && goal !== 4 ? lbl(goal, "ios-ring-lg") : "");
-  }
-
-  function chartSvg(pts) {
-    if (!pts.length) return '<p class="ios-chart-empty">La courbe apparaît dès la première note de cette branche.</p>';
-    var W = 340, H = 150, L = 30, R = 12, T = 12, B = 26;
-    var vals = pts.map(function (p) { return p.avg; });
-    var lo = Math.max(1, Math.min(4, Math.floor(Math.min.apply(null, vals) * 2) / 2)), hi = Math.min(6, Math.max(lo + 1, Math.ceil(Math.max.apply(null, vals) * 2) / 2));
-    var step = hi - lo > 2 ? 1 : 0.5, n = pts.length;
-    function X(i) { return n === 1 ? (L + W - R) / 2 : L + i * (W - L - R) / (n - 1); }
-    function Y(v) { return T + (hi - v) / (hi - lo) * (H - T - B); }
-    var g = "", v;
-    for (v = lo; v <= hi + 1e-9; v += step) g += '<line class="ios-chart-grid" x1="' + L + '" x2="' + W + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '"/><text class="ios-chart-y" x="0" y="' + (Y(v) + 4).toFixed(1) + '">' + v + '</text>';
-    var xl = "", seen = {}, k = Math.min(6, n);
-    for (var i = 0; i < k; i++) {
-      var j = k === 1 ? 0 : Math.round(i * (n - 1) / (k - 1)), m = MONTHS[parseInt(pts[j].date.slice(5, 7), 10) - 1];
-      if (seen[m]) continue; seen[m] = 1;
-      xl += '<text class="ios-chart-x" x="' + X(j).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="' + (j === 0 && n > 1 ? "start" : j === n - 1 && n > 1 ? "end" : "middle") + '">' + m + '</text>';
-    }
-    var line = pts.map(function (p, i) { return X(i).toFixed(1) + "," + Y(p.avg).toFixed(1); }).join(" ");
-    var last = pts[n - 1];
-    return '<svg class="ios-chart" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Moyenne au fil des notes : ' + vals.map(fmt2).join(", ") + '">' + g +
-      (n > 1 ? '<polyline class="ios-chart-line" points="' + line + '"/>' : "") +
-      '<circle class="ios-chart-end" cx="' + X(n - 1).toFixed(1) + '" cy="' + Y(last.avg).toFixed(1) + '" r="5.5"/>' + xl + '</svg>';
-  }
-
-  // Date d'une ligne de la liste (pour la ranger dans son semestre) et identifiant de ses actions.
+  // Date d'une ligne de la liste (pour son effet sur la moyenne).
   function rowDate(li, recs, coll) {
     var ta = li.querySelector("[data-ta]");
     if (ta) { var t = coll.filter(function (x) { return x.id === "ta:" + ta.dataset.ta; })[0]; return t ? t.date : null; }
@@ -97,71 +67,109 @@
     return r ? r.date : null;
   }
 
+  function chartHtml(pts, selI, up) {
+    var W = 358, H = 220, L = 4, R = 40, T = 10, B = 30, n = pts.length;
+    var lo = Math.max(1, Math.min(3, Math.floor(Math.min.apply(null, pts.map(function (p) { return p.avg; }))))), hi = 6;
+    function X(i) { return n === 1 ? (L + W - R) / 2 : L + 12 + i * (W - L - R - 24) / (n - 1); }
+    function Y(v) { return T + (hi - v) / (hi - lo) * (H - T - B); }
+    var g = "", v;
+    for (v = lo; v <= hi; v++) g += '<line class="' + (v === 4 ? "ios-echart-thr" : "ios-echart-grid") + '" x1="0" x2="' + (W - R + 4) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '"/>' +
+      '<text class="ios-echart-y" x="' + W + '" y="' + (Y(v) + 4).toFixed(1) + '" text-anchor="end">' + v + (v === 4 ? " · seuil" : "") + '</text>';
+    var line = pts.map(function (p, i) { return X(i).toFixed(1) + "," + Y(p.avg).toFixed(1); }).join(" ");
+    var area = n > 1 ? '<polygon class="ios-echart-area' + (up ? "" : " is-down") + '" points="' + line + " " + X(n - 1).toFixed(1) + "," + (H - B) + " " + X(0).toFixed(1) + "," + (H - B) + '"/>' : "";
+    var svg = '<svg class="ios-echart-svg" viewBox="0 0 ' + W + " " + H + '" aria-hidden="true">' + g + area +
+      (n > 1 ? '<polyline class="ios-echart-line' + (up ? "" : " is-down") + '" points="' + line + '"/>' : "") +
+      '<line class="ios-echart-cross" x1="' + X(selI).toFixed(1) + '" x2="' + X(selI).toFixed(1) + '" y1="0" y2="' + (H - B) + '"/>' +
+      '<text class="ios-echart-x" x="' + X(0).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="' + (n > 1 ? "start" : "middle") + '">' + fmtDay(pts[0].date) + '</text>' +
+      (n > 1 ? '<text class="ios-echart-x" x="' + X(n - 1).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="end">' + fmtDay(pts[n - 1].date) + '</text>' : "") + '</svg>';
+    var dots = pts.map(function (p, i) {
+      return '<button type="button" class="ios-echart-dot' + (i === selI ? " is-sel" + (up ? "" : " is-down") : "") + '" data-esel="' + i + '" style="left:' + (X(i) / W * 100).toFixed(2) + '%;top:' + (Y(p.avg) / H * 100).toFixed(2) + '%" aria-label="' +
+        fmtDay(p.date) + " : moyenne " + fmt2(p.avg) + '"><i></i></button>';
+    }).join("");
+    return '<div class="ios-echart">' + svg + dots + '</div>';
+  }
+
+  function paintPanel(panel) {
+    var A = window.NotesApp, c = cur; if (!panel || !c) return;
+    var pts = A.series ? A.series(c.id, range) : [], s1End = A.get().cfg.s1End;
+    var all = A.subjNotes ? A.subjNotes(c.id) : [];
+    var notes = all.filter(function (g) { return range === "year" || (range === "s1" ? g.date <= s1End : g.date > s1End); });
+    var btns = '<div class="ios-erange" role="group" aria-label="Période">' + [["s1", "S1"], ["s2", "S2"], ["year", "Année"]].map(function (r) {
+      return '<button type="button" data-erange="' + r[0] + '" aria-pressed="' + (r[0] === range) + '">' + r[1] + '</button>';
+    }).join("") + '</div>';
+    if (!pts.length) {
+      panel.innerHTML = '<div class="ios-evalue"><span class="ios-evalue-n">–</span></div><p class="ios-ecap">' + LAB[range] + ' · pas encore de note</p>' + btns +
+        '<p class="ios-eempty">' + (range === "year" ? "La courbe apparaît dès la première note de cette branche." : "Aucune note dans ce semestre.") + '</p>';
+      return;
+    }
+    var n = pts.length, first = pts[0].avg, last = pts[n - 1].avg, d = last - first, up = d >= -1e-9;
+    var si = sel == null || sel >= n ? n - 1 : sel, p = pts[si], before = si > 0 ? pts[si - 1].avg : null;
+    var onDay = notes.filter(function (g) { return g.date === p.date; });
+    var selV = onDay.length === 1 ? fmtN(onDay[0].value) : onDay.map(function (g) { return fmtN(g.value); }).join(" · ");
+    var selT = onDay.map(noteName).join(", ") || "Note";
+    var selM = fmtDay(p.date) + (onDay.length === 1 ? (onDay[0].type === "tp" ? " · TP" : onDay[0].type === "ta" ? "" : " · coef " + fmtN(onDay[0].coef)) : "") +
+      " · moyenne " + (before == null ? fmt2(p.avg) : fmt2(before) + " → " + fmt2(p.avg));
+    var vals = notes.map(function (g) { return g.value; });
+    var hiV = vals.length ? Math.max.apply(null, vals) : null, loV = vals.length ? Math.min.apply(null, vals) : null;
+    var goal = c.s && c.s.goal ? +c.s.goal : null, yearAvg = A.annualAvg(c.id);
+    var stats = [
+      ["Bulletin", String(roundHalf(last)), toneV(roundHalf(last))],
+      ["Notes", String(notes.length), ""],
+      ["Plus haute", hiV == null ? "–" : fmtN(hiV), ""],
+      ["Plus basse", loV == null ? "–" : fmtN(loV), loV != null && loV < 4 ? "crit" : ""]
+    ];
+    c.sem.forEach(function (t) { stats.push([t.k, t.v, t.tone === "none" ? "" : ""]); });
+    if (goal) { stats.push(["Objectif", fmtN(goal), ""]); stats.push(["Écart", yearAvg == null ? "–" : signed(yearAvg - goal), yearAvg == null ? "" : yearAvg >= goal ? "good" : "crit"]); }
+    c.extra.forEach(function (x) { stats.push([x.k, x.v, ""]); });
+    panel.innerHTML =
+      '<div class="ios-evalue"><span class="ios-evalue-n">' + fmt2(last) + '</span>' +
+      (n > 1 ? '<span class="ios-evalue-d ' + (up ? "is-up" : "is-down") + '">' + signed(d) + " (" + (d >= 0 ? "+" : "−") + Math.abs(first ? d / first * 100 : 0).toFixed(1) + ' %)</span>' : "") + '</div>' +
+      '<p class="ios-ecap">' + LAB[range] + ' · moyenne exacte, bulletin ' + roundHalf(last) + '</p>' + btns + chartHtml(pts, si, up) +
+      '<div class="ios-esel"><span class="ios-esel-v ios-tone-' + (onDay.length === 1 ? toneV(onDay[0].value) : "none") + '">' + selV + '</span>' +
+      '<span class="ios-esel-t"><b>' + selT.replace(/[&<>"']/g, function (ch) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]; }) + '</b><span>' + selM + '</span></span></div>' +
+      '<div class="ios-estats">' + stats.map(function (st) { return '<div class="ios-estat"><span>' + st[0] + '</span><b' + (st[2] ? ' class="ios-tone-' + st[2] + '"' : "") + '>' + st[1] + '</b></div>'; }).join("") + '</div>';
+  }
+
   function buildPage() {
     var box = document.getElementById("sheet-box");
     if (!box || !box.firstChild) return null;
     var A = window.NotesApp, id = A.detailId && A.detailId(), s = id ? subjOf(id) : null;
     var h2 = box.querySelector("#sheet-title"), sp = box.querySelector(".sheet-head p"), name = h2 ? h2.textContent : "";
-    var page = el("div", "ios-page ios-dpage ios-fpage");
+    var page = el("div", "ios-page ios-dpage ios-epage");
 
     // 1. En-tête.
-    var head = el("div", "ios-fhead");
-    var h1 = el("h1", "ios-large"); h1.textContent = name; head.appendChild(h1);
+    var h1 = el("h1", "ios-large"); h1.textContent = name; page.appendChild(h1);
     var subTxt = (sp ? sp.textContent : "") + (s && s.goal ? " · objectif " + s.goal : "");
-    if (subTxt) { var sub = el("p", "ios-sub"); sub.textContent = subTxt; head.appendChild(sub); }
-    var tiles = [].slice.call(box.querySelectorAll(".tiles .tile"));
-    page.appendChild(head);
+    if (subTxt) { var sub = el("p", "ios-sub"); sub.textContent = subTxt; page.appendChild(sub); }
 
-    var chart = box.querySelector("#sheet-chart"), notesUl = box.querySelector("#sheet-notes"), need = box.querySelector(".need"), cert = box.querySelector(".cert-min");
+    var tiles = [].slice.call(box.querySelectorAll(".tiles .tile")), notesUl = box.querySelector("#sheet-notes"), need = box.querySelector(".need"), cert = box.querySelector(".cert-min");
     var brk = box.querySelector(".brk"), rowsOf = brk ? [].slice.call(brk.children) : [];
+    var chart = box.querySelector("#sheet-chart"); if (chart) chart.remove();
 
+    // 2. Panneau « Bourse ».
     if (tiles.length) {
-      // 2. Anneau de la moyenne de l'année.
-      var y = tiles[0], num = y.querySelector(".num"), tone = toneOf(num), avg = A.annualAvg(id), goal = s && s.goal ? +s.goal : null;
-      var status = TONE_TEXT[tone];
-      if (avg != null && goal) status += avg >= goal ? " · objectif atteint" : " · encore " + (goal - avg).toFixed(2).replace(/0$/, "") + " pour l'objectif";
-      var ring = el("div", "ios-ring", ringSvg(avg, goal, tone) +
-        '<div class="ios-ring-in"><span class="ios-ring-k">Bulletin</span><span class="ios-ring-num">' + esc(num ? num.textContent : "–") + '</span>' +
-        '<span class="ios-ring-s">' + (avg != null ? "exacte " + fmt2(avg) : "pas encore de note") + '</span></div>');
-      ring.setAttribute("role", "img");
-      ring.setAttribute("aria-label", "Note de bulletin " + (num ? num.textContent : "–") + (avg != null ? ", moyenne exacte " + fmt2(avg) : "") + ", sur une échelle de 1 à 6");
-      page.appendChild(ring);
-      var st = el("p", "ios-ring-st ios-tone-" + tone); st.textContent = status; page.appendChild(st);
+      cur = {
+        id: id, s: s,
+        sem: tiles.slice(1).map(function (t) { var nn = t.querySelector(".num"), lb = t.querySelector(".lbl"); return { k: lb ? lb.textContent : "", v: nn ? nn.textContent : "–", tone: toneOf(nn) }; }),
+        extra: rowsOf.map(function (r) {
+          var sps = r.querySelectorAll(":scope > span"), a = sps[0];
+          if (sps.length < 2 || !a || /^(Notes saisies|Objectif)/.test(a.textContent)) return null;
+          return { k: a.textContent.replace(/\s+/g, " ").trim(), v: sps[1].textContent };
+        }).filter(Boolean)
+      };
+      var panel = el("div", "ios-epanel"); page.appendChild(panel); paintPanel(panel);
+    } else cur = null;
 
-      // 3. Semestres.
-      var grid = el("div", "ios-ftiles");
-      tiles.slice(1).forEach(function (t) {
-        var n = t.querySelector(".num"), sb = t.querySelector(".sub"), lb = t.querySelector(".lbl");
-        grid.appendChild(el("div", "ios-ftile", '<span class="ios-ftile-k">' + esc(lb ? lb.textContent : "") + '</span><span class="ios-ftile-v ios-tone-' + toneOf(n) + '">' +
-          esc(n ? n.textContent : "–") + '</span><span class="ios-ftile-s">' + esc(sb ? sb.textContent : "") + '</span>'));
-      });
-      page.appendChild(grid);
-    }
+    // 3. Prochain test, certificat (3e).
     if (need) { need.className = "ios-grp ios-need"; page.appendChild(need); }
     if (cert) { var cg = el("div", "ios-grp ios-cert"); cg.appendChild(cert); page.appendChild(cg); }
 
-    // 4. Évolution (courbe simple de la moyenne) et détail tests / TP ou parties.
+    // 4. Notes.
     if (tiles.length) {
-      var pts = A.series ? A.series(id) : [];
-      var card = el("div", "ios-grp ios-fchart", '<div class="ios-fchart-h"><span>Évolution</span>' +
-        (pts.length > 1 ? '<span class="ios-fchart-r">' + MONTHS[parseInt(pts[0].date.slice(5, 7), 10) - 1] + " → " + MONTHS[parseInt(pts[pts.length - 1].date.slice(5, 7), 10) - 1] + '</span>' : "") + '</div>' + chartSvg(pts));
-      var extra = rowsOf.filter(function (r) { var a = r.querySelector("span"); return a && !/^(Notes saisies|Objectif)/.test(a.textContent); });
-      if (extra.length) {
-        var dl = el("div", "ios-fchart-rows");
-        extra.forEach(function (r) {
-          var sps = r.querySelectorAll(":scope > span"); if (sps.length < 2) return;
-          dl.appendChild(el("div", "ios-fchart-row", '<span>' + sps[0].innerHTML + '</span><span class="mono">' + sps[1].innerHTML + '</span>'));
-        });
-        card.appendChild(dl);
-      }
-      page.appendChild(card);
-      if (chart) chart.remove();
-    }
-
-    // 5. Notes, groupées par semestre.
-    if (tiles.length) {
+      var hd = el("div", "ios-enotes-h", '<span>Notes</span><small>les plus récentes d\'abord</small>'); page.appendChild(hd);
       if (notesUl) {
-        var recs = A.records(), coll = A.collapse(recs), s1End = A.get().cfg.s1End, groups = { s2: [], s1: [] };
+        var recs = A.records(), coll = A.collapse(recs), yearPts = A.series ? A.series(id, "year") : [], byDate = {};
+        yearPts.forEach(function (pt, i) { byDate[pt.date] = { avg: pt.avg, prev: i ? yearPts[i - 1].avg : null }; });
         [].slice.call(notesUl.children).forEach(function (li) {
           var w = li.querySelector(":scope > .what");
           if (w) {   // dans la page d'une matière, le nom de la matière est inutile sur chaque ligne
@@ -169,30 +177,24 @@
             if (t === name) w.textContent = meta && /· TP/.test(meta.textContent) ? "TP" : "Test";
             else if (t.indexOf(name + " · ") === 0) w.textContent = t.slice(name.length + 3);
           }
-          var v = li.querySelector(":scope > .v");
-          if (v && !li.classList.contains("ios-ta-li")) {
-            var x = parseFloat(v.textContent);
-            v.classList.add(x < 4 ? "ios-nv-crit" : x >= 5 ? "ios-nv-good" : "ios-nv-mid");
-            li.classList.add("ios-nrow");
-            var ed = li.querySelector("[data-edit]"); if (ed) li.dataset.nid = ed.dataset.edit;
-            if (li.dataset.photos) {   // les photos s'ouvrent par un bouton des actions : le toucher de la ligne montre les actions
-              var acts = li.querySelector(":scope > .acts"), pb = document.createElement("button");
-              pb.type = "button"; pb.className = "link"; pb.setAttribute("data-ph-open", li.dataset.photos); pb.textContent = "Photos";
-              if (acts) acts.insertBefore(pb, acts.firstChild);
-              li.removeAttribute("data-photos");
-            }
-            if (li.dataset.nid && li.dataset.nid === openRow) li.classList.add("ios-open");
+          var dt = rowDate(li, recs, coll), ef = dt && byDate[dt], txt = "début", cls = "is-flat";
+          if (ef && ef.prev != null) { var dd = ef.avg - ef.prev; txt = Math.abs(dd) < 0.005 ? "=" : signed(dd); cls = Math.abs(dd) < 0.005 ? "is-flat" : dd > 0 ? "is-up" : "is-down"; }
+          if (li.classList.contains("ios-ta-li")) return;
+          var v = li.querySelector(":scope > .v"); if (!v) return;
+          li.classList.add("ios-nrow", "ios-erow");
+          var badge = document.createElement("span"); badge.className = "ios-eff " + cls; badge.textContent = txt;
+          badge.setAttribute("aria-label", txt === "début" ? "première note" : "effet sur la moyenne : " + txt);
+          li.insertBefore(badge, li.querySelector(":scope > .acts"));
+          var ed = li.querySelector("[data-edit]"); if (ed) li.dataset.nid = ed.dataset.edit;
+          if (li.dataset.photos) {   // les photos s'ouvrent par un bouton des actions : le toucher de la ligne montre les actions
+            var acts = li.querySelector(":scope > .acts"), pb = document.createElement("button");
+            pb.type = "button"; pb.className = "link"; pb.setAttribute("data-ph-open", li.dataset.photos); pb.textContent = "Photos";
+            if (acts) acts.insertBefore(pb, acts.firstChild);
+            li.removeAttribute("data-photos");
           }
-          var d = rowDate(li, recs, coll);
-          (d && s1End && d <= s1End ? groups.s1 : groups.s2).push(li);
+          if (li.dataset.nid && li.dataset.nid === openRow) li.classList.add("ios-open");
         });
-        var multi = groups.s1.length && groups.s2.length;
-        [["s2", "Semestre 2"], ["s1", "Semestre 1"]].forEach(function (gk) {
-          var list = groups[gk[0]]; if (!list.length) return;
-          if (multi || s1End) { var hd = el("li", "ios-nsem"); hd.setAttribute("aria-hidden", "true"); hd.textContent = gk[1] + " · " + list.length + " note" + (list.length > 1 ? "s" : ""); notesUl.appendChild(hd); }
-          list.forEach(function (li, i) { li.classList.toggle("ios-nfirst", i === 0); li.classList.toggle("ios-nlast", i === list.length - 1); notesUl.appendChild(li); });
-        });
-        var wrapN = el("div", "ios-fnotes"); wrapN.appendChild(notesUl); page.appendChild(wrapN);
+        var wrapN = el("div", "ios-enotes"); wrapN.appendChild(notesUl); page.appendChild(wrapN);
       } else {
         page.appendChild(el("div", "ios-grp ios-empty", window.Icons.svg("doc", "ios-empty-ic") + '<b>Aucune note pour l\'instant</b><span>Ajoute ta première note dans cette branche : la moyenne et la courbe apparaîtront ici.</span>' +
           '<button type="button" class="btn" data-dadd="1">Ajouter une note</button>'));
@@ -200,6 +202,15 @@
     }
     return page;
   }
+  // Période (S1, S2, Année) et point de la courbe : le panneau est redessiné sur place, sans nouveau rendu du moteur.
+  container.addEventListener("click", function (e) {
+    var rb = e.target.closest("[data-erange]"), pb = e.target.closest("[data-esel]");
+    if (!rb && !pb) return;
+    if (rb) { if (rb.dataset.erange === range) return; range = rb.dataset.erange; sel = null; }
+    else sel = parseInt(pb.dataset.esel, 10);
+    if (window.FX) FX.haptic("select");
+    paintPanel(container.querySelector(".ios-epanel"));
+  });
   // Toucher une note montre ses actions (Modifier, Supprimer, Photos) ; un seul bloc ouvert à la fois.
   container.addEventListener("click", function (e) {
     var ph = e.target.closest("[data-ph-open]");
@@ -211,6 +222,7 @@
     li.classList.toggle("ios-open", on); openRow = on ? li.dataset.nid || null : null;
     if (window.FX) FX.haptic("select");
   });
+
   // « + » de la barre de titre et état vide : « Ajouter une note » ouvre le formulaire sur cette matière.
   // Le « + » vit dans la barre fixe (.ios-bar, hors de .wrap), à droite, comme dans la maquette F ; ios.css ne le montre
   // que pendant la page de détail.
@@ -244,7 +256,7 @@
     if (active) {                                   // nouveau rendu pendant que la page est ouverte : on garde le défilement
       var y = window.scrollY; container.replaceChildren(page); window.scrollTo(0, y); IOSTitle.set(ctxFor(page)); return true;
     }
-    scrollDash = window.scrollY; openRow = null;
+    scrollDash = window.scrollY; openRow = null; range = "year"; sel = null;
     // Affichage de l'Accueil avant l'ouverture : la copie du balayage de retour le reprend tel quel.
     shown = {};
     ["#view-dash", "header.top", "#demo"].forEach(function (q) { var n = document.querySelector(q); if (n) shown[q] = getComputedStyle(n).display; });

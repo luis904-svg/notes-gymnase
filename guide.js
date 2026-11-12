@@ -196,8 +196,8 @@
       { t: "Tes branches", v: "bars", p: [
         "Chaque barre et chaque carte montrent la <b>note de bulletin</b>, arrondie : <b>vert</b> dès 4.5, <b>orange</b> pour 4, <b>rouge</b> sous 4. Touche une branche pour ouvrir son détail."] },
       { t: "Le détail d'une branche", v: "detail", p: [
-        "En haut : un <b>anneau</b> avec ta note de bulletin et ta moyenne exacte (repères à 4 et à ton objectif), puis les deux <b>semestres</b> et la <b>courbe</b> de ta moyenne au fil des notes. Le <b>+</b> en haut à droite ajoute une note dans cette branche.",
-        "Dessous : les notes, rangées par semestre, de la plus récente à la plus ancienne. <b>Touche une note</b> pour voir Modifier, Supprimer et ses photos. Un TA se déplie pour montrer ses ETA."] },
+        "En haut : ta <b>moyenne exacte</b> et sa variation depuis la première note. Les boutons <b>S1</b>, <b>S2</b> et <b>Année</b> changent la période ; <b>touche un point de la courbe</b> pour voir la note et son effet sur la moyenne. Dessous, les chiffres clés (bulletin, plus haute et plus basse note, semestres, objectif). Le <b>+</b> en haut à droite ajoute une note dans cette branche.",
+        "Plus bas : les notes de la plus récente à la plus ancienne, chacune avec son effet sur ta moyenne (+0.17, −0.30…). <b>Touche une note</b> pour voir Modifier, Supprimer et ses photos. Un TA se déplie pour montrer ses ETA."] },
       { t: "Alertes et périodes", v: "watch", p: [
         "<b>À surveiller</b> liste les branches en difficulté. Les boutons <b>Année</b>, <b>Semestre 1</b> et <b>Semestre 2</b> filtrent tout le tableau de bord."] },
       { t: "La barre du bas", v: "scrub", p: [
