@@ -1,15 +1,18 @@
 /* Notes : photos des tests. Chaque photo est une page rattachée à une note (ou à un ETA) par son identifiant.
    Stockage : IndexedDB, base à part (« notes2m01-photos »). Les photos restent sur l'appareil : elles ne passent ni par la
-   synchronisation ni par la sauvegarde JSON. Elles sont réduites avant l'enregistrement (côté long 1600 px, JPEG).
-   Formulaire : « Photographier le test » ajoute des pages (enregistrées tout de suite sous la clé « pending », pour qu'une
-   erreur d'espace plein apparaisse dans le formulaire), rattachées à la note quand elle est enregistrée (Photos.commit).
+   synchronisation ni par la sauvegarde JSON. Elles sont réduites avant l'enregistrement (côté long 2400 px, JPEG 85 %,
+   environ 1 Mo par page, choix de l'utilisateur en v52 avec le retrait du scanner).
+   Formulaire : « Photographier le test » ouvre l'appareil photo du téléphone (une page à la fois ; le bouton devient
+   ensuite « Ajouter une page ») et « Choisir une photo » la photothèque (plusieurs à la fois). Les pages sont enregistrées
+   tout de suite sous la clé « pending » (une erreur d'espace plein apparaît donc dans le formulaire), puis rattachées à
+   la note quand elle est enregistrée (Photos.commit).
    Liste : une note avec photos porte data-photos ; la toucher ouvre la visionneuse plein écran (défilement horizontal).
    Aucune lecture automatique : la note est toujours tapée à la main. */
 (function () {
   "use strict";
   function $(s, r) { return (r || document).querySelector(s); }
   function hap(k) { if (window.FX) FX.haptic(k); }
-  var DB = "notes2m01-photos", STORE = "pages", PENDING = "pending", MAX_SIDE = 1600, QUALITY = 0.72;
+  var DB = "notes2m01-photos", STORE = "pages", PENDING = "pending", MAX_SIDE = 2400, QUALITY = 0.85;
   var FULL = "Impossible d'enregistrer la photo : l'espace de stockage de l'appareil est plein ou refusé. Libère de la place, puis réessaie.";
   var counts = {}, dbp = null;
 
@@ -88,20 +91,12 @@
         .then(function (b) { return add(note, b).then(function () { n++; }, function () { throw FULL; }); });
     }, Promise.resolve()).then(function () { return n; }, function (m) { throw typeof m === "string" ? m : FULL; });
   }
-  function picker(cb) {
-    var i = document.createElement("input"); i.type = "file"; i.accept = "image/*"; i.multiple = true; i.className = "ios-ph-file";
+  // camera : ouvre directement l'appareil photo (capture="environment", une photo) ; sinon la photothèque (plusieurs).
+  function picker(cb, camera) {
+    var i = document.createElement("input"); i.type = "file"; i.accept = "image/*"; i.className = "ios-ph-file";
+    if (camera) i.setAttribute("capture", "environment"); else i.multiple = true;
     i.addEventListener("change", function () { var f = i.files; if (f && f.length) cb(f); i.remove(); });
     document.body.appendChild(i); i.click();
-  }
-
-  // Ouvre le scanner pour la note `note` ; `fallback(message)` est appelé si la caméra ne peut pas servir.
-  function scanOr(note, done, fallback) {
-    if (!window.Scan || !Scan.available()) { fallback(""); return; }
-    Scan.open({
-      onPage: function (blob) { return add(note, blob).then(null, function () { throw FULL; }); },
-      onClose: function () { done(); },
-      onUnavailable: function (m) { fallback(m); }
-    });
   }
 
   /* ---------- Formulaire « Ajouter une note » ---------- */
@@ -116,7 +111,7 @@
         var u = URL.createObjectURL(p.blob); urls.push(u);
         return '<span class="ios-ph-thumb"><img src="' + u + '" alt="Page ' + (k + 1) + '"><button type="button" class="ios-ph-x" data-ph-x="' + p.id + '" aria-label="Retirer la page ' + (k + 1) + '">×</button></span>';
       }).join("");
-      $("#ph-add", box).textContent = l.length || had ? "Scanner une autre page" : "Photographier le test";
+      $("#ph-add", box).textContent = l.length || had ? "Ajouter une page" : "Photographier le test";
       $("#ph-info", box).textContent = (had ? had + " photo" + (had > 1 ? "s" : "") + " déjà jointe" + (had > 1 ? "s" : "") + " à cette note. " : "") +
         "Les photos restent sur cet appareil : elles ne sont ni synchronisées ni dans la sauvegarde.";
     }, function () {});
@@ -129,15 +124,15 @@
     box.addEventListener("click", function (e) {
       var x = e.target.closest("[data-ph-x]");
       if (x) { delPage(+x.dataset.phX, PENDING).then(drawPending, drawPending); hap("tap"); return; }
-      function pick() {
+      function pick(camera) {
         picker(function (files) {
           msg.style.color = ""; msg.textContent = "";
           addFiles(PENDING, files).then(function () { hap("success"); }, function (m) { msg.textContent = m; hap("error"); }).then(drawPending);
-        });
+        }, camera);
       }
-      if (e.target.closest("#ph-lib")) { pick(); return; }
-      // « Photographier le test » : le scanner de l'app (caméra en direct, prise automatique) ; sinon le choix de photo.
-      if (e.target.closest("#ph-add")) scanOr(PENDING, drawPending, function (m) { if (m) { msg.style.color = ""; msg.textContent = m; } pick(); });
+      if (e.target.closest("#ph-lib")) { pick(false); return; }
+      // « Photographier le test » / « Ajouter une page » : l'appareil photo du téléphone (sur ordinateur : choix de fichier).
+      if (e.target.closest("#ph-add")) pick(true);
     });
   }
 
@@ -178,12 +173,9 @@
       if (b.dataset.ph === "close") closeView();
       if (b.dataset.ph === "add") {
         var n = view.querySelectorAll(".ios-ph-page").length;
-        scanOr(vNote, function () { if (view) drawView(n); }, function (t0) {
-          if (t0 && view) m.textContent = t0;
-          picker(function (files) {
-            addFiles(vNote, files).then(function () { hap("success"); }, function (t) { m.textContent = t; hap("error"); }).then(function () { return drawView(n); });
-          });
-        });
+        picker(function (files) {
+          addFiles(vNote, files).then(function () { hap("success"); }, function (t) { m.textContent = t; hap("error"); }).then(function () { return drawView(n); });
+        }, true);
       }
       if (b.dataset.ph === "del") {
         var i = curIndex(), p = view.querySelectorAll(".ios-ph-page")[i]; if (!p) return;

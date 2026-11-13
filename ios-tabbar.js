@@ -1,6 +1,6 @@
 /* ios-tabbar.js : barre du bas enrichie (téléphone, ≤ 700 px), v44. La barre reste TOUJOURS en bas de l'écran, y compris
    dans les sous-pages de Réglages et le détail d'une matière (elle n'est plus cachée). Seuls l'assistant, le guide, les
-   écrans plein écran (photos, scanner, réussite) et le clavier ouvert la recouvrent, comme sur iOS.
+   écrans plein écran (photos, réussite) et le clavier ouvert la recouvrent, comme sur iOS.
    Structure : un « dock » fixe (.ios-dock, hors de .wrap, au-dessus des fantômes de ios-nav.js) qui contient :
    - la pilule d'onglets existante (#tabbar, déplacée ici ; appui long glissé et balayage rapide : fx.js) ;
    - le bouton rond Rechercher (.ios-find-btn), à droite de la pilule comme l'onglet de recherche d'iOS 26 : ouvre la

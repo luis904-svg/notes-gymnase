@@ -1,6 +1,6 @@
 /* Hors-ligne : la page vient du réseau si possible, sinon du cache ; le reste du cache d'abord. */
-var V = "notes2m01-v50";
-var ASSETS = ["./", "index.html", "fx.css", "ios.css", "fx.js", "ios-nav.js", "ios-motion.js", "ios-tabbar.js", "ios-home.js", "ios-title.js", "ios-settings.js", "ios-detail.js", "ios-anim.js", "icons.js", "NOTICE-Lucide.txt", "grid.js", "ta.js", "photos.js", "scan.js", "scanic.js", "NOTICE-Scanic.txt", "cert.js", "year.js", "notify.js", "sync.js", "onboard.js", "guide.js", "hello.js", "motion.js", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
+var V = "notes2m01-v57";
+var ASSETS = ["./", "index.html", "fx.css", "ios.css", "fx.js", "ios-nav.js", "ios-motion.js", "ios-tabbar.js", "ios-home.js", "ios-dash.js", "ios-title.js", "ios-settings.js", "ios-detail.js", "ios-anim.js", "icons.js", "NOTICE-Lucide.txt", "grid.js", "ta.js", "photos.js", "cert.js", "year.js", "notify.js", "sync.js", "onboard.js", "guide.js", "hello.js", "motion.js", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(V).then(function (c) { return c.addAll(ASSETS.map(function (u) { return new Request(u, { cache: "reload" }); })); }).then(function () { return self.skipWaiting(); }));
 });

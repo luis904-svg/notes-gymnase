@@ -1237,6 +1237,7 @@ td input[type="date"] { width: auto; }
     closeDetail: function () { closeDetail(); },
     detailId: function () { return ui.detail; },
     period: function () { return ui.period; },
+    general: function (period) { return generalSeries(periodNotes(currentGrades(), period || "year")).filter(function (p) { return p.avg != null; }); },
     // Page de détail (ios-detail.js, maquette E « Bourse ») : moyenne cumulée au fil des notes d'une branche, sur l'année
     // ou un semestre (period : "year" | "s1" | "s2"), et notes de la branche (TA regroupés, mode exemple compris).
     series: function (id, period) { return sub(id) ? subjSeries(id, periodNotes(currentGrades(), period || "year")).filter(function (p) { return p.avg != null; }) : []; },
@@ -1283,8 +1284,8 @@ td input[type="date"] { width: auto; }
 <script src="ios-anim.js"></script>
 <script src="ios-tabbar.js"></script>
 <script src="ios-home.js"></script>
+<script src="ios-dash.js"></script>
 <script src="ta.js"></script>
-<script src="scan.js"></script>
 <script src="photos.js"></script>
 <script src="cert.js"></script>
 <script src="notify.js"></script>

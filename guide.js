@@ -179,28 +179,29 @@
         "Un <b>TA</b> (travail assimilé) regroupe des petites évaluations, les <b>ETA</b>. Choisis le type <b>TA</b>, puis un TA existant ou <b>+ Nouveau TA…</b>, et saisis l'ETA.",
         "À la création, <b>Noter en points</b> te fait saisir des points obtenus et des points max au lieu d'une note. Dans la liste, le TA se déplie : tu y ajoutes un ETA, tu le renommes ou tu le supprimes."] },
       { t: "Photographie ton test", v: "photos", p: [
-        "Dans le formulaire, <b>Photographier le test</b> ouvre le scanner : cadre la feuille entière, l'app repère ses bords et prend la page toute seule quand tu ne bouges plus, puis la redresse. Présente la page suivante, ou touche <b>Terminé</b>. Le bouton rond prend la page à la main, et <b>Choisir une photo</b> passe par ta photothèque.",
+        "Dans le formulaire, <b>Photographier le test</b> ouvre l'appareil photo du téléphone : prends la page, puis touche <b>Utiliser la photo</b>. Pour un test de plusieurs pages, touche <b>Ajouter une page</b>. <b>Choisir une photo</b> passe par ta photothèque (plusieurs photos d'un coup).",
         "Ensuite, touche la note dans le détail de la branche pour revoir les pages en plein écran, en ajouter ou en supprimer.",
         "<span class='note'>Les photos restent sur cet appareil : elles ne sont ni synchronisées ni dans la sauvegarde. Changer d'iPhone ou supprimer l'icône de l'app les fait perdre. La note, elle, est toujours tapée à la main.</span>"] },
       { t: "Corrige ou supprime", v: "edit", p: [
-        "Dans <b>Dernières notes</b> ou dans le détail d'une branche : <b>Modifier</b> rouvre la note, <b>Supprimer</b> demande une seconde touche (« Confirmer ? »). Supprimer une note supprime aussi ses photos."] }
+        "Dans <b>Dernières notes</b> ou dans le détail d'une branche (sur téléphone, <b>touche la note</b> pour voir ses boutons) : <b>Modifier</b> rouvre la note, <b>Supprimer</b> demande une seconde touche (« Confirmer ? »). Supprimer une note supprime aussi ses photos."] }
     ] },
     { t: "Lire le tableau de bord", d: "3 min", s: [
       { t: "Le verdict de promotion", v: "promo", p: [
         "Le verdict (<b>Promotion assurée</b>, <b>Marge faible</b>, <b>Cas limite</b> ou <b>En danger</b>) vérifie trois règles : total des notes, groupe français + L2/L3 + maths + OS d'au moins 16, et 4 notes sous 4 au maximum. Tant qu'une branche n'a aucune note, il reste sur <b>Verdict incomplet</b>.",
+        "Sur téléphone, le verdict est en tête de l'Accueil, suivi d'une <b>tuile par règle</b> : un anneau qui se remplit, avec une encoche au minimum à atteindre, et des pastilles pour les notes sous 4. La dernière tuile montre ta <b>moyenne générale</b> et sa courbe.",
         "<span class='note'>En 3e année, ce verdict est remplacé par celui du certificat de maturité (étape suivante).</span>"] },
       { t: "En 3e : le certificat de maturité", v: "promo", p: [
         "En 3e, l'en-tête montre une pastille (<b>Bonne voie</b>, <b>Serré</b> ou <b>Compliqué</b>, puis <b>Maturité réussie</b> ou <b>non réussie</b> quand tous les examens sont saisis) et trois jauges : le <b>total des 14 notes avec double compensation</b> (seuil 56), le <b>total des examens</b> (seuil 38.5) et les <b>notes sous 4</b> (4 au maximum).",
         "Les examens se saisissent dans le <b>détail de chaque branche</b> : entre l'écrit et l'oral, et lis la <b>note minimale</b> à viser pour avoir 4 dans la branche.",
         "Chimie, physique et la discipline artistique gardent leur <b>note de 2e</b>. Pour la corriger, va dans <b>Réglages → Notes reprises de 2e</b>."] },
       { t: "Tes branches", v: "bars", p: [
-        "Chaque barre montre la <b>note de bulletin</b>, arrondie : <b>vert</b> dès 4.5, <b>orange</b> pour 4, <b>rouge</b> sous 4.",
-        "Sur téléphone, la liste <b>Branches</b> se lit comme l'app Bourse : une ligne par branche avec une <b>mini-courbe</b> (verte si ta moyenne monte, rouge si elle baisse), la note de bulletin et une <b>pastille</b> qui montre l'effet de ta dernière note (+0.17, −0.30…). Elle suit la période choisie en haut. Touche une ligne pour ouvrir le détail."] },
+        "Chaque barre montre la <b>note de bulletin</b>, arrondie : <b>vert</b> dès 4.5, <b>orange</b> pour 4, <b>rouge</b> sous 4. Sur téléphone, les barres sont couchées, de 1 à 6, avec le seuil 4 en pointillé.",
+        "Sur téléphone, la liste <b>Branches</b> montre pour chaque branche sa <b>note de bulletin</b>, à droite. Tout suit la période choisie en haut. Touche une ligne pour ouvrir le détail."] },
       { t: "Le détail d'une branche", v: "detail", p: [
-        "En haut : ta <b>moyenne exacte</b> et sa variation depuis la première note. Les boutons <b>S1</b>, <b>S2</b> et <b>Année</b> changent la période ; <b>glisse le doigt le long de la courbe</b>, comme dans l'app Bourse : une barre au-dessus de la courbe montre la date et ta moyenne à ce moment-là ; lève le doigt pour la faire disparaître. Dessous, les chiffres clés (bulletin, plus haute et plus basse note, semestres, objectif). Le <b>+</b> en haut à droite ajoute une note dans cette branche.",
+        "En haut : ta <b>moyenne exacte</b> et sa variation depuis la première note. Les boutons <b>Année</b>, <b>S1</b> et <b>S2</b> changent la période ; <b>glisse le doigt le long de la courbe</b>, comme dans l'app Bourse : une barre au-dessus de la courbe montre la date et ta moyenne à ce moment-là ; lève le doigt pour la faire disparaître. Dessous, les chiffres clés (bulletin, plus haute et plus basse note, semestres, objectif). Le <b>+</b> en haut à droite ajoute une note dans cette branche.",
         "Plus bas : les notes de la plus récente à la plus ancienne, chacune avec son effet sur ta moyenne (+0.17, −0.30…). <b>Touche une note</b> pour voir Modifier, Supprimer et ses photos. Un TA se déplie pour montrer ses ETA."] },
       { t: "Alertes et périodes", v: "watch", p: [
-        "<b>À surveiller</b> liste les branches en difficulté. Les boutons <b>Année</b>, <b>Semestre 1</b> et <b>Semestre 2</b> filtrent tout le tableau de bord."] },
+        "<b>À surveiller</b> liste les branches en difficulté (touche une ligne pour ouvrir la branche). Les boutons <b>Année</b>, <b>Semestre 1</b> et <b>Semestre 2</b> filtrent tout le tableau de bord."] },
       { t: "La barre du bas", v: "scrub", p: [
         "Un appui court change d'onglet. Un <b>appui long</b> fait grossir la pastille : glisse-la sans lever le doigt et relâche sur l'onglet voulu.",
         "Si tu relâches le doigt bien au-dessus de la barre, rien ne change. Un <b>balayage rapide</b> sur la barre passe à l'onglet voisin, et toucher l'onglet déjà ouvert revient au début (Réglages revient à sa page principale).",
@@ -377,7 +378,7 @@
         "<p class='muted small'><b>Tes données.</b> Tes notes, tes TA et ton profil restent sur ton téléphone : l'app n'a pas de compte et ne collecte aucune donnée personnelle. Si tu supprimes l'icône, ils sont effacés, pense donc à exporter une sauvegarde.</p>" +
         "<p class='muted small'><b>Photos des tests.</b> Elles restent sur l'appareil qui les a prises : elles ne sont ni synchronisées ni dans la sauvegarde.</p>" +
         "<p class='muted small'><b>Synchronisation et notifications.</b> Elles sont facultatives. La synchronisation envoie une copie chiffrée avec ton code, que personne d'autre ne peut lire ; les notifications passent par le même serveur, chiffrées avec le même code, puis par le service de notifications d'Apple ou de Google. La copie est stockée chez Cloudflare. Le site est hébergé par GitHub, qui peut enregistrer des données techniques de connexion comme tout site web.</p>" +
-        "<p class='muted small'><b>Icônes et scanner.</b> Icônes Lucide (licence ISC). Détection de la feuille par Scanic (licence MIT), exécutée sur ton téléphone.</p>" +
+        "<p class='muted small'><b>Icônes.</b> Icônes Lucide (licence ISC).</p>" +
         "<p class='gd-copy'>©louis mutter</p>";
       host.appendChild(d);
     }

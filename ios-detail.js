@@ -2,7 +2,7 @@
    design/SPEC-reglages.md (« Additions »). Sur grand écran, rien ne change : la feuille (#sheet) reste, sans animation.
    Principe : renderDetail (index.html) construit toujours son contenu dans #sheet-box ; sur téléphone, IOSDetail.open() prend
    ce contenu et en fait la page #ios-detail, mise en page de la maquette E « façon Bourse » (v47, à la place de F) :
-   moyenne et variation, S1 / S2 / Année, grande courbe à points touchables, chiffres clés, notes avec leur effet
+   moyenne et variation, Année / S1 / S2, grande courbe à points touchables, chiffres clés, notes avec leur effet
    (voir buildPage). Chaque nouveau rendu (note supprimée…) refait
    la page en gardant le défilement. L'affichage de la page est piloté par une classe sur <body> (ios-detail-open) :
    l'Accueil et son en-tête disparaissent, la page apparaît ; aucune bascule de `hidden`, donc aucun conflit avec setView.
@@ -39,7 +39,7 @@
      à la place de F. Le moteur écrit toujours dans #sheet-box ; on en reprend les morceaux et les données de NotesApp :
      1. en-tête : nom de la branche, périodes et objectif ;
      2. panneau (.ios-epanel, redessiné sur place quand on change de période ou de point) : moyenne exacte de la période,
-        variation depuis la première note de la période (en points et en %), boutons S1 / S2 / Année, grande courbe de la
+        variation depuis la première note de la période (en points et en %), boutons Année / S1 / S2, grande courbe de la
         moyenne cumulée (échelle fixe jusqu'à 6, seuil 4 en pointillé) qu'on parcourt en glissant le doigt (v49, voir
         plus bas : barre « date · moyenne » au-dessus de la courbe, comme Bourse) ; chiffres clés ;
      3. le bloc « Prochain test » et le certificat (3e) tels quels ;
@@ -69,7 +69,7 @@
 
   /* Courbe (v49), comme dans Bourse : on glisse un doigt le long de la moyenne. Le point glisse en continu sur la ligne
      (position interpolée entre deux notes) avec une ligne verticale ; pendant le geste, une barre remplace les boutons
-     S1 / S2 / Année au-dessus de la courbe et donne la date et la moyenne de la note la plus proche (petit retour haptique
+     Année / S1 / S2 au-dessus de la courbe et donne la date et la moyenne de la note la plus proche (petit retour haptique
      quand elle change). Le grand chiffre en haut ne bouge pas. Doigt levé : la barre disparaît, les boutons reviennent.
      touch-action: pan-y (ios.css) laisse défiler la page à la verticale ; le navigateur annule alors le geste
      (pointercancel). Clavier : flèches gauche / droite de note en note, Échap pour revenir. */
@@ -105,7 +105,7 @@
     var pts = A.series ? A.series(c.id, range) : [], s1End = A.get().cfg.s1End;
     var all = A.subjNotes ? A.subjNotes(c.id) : [];
     var notes = all.filter(function (g) { return range === "year" || (range === "s1" ? g.date <= s1End : g.date > s1End); });
-    var btns = '<div class="ios-erange" role="group" aria-label="Période">' + [["s1", "S1"], ["s2", "S2"], ["year", "Année"]].map(function (r) {
+    var btns = '<div class="ios-erange" role="group" aria-label="Période">' + [["year", "Année"], ["s1", "S1"], ["s2", "S2"]].map(function (r) {
       return '<button type="button" data-erange="' + r[0] + '" aria-pressed="' + (r[0] === range) + '">' + r[1] + '</button>';
     }).join("") + '</div>';
     c.pts = pts; c.notes = notes; c.live = false; c.near = null;
@@ -279,7 +279,7 @@
     }
     return page;
   }
-  // Période (S1, S2, Année) : le panneau est redessiné sur place, sans nouveau rendu du moteur.
+  // Période (Année, S1, S2) : le panneau est redessiné sur place, sans nouveau rendu du moteur.
   container.addEventListener("click", function (e) {
     var rb = e.target.closest("[data-erange]");
     if (!rb || rb.dataset.erange === range) return;
