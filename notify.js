@@ -138,6 +138,15 @@
   function paint() {
     if (!host) return;
     var granted = meta.on && window.Notification && Notification.permission === "granted";
+    // Téléphone (v58, style C) : deux interrupteurs iOS ; « Recevoir » active ou coupe les notifications de cet appareil.
+    if (window.matchMedia("(max-width: 700px)").matches) {
+      host.innerHTML = '<p class="ios-grp-head">Notifications</p><div class="ios-grp">' +
+        '<label class="ios-row"><span class="ios-row-l">' + (busy ? "Activation…" : "Recevoir les notifications") + '</span><input type="checkbox" switch id="nt-recv"' + (granted ? " checked" : "") + (busy ? " disabled" : "") + '></label>' +
+        '<label class="ios-row"><span class="ios-row-l">Tout couper</span><input type="checkbox" switch id="nt-all"' + (off() ? " checked" : "") + '></label></div>' +
+        '<p class="ios-grp-foot">Les appareils reliés à ce code (par exemple ceux de tes parents) reçoivent une notification quand une note est ajoutée ou que le verdict change. Le message est chiffré : le serveur ne peut pas le lire. « Tout couper » arrête les notifications de tous les appareils du code.</p>' +
+        (note ? '<p class="ios-grp-foot" id="nt-msg" role="status">' + note + '</p>' : '<p class="ios-grp-foot" id="nt-msg" role="status"></p>');
+      return;
+    }
     host.innerHTML = '<h3>Notifications</h3>' +
       '<p class="muted small">Les appareils reliés à ce code (par exemple ceux de tes parents) peuvent recevoir une notification quand une note est ajoutée ou que le verdict change. Le message est chiffré avec le code : le serveur ne peut pas le lire.</p>' +
       (granted ? '<p class="small">Notifications activées sur cet appareil.</p><div class="btns"><button type="button" class="link danger" id="nt-off">Désactiver sur cet appareil</button></div>'
@@ -156,6 +165,14 @@
     if (t.id === "nt-off") { disable().then(paint); note = ""; hap("tap"); paint(); }
   }
   function onChange(e) {
+    if (e.target.id === "nt-recv") {
+      if (e.target.checked && !busy) {
+        busy = true; note = ""; paint();
+        enable().then(function () { note = ""; hap("success"); }, function (err) { note = (err && err.msg) || "L'activation a échoué."; hap("error"); })
+          .then(function () { busy = false; paint(); });
+      } else if (!e.target.checked) { disable().then(paint); note = ""; hap("tap"); }
+      return;
+    }
     if (e.target.id === "nt-all" && app().setNotifOff) { app().setNotifOff(e.target.checked); hap("select"); }
   }
 

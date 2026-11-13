@@ -152,8 +152,35 @@
     var s = Math.round((Date.now() - t) / 1000);
     return s < 10 ? "à l'instant" : s < 60 ? "il y a " + s + " s" : s < 3600 ? "il y a " + Math.round(s / 60) + " min" : new Date(t).toLocaleString("fr-CH", { dateStyle: "short", timeStyle: "short" });
   }
+  function phone() { return window.matchMedia("(max-width: 700px)").matches; }
+  // Téléphone (v58, style C du canvas) : tuile d'état, code dans un groupe, actions en lignes, « Désactiver » seul en rouge.
+  function paintPhone() {
+    var Ic = window.Icons, ic = function (n) { return Ic ? Ic.svg(n) : ""; };
+    function tile(st, title, sub) {
+      return '<section class="ios-stat is-' + st + '" role="status"><span class="ios-stat-ic">' + ic(st === "ok" ? "check" : st === "crit" ? "times" : st === "warn" ? "wifioff" : "sync") + '</span>' +
+        '<span class="ios-stat-t"><span class="ios-dk">État</span><b>' + title + '</b>' + (sub ? '<span>' + sub + '</span>' : "") + '</span></section>';
+    }
+    if (!meta.code) {
+      ui.innerHTML = tile("none", "Désactivée", "Tes notes restent sur cet appareil.") +
+        '<p class="ios-grp-head">Synchroniser</p><div class="ios-grp"><button type="button" class="ios-row ios-act" id="sy-new">Activer la synchronisation</button>' +
+        '<button type="button" class="ios-row ios-act" id="sy-join">J\'ai déjà un code</button></div>' +
+        '<p class="ios-grp-foot">Retrouve tes notes sur ton iPhone, ton iPad et ton ordinateur. Elles sont chiffrées avec ton code : personne d\'autre ne peut les lire.</p>' +
+        '<p class="ok ios-grp-foot" id="sy-msg" role="status"></p>';
+      return;
+    }
+    var st = { sync: ["ok", "Synchronisation…", ""], ok: ["ok", "À jour", "Dernière synchronisation " + ago(meta.last)], offline: ["warn", "Hors connexion", "Dernière synchronisation " + ago(meta.last)], badcode: ["crit", "Code refusé", "Vérifie le code sur tes autres appareils."] }[lastStatus] || ["ok", "À jour", "Dernière synchronisation " + ago(meta.last)];
+    ui.innerHTML = tile(st[0], st[1], st[2]) +
+      '<p class="ios-grp-head">Ton code</p><div class="ios-grp"><div class="ios-row ios-sy-code mono" id="sy-code">' + meta.code + '</div>' +
+      '<button type="button" class="ios-row ios-act" id="sy-copy">Copier le code</button><button type="button" class="ios-row ios-act" id="sy-now">Synchroniser maintenant</button></div>' +
+      '<p class="ios-grp-foot" id="sy-status">Tape ce code sur tes autres appareils (Réglages › Synchronisation › J\'ai déjà un code). Garde-le : il ne peut pas être récupéré.</p>';
+    if (window.Notify) { notifBox = notifBox || document.createElement("div"); notifBox.id = "notif"; ui.appendChild(notifBox); Notify.mount(notifBox); }
+    var off = document.createElement("div"); off.className = "ios-grp ios-sy-off";
+    off.innerHTML = '<button type="button" class="ios-row ios-act is-danger" id="sy-off">Désactiver sur cet appareil</button>';
+    ui.appendChild(off);
+  }
   function paint() {
     if (!ui) return;
+    if (SYNC_URL && phone()) { paintPhone(); return; }
     if (!SYNC_URL) { ui.innerHTML = '<h3>Synchronisation</h3><p class="muted small">Bientôt disponible.</p>'; return; }
     if (!meta.code) {
       ui.innerHTML = '<h3>Synchronisation</h3><p class="muted small">Retrouve tes notes sur ton iPhone, ton iPad et ton ordinateur. Elles sont chiffrées avec ton code : personne d\'autre ne peut les lire.</p>' +
@@ -209,7 +236,9 @@
     ctx: function () { return cryptoKey && vaultId ? { id: vaultId, key: cryptoKey, url: SYNC_URL } : null; },
     seal: function (obj) { return seal(obj); },
     applying: function () { return applying; },
-    join: join, enabled: function () { return !!meta.code && !!SYNC_URL; }, available: function () { return !!SYNC_URL; }
+    join: join, enabled: function () { return !!meta.code && !!SYNC_URL; }, available: function () { return !!SYNC_URL; },
+    // État et heure de la dernière synchronisation réussie (tuile de Réglages, ios-settings.js).
+    status: function () { return lastStatus; }, last: function () { return meta.last || 0; }
   };
   var looping = false;
   function loop() {

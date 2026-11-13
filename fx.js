@@ -248,6 +248,15 @@
   /* ---------- Sauvegarde : exporter / importer ---------- */
   function stamp() { var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
   function say(t, bad) { var o = $("#bk-msg"); if (!o) return; o.textContent = t; o.style.color = bad ? "var(--crit)" : ""; }
+  // Date du dernier export (tuile « Sauvegarde » de Réglages, v58).
+  var BK = "notes2m01.backupAt";
+  function backupAt() { try { return +localStorage.getItem(BK) || 0; } catch (e) { return 0; } }
+  function markBackup() { try { localStorage.setItem(BK, String(Date.now())); } catch (e) {} lastLine(); }
+  function lastLine() {
+    var o = $("#bk-last"); if (!o) return;
+    var t = backupAt();
+    o.textContent = t ? "Dernier export : " + new Date(t).toLocaleDateString("fr-CH", { day: "numeric", month: "long", year: "numeric" }) + "." : "Aucun export pour l'instant.";
+  }
   function exportData() {
     if (!window.NotesApp) return;
     var json = JSON.stringify({ app: "notes2m01", version: 1, exported: new Date().toISOString(), state: window.NotesApp.get() }, null, 2);
@@ -255,11 +264,11 @@
     var file = null;
     try { file = new File([json], name, { type: "application/json" }); } catch (e) {}
     if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
-      navigator.share({ files: [file], title: "Sauvegarde Notes" }).then(function () { say("Sauvegarde partagée."); }, function () {});
+      navigator.share({ files: [file], title: "Sauvegarde Notes" }).then(function () { markBackup(); say("Sauvegarde partagée."); }, function () {});
     } else {
       var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([json], { type: "application/json" })); a.download = name;
       document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
-      say("Fichier " + name + " téléchargé.");
+      markBackup(); say("Fichier " + name + " téléchargé.");
     }
   }
   function importFile(f) {
@@ -278,16 +287,23 @@
   function mountBackup() {
     var host = $("#set-block"); if (!host || $("#backup")) return;
     var div = document.createElement("div"); div.className = "backup"; div.id = "backup";
-    div.innerHTML =
-      '<h3>Sauvegarde</h3>' +
-      '<p class="muted small">Tes notes restent sur ce téléphone. Exporte-les de temps en temps (Fichiers, AirDrop) pour ne rien perdre. Les photos des tests ne sont ni dans la sauvegarde ni synchronisées : changer d\'iPhone ou supprimer l\'icône de l\'app les fait perdre.</p>' +
+    var phone = window.matchMedia("(max-width: 700px)").matches;
+    var txt = "Tes notes restent sur ce téléphone. Exporte-les de temps en temps (Fichiers, AirDrop) pour ne rien perdre. Les photos des tests ne sont ni dans la sauvegarde ni synchronisées : changer d'iPhone ou supprimer l'icône de l'app les fait perdre.";
+    var hapRow = '<label class="row ios-bk-hap">Retours haptiques<input type="checkbox" switch id="bk-haptic"' + (hapticsOn ? " checked" : "") + '></label>';
+    // Téléphone (v58, style C) : groupe de lignes iOS ; l'interrupteur haptique vit dans Réglages › Données (ios-settings.js).
+    div.innerHTML = phone ?
+      '<p class="ios-grp-head">Fichier de sauvegarde</p><div class="ios-grp"><button type="button" class="ios-row ios-act" id="bk-export">Exporter</button>' +
+        '<button type="button" class="ios-row ios-act" id="bk-import">Importer un fichier</button></div>' +
+        '<p class="ios-grp-foot" id="bk-last"></p><p class="ios-grp-foot">' + txt + '</p>' +
+        '<input type="file" id="bk-file" accept="application/json,.json"><p class="ok ios-grp-foot" id="bk-msg" role="status"></p>' + hapRow :
+      '<h3>Sauvegarde</h3><p class="muted small">' + txt + '</p>' +
       '<div class="btns"><button type="button" class="btn" id="bk-export">Exporter</button>' +
       '<button type="button" class="btn-ghost" id="bk-import">Importer un fichier</button></div>' +
       '<input type="file" id="bk-file" accept="application/json,.json">' +
-      '<p class="ok" id="bk-msg" role="status"></p>' +
-      '<label class="row">Retours haptiques<input type="checkbox" switch id="bk-haptic"' + (hapticsOn ? " checked" : "") + '></label>';
+      '<p class="ok" id="bk-msg" role="status"></p>' + hapRow;
     host.appendChild(div);
     $("#bk-export").addEventListener("click", exportData);
+    lastLine();
     $("#bk-import").addEventListener("click", function () { $("#bk-file").click(); });
     $("#bk-file").addEventListener("change", function (e) { var f = e.target.files && e.target.files[0]; if (f) importFile(f); e.target.value = ""; });
     $("#bk-haptic").addEventListener("change", function (e) {
@@ -332,7 +348,8 @@
       document.dispatchEvent(new CustomEvent("ios:rendered"));   // barre du bas (ios-tabbar.js) : pastilles et verdict
     },
     view: function () { placeTab(); },
-    success: function () { haptic("success"); }
+    success: function () { haptic("success"); },
+    backupAt: backupAt
   };
   mountBackup(); mountInstallTip();
   placeSeg(); placeTab();

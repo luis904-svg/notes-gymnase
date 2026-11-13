@@ -111,8 +111,11 @@
     var pct = Math.round((step / (vs.length - 1)) * 100);
     root.innerHTML =
       // En modification (Réglages → Profil), « Annuler » est proposé dès l'étape d'ouverture : on peut toujours ressortir sans tout parcourir.
-      '<div class="ob-top"><button type="button" class="link ob-back"' + (editing && step <= firstStep ? ' data-cancel' : step === 0 ? " hidden" : "") + '>' + (editing && step <= firstStep ? "Annuler" : "‹ Retour") + '</button>' +
-      (s.id !== "welcome" ? '<div class="ob-prog" aria-hidden="true"><i style="width:' + pct + '%"></i></div>' : "") + '</div>' +
+      // v58 (style C) : rond Retour (chevron) ou Fermer (croix, en modification), titre « Étape n sur N », fine barre verte.
+      '<div class="ob-top ob-top-c"><button type="button" class="ob-back ob-round"' + (editing && step <= firstStep ? ' data-cancel aria-label="Annuler"' : step === 0 ? ' hidden aria-label="Retour"' : ' aria-label="Retour"') + '>' +
+      (window.Icons ? Icons.svg(editing && step <= firstStep ? "times" : "chevl") : "‹") + '</button>' +
+      (s.id !== "welcome" ? '<b class="ob-bar-t">Étape ' + step + ' sur ' + (vs.length - 1) + '</b>' : '<span class="ob-bar-t"></span>') + '<span class="ob-round-sp"></span></div>' +
+      (s.id !== "welcome" ? '<div class="ob-prog" aria-hidden="true"><i style="width:' + pct + '%"></i></div>' : "") +
       '<div class="ob-body" id="ob-body">' + body(s) + '</div>' +
       (s.id === "guide"
         ? '<div class="ob-foot"><button type="button" class="btn" id="ob-guide">' + (guideTouched ? "Reprendre le guide" : "Suivre le guide maintenant") + '</button><button type="button" class="link ob-later" id="ob-later">' + (guideTouched ? "Continuer la configuration" : "Plus tard") + '</button></div>'

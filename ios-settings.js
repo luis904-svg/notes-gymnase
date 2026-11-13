@@ -105,29 +105,60 @@
   }
   function hap(k) { if (window.FX) FX.haptic(k); }
 
+  /* ---------- Tuiles d'état de la page principale (v58) ---------- */
+  function dateShort(iso) { var p = String(iso || "").split("-"); if (p.length !== 3) return "–"; try { return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString("fr-CH", { day: "numeric", month: "short" }); } catch (e) { return fmtDate(iso); } }
+  function agoShort(t) {
+    if (!t) return "";
+    var m = Math.round((Date.now() - t) / 60000);
+    return m < 1 ? "à l'instant" : m < 60 ? "il y a " + m + " min" : m < 1440 ? "il y a " + Math.round(m / 60) + " h" : "il y a " + Math.round(m / 1440) + " j";
+  }
+  function stile(label, st, text, foot, act) {
+    return '<button type="button" class="ios-stile" data-act="' + act + '"><span class="ios-dk">' + label + '</span><b><i class="ios-sdot is-' + st + '"></i>' + esc(text) + '</b>' +
+      (foot ? '<span class="ios-dfoot">' + esc(foot) + '</span>' : "") + '</button>';
+  }
+  function syncTile() {
+    var S = window.Sync;
+    if (!S || !S.available || !S.available()) return stile("Synchronisation", "none", "Indisponible", "", "go:sync");
+    if (!S.enabled()) return stile("Synchronisation", "none", "Désactivée", "Retrouve tes notes partout", "go:sync");
+    var st = S.status ? S.status() : "ok", last = S.last ? S.last() : 0;
+    if (st === "offline") return stile("Synchronisation", "warn", "Hors connexion", last ? "dernière fois " + agoShort(last) : "", "go:sync");
+    if (st === "badcode") return stile("Synchronisation", "crit", "Code refusé", "vérifie le code", "go:sync");
+    return stile("Synchronisation", "ok", st === "sync" ? "En cours…" : "À jour", last ? agoShort(last) : "", "go:sync");
+  }
+  function backupTile() {
+    var t = window.FX && FX.backupAt ? FX.backupAt() : 0;
+    if (!t) return stile("Sauvegarde", "warn", "Jamais", "Exporte un fichier", "go:backup");
+    var d = Math.floor((Date.now() - t) / 86400000);
+    return stile("Sauvegarde", d > 30 ? "warn" : "ok", d <= 0 ? "Aujourd'hui" : d === 1 ? "Hier" : "Il y a " + d + " j", d > 30 ? "Exporte un nouveau fichier" : "Fichier exporté", "go:backup");
+  }
+
   /* ---------- Pages ---------- */
   var PAGES = {
     main: {
       title: "Réglages", large: true,
+      // v58 (style C du canvas) : tuile Profil, deux tuiles d'état (synchronisation, sauvegarde), puis des sections titrées.
       html: function () {
         var pr = app().profile() || {}, G = window.Grid, c = cfg(), arch = app().archive();
         var gname = G && pr.gymnase ? G.gymnaseName(pr.gymnase) : "", name = "Notes " + (pr.classe || (pr.year ? pr.year + "M" : ""));
         var initials = esc((pr.classe || (pr.year ? pr.year + "M" : "N")).slice(0, 2));
         var prof = '<div class="ios-grp"><button type="button" class="ios-row ios-prof" data-act="go:profil"><span class="ios-avatar">' + initials + '</span>' +
-          '<span class="ios-prof-t"><b>' + esc(name) + '</b><span>' + esc((gname ? gname + " · " : "") + (pr.year ? ORD[pr.year] + " année" : "")) + '</span></span>' + CHEV + '</button></div>';
-        var semestre = row({ ic: "red", svg: "calendar", label: "Fin du semestre 1", act: "go:semestre" });
+          '<span class="ios-prof-t"><span class="ios-dk">Profil</span><b>' + esc(name) + '</b><span>' + esc((gname ? gname + " · " : "") + (pr.year ? ORD[pr.year] + " année" : "")) + '</span></span>' + CHEV + '</button></div>';
+        var tiles = '<div class="ios-stiles">' + syncTile() + backupTile() + '</div>';
         var an = [];
-        if (pr.year && pr.year < 3) an.push(row({ ic: "orange", svg: "up", label: "Passer en " + ORD[pr.year + 1] + " année", act: "click:yp-next" }));
+        if (pr.year && pr.year < 3) an.push(row({ ic: "green", svg: "up", label: "Passer en " + ORD[pr.year + 1] + " année", act: "click:yp-next" }));
         // 3e année : notes de 2e reprises (chimie, physique, art), bloc #carriedset de cert.js.
         if (pr.year === 3) an.push(row({ ic: "green", svg: "flask", label: "Notes reprises de 2e", act: "go:carried" }));
         if (arch.length) an.push(row({ ic: "gray", svg: "archive", label: "Années précédentes", val: String(arch.length), act: "click:yp-hist" }));
-        return '<h1 class="ios-large">Réglages</h1>' + prof +
-          '<div class="ios-grp">' + row({ ic: "blue", svg: "list", label: "Branches", act: "go:branches" }) + semestre + '</div>' +
-          grp([row({ ic: "blue", svg: "sync", label: "Synchronisation", act: "go:sync" }), row({ ic: "green", svg: "save", label: "Sauvegarde", act: "go:backup" })]) +
+        var hap = document.getElementById("bk-haptic");
+        var hapRow = '<label class="ios-row has-ic">' + icon("gray", "phone") + '<span class="ios-row-l">Retours haptiques</span><input type="checkbox" switch id="ios-haptic"' + (!hap || hap.checked ? " checked" : "") + '></label>';
+        return '<h1 class="ios-large">Réglages</h1>' + prof + tiles +
+          grp([row({ ic: "green", svg: "list", label: "Branches et objectifs", val: String(subjects().length), act: "go:branches" }),
+               row({ ic: "orange", svg: "calendar", label: "Fin du semestre 1", val: dateShort(c.s1End), act: "go:semestre" })], "Branches") +
+          grp([row({ ic: "blue", svg: "sync", label: "Synchronisation", act: "go:sync" }), row({ ic: "gray", svg: "save", label: "Sauvegarde", act: "go:backup" }), hapRow], "Données") +
           (an.length ? grp(an, "Année scolaire") : "") +
           grp([row({ ic: "orange", svg: "book", label: "Guide d'utilisation", act: "click:gd-open" }),
-               row({ ic: "gray", svg: "calc", label: "Comment les moyennes sont calculées", act: "go:rules" }),
-               row({ ic: "gray", svg: "info", label: "À propos", act: "go:about" })]) +
+               row({ ic: "gray", svg: "calc", label: "Calcul des moyennes", act: "go:rules" }),
+               row({ ic: "gray", svg: "info", label: "À propos", act: "go:about" })], "Aide") +
           '<p class="ios-copy">©louis mutter</p>';
       }
     },
@@ -334,6 +365,11 @@
   });
   container.addEventListener("change", function (ev) {
     var t = ev.target;
+    if (t.id === "ios-haptic") {   // interrupteur de la page principale : relais vers celui du bloc Sauvegarde (fx.js)
+      var hb = document.getElementById("bk-haptic");
+      if (hb) { hb.checked = t.checked; hb.dispatchEvent(new Event("change", { bubbles: true })); }
+      return;
+    }
     if (t.id === "ios-classe") {
       var pr = app().profile(), c = t.value.trim().toUpperCase().slice(0, 8);
       if (pr && c && c !== pr.classe) { app().setProfile(Object.assign({}, pr, { classe: c })); hap("success"); }
@@ -365,6 +401,8 @@
     if (!active) return;
     show(0);
   });
+  // État de la synchronisation changé : la tuile de la page principale suit.
+  document.addEventListener("sync:status", function () { if (active && settingsVisible() && top().id === "main") show(window.scrollY); });
   // Après l'assistant de profil, le passage d'année, etc. : les valeurs affichées sont rafraîchies.
   new MutationObserver(function () {
     if (active && settingsVisible() && !document.body.classList.contains("ob-open") && !document.body.classList.contains("gd-open")) show(window.scrollY);

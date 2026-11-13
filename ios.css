@@ -889,3 +889,154 @@ body.ios-find-open { overflow: hidden; }
 .ios-hb.is-warn b, .ios-hb.is-crit b { color: var(--ios-label); }
 #notes > li.ios-dnote > .v.crit, .ios-enotes .notes > li.ios-erow > .v.crit { color: var(--ios-label); }
 
+
+/* ---------- v58 : toutes les pages au style C (Réglages, Synchronisation, Sauvegarde, sous-pages) ----------
+   Titres de section en 22 px au-dessus des groupes (comme l'Accueil), tuiles d'état, actions en lignes bleues,
+   « Désactiver » seul dans son groupe en rouge. Chiffres en noir (règle v56). */
+@media (max-width: 700px) {
+  .ios-grp-head { margin: 0 4px; font-size: var(--ios-sec-title); font-weight: 700; line-height: 1.25; color: var(--ios-label); }
+  .ios-page > .ios-grp-head { margin-top: 28px; }
+  .ios-page > .ios-grp-head + .ios-grp { margin-top: 8px; }
+  .ios-prof-t .ios-dk { margin-bottom: 1px; }
+  .ios-prof .ios-avatar { background: var(--ios-green); }
+  /* Tuiles d'état (page principale) */
+  .ios-stiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ios-tile-gap); margin-top: var(--ios-tile-gap); }
+  .ios-stile { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; padding: var(--ios-tile-pad); border: 0; border-radius: var(--ios-r-group); background: var(--ios-cell); color: var(--ios-label); text-align: left; font: inherit; cursor: pointer; }
+  .ios-stile:active, .ios-stile.is-pressed { transform: none; background: var(--ios-press-card); }
+  .ios-stile b { display: flex; align-items: center; gap: 6px; font-size: var(--ios-title-inline); font-weight: 600; }
+  .ios-sdot { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--ios-gray); }
+  .ios-sdot.is-ok { background: var(--ios-green); } .ios-sdot.is-warn { background: var(--ios-orange); } .ios-sdot.is-crit { background: var(--ios-red); }
+  /* Blocs adoptés (Synchronisation, Sauvegarde) : plus de carte autour, ce sont des groupes et des titres */
+  .ios-slot .backup { margin: 0; padding: 0; border: 0; border-radius: 0; background: var(--ios-clear); gap: 0; }
+  .ios-slot .backup > .ios-grp, .ios-slot #notif > .ios-grp { margin-top: 8px; }
+  .ios-slot .backup > .ios-grp-head, .ios-slot #notif > .ios-grp-head { margin: 28px 4px 0; }
+  .ios-slot .backup > .ios-grp-foot, .ios-slot #notif > .ios-grp-foot { margin: 8px var(--ios-pad) 0; }
+  .ios-slot .backup > .ios-grp-foot:empty, .ios-slot #notif > .ios-grp-foot:empty { display: none; }
+  .ios-slot #notif { margin: 0; padding: 0; border: 0; gap: 0; display: block; }
+  .ios-slot .ios-sy-off { margin-top: 28px; }
+  .ios-slot .backup .ios-bk-hap { display: none; }
+  .ios-slot .backup > .ios-grp-head:first-child { margin-top: 4px; }
+  .ios-act { color: var(--ios-blue); }
+  .ios-act.is-danger { color: var(--ios-red-text); }
+  .ios-sy-code { justify-content: center; min-height: 64px; font-size: 22px; font-weight: 600; letter-spacing: 1.5px; }
+  .ios-stat { display: flex; align-items: center; gap: 14px; padding: var(--ios-tile-pad); border-radius: var(--ios-r-group); background: var(--ios-cell); }
+  .ios-stat-ic { display: flex; align-items: center; justify-content: center; flex: none; width: var(--ios-verdict-ic); height: var(--ios-verdict-ic); border-radius: 50%; color: var(--ios-white); background: var(--ios-gray); }
+  .ios-stat.is-ok .ios-stat-ic { background: var(--ios-green); } .ios-stat.is-warn .ios-stat-ic { background: var(--ios-orange); } .ios-stat.is-crit .ios-stat-ic { background: var(--ios-red); }
+  .ios-stat-ic svg { width: 26px; height: 26px; stroke-width: 2.5; }
+  .ios-stat-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .ios-stat-t b { font-size: 20px; font-weight: 700; }
+  .ios-stat-t > span:not(.ios-dk) { font-size: 13px; color: var(--ios-label-2); }
+}
+
+/* ---------- v58 : formulaire Ajouter au style C (ios-add.js) ---------- */
+.ios-add-h, .ios-tseg, .ios-ph-ic, .ios-ph-chev { display: none; }
+.ios-add-grp { display: flex; flex-direction: column; gap: 12px; }   /* grand écran : même espacement qu'avant */
+@media (max-width: 700px) {
+  #view-add > .panel { background: var(--ios-clear); padding: 0; border-radius: 0; }
+  .ios-add-h { display: block; margin: 0 4px 8px; }
+  #form .ios-add-h ~ .ios-add-h { margin-top: 28px; }
+  .ios-add-grp { display: flex; flex-direction: column; gap: 14px; padding: 18px var(--ios-pad); border-radius: var(--ios-r-group); background: var(--ios-cell); }
+  #f-type { display: none; }
+  .ios-tseg { display: flex; padding: 3px; border-radius: 10px; background: var(--ios-fill); }
+  .ios-tseg button { flex: 1; min-height: 34px; padding: 0; border: 0; border-radius: 8px; background: var(--ios-clear); color: var(--ios-label); font: inherit; font-size: 15px; }
+  .ios-tseg button[aria-pressed="true"] { background: var(--ios-cell); font-weight: 600; box-shadow: 0 1px 3px var(--ios-sep); }
+  .ios-tseg button:active { transform: none; opacity: 0.6; }
+  #form .chips button.is-on { background: var(--ios-green); color: var(--ios-white); font-weight: 600; }
+  /* Photo : deux lignes à carré d'icône dans un groupe, puis les vignettes et la note de bas */
+  #form .ios-ph-box { display: flex; flex-direction: column; align-items: stretch; gap: 8px; }
+  #form .ios-ph-btns { display: flex; flex-direction: column; gap: 0; border-radius: var(--ios-r-group); background: var(--ios-cell); overflow: hidden; }
+  #form .ios-ph-btns button { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: var(--ios-row-h); padding: 0 16px 0 var(--ios-pad);
+    border: 0; border-radius: 0; background: var(--ios-clear); color: var(--ios-label); font: inherit; font-size: var(--ios-title-inline); text-align: left; }
+  #form .ios-ph-btns button + button::before { content: ""; position: absolute; top: 0; left: calc(var(--ios-pad) + var(--ios-icon) + 12px); right: 0; height: var(--ios-hair); background: var(--ios-sep); }
+  #form .ios-ph-btns button:active { transform: none; background: var(--ios-press-row); }
+  #form .ios-ph-ic { display: flex; }
+  #form .ios-ph-t { flex: 1; min-width: 0; }
+  #form .ios-ph-chev { display: block; }
+  #form .ios-ph-info { margin: 0 var(--ios-pad); font-size: 13px; }
+  #form .ios-ph-list:empty { display: none; }
+  #form > .btns { margin-top: 20px; }
+  #form > .btns #f-submit { flex: 1; min-height: 52px; border-radius: 26px; font-weight: 600; }
+}
+
+/* ---------- v58 : page d'une branche au style C (ios-detail.js) ---------- */
+@media (max-width: 700px) {
+  .ios-epage > .ios-sub { border-bottom: 0; padding-bottom: 0; }
+  .ios-epanel { gap: var(--ios-tile-gap); margin-top: 12px; }
+  .ios-etop { margin-top: 0; }
+  .ios-erange { display: flex; gap: 0; padding: 3px; border-radius: 22px; background: var(--ios-fill); }
+  .ios-erange button { flex: 1; min-height: 36px; border-radius: 19px; font-size: 15px; font-weight: 400; color: var(--ios-label); }
+  .ios-erange button[aria-pressed="true"] { background: var(--ios-cell); font-weight: 600; box-shadow: 0 1px 3px var(--ios-sep); }
+  .ios-escrub { border-radius: 22px; }
+  .ios-ehero { display: flex; flex-direction: column; padding: var(--ios-tile-pad); border-radius: var(--ios-r-group); background: var(--ios-cell); }
+  .ios-ehero .ios-evalue { margin-top: 4px; }
+  .ios-evalue-n { font-size: 44px; line-height: 1; }
+  .ios-evalue-b { font-size: 15px; color: var(--ios-label-2); }
+  .ios-ehero .ios-ecap { margin-top: 4px; }
+  .ios-ehint { margin: 8px 0 0; font-size: 13px; color: var(--ios-label-2); }
+  .ios-estats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ios-tile-gap); margin-top: 0; }
+  .ios-estat { flex-direction: column; justify-content: flex-start; align-items: stretch; gap: 6px; padding: var(--ios-tile-pad); border: 0; border-radius: var(--ios-r-group); background: var(--ios-cell); }
+  .ios-estat b { font-size: var(--ios-tile-big); font-weight: 700; line-height: 1; margin-top: auto; }
+  .ios-ebar { position: relative; display: block; height: 8px; margin: 4px 0; border-radius: 4px; background: var(--ios-bg); }
+  .ios-ebar i { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 4px; background: var(--ios-green); }
+  .ios-ebar.is-warn i { background: var(--ios-orange); } .ios-ebar.is-crit i { background: var(--ios-red); }
+  .ios-ebar::after { content: ""; position: absolute; left: 60%; top: -4px; bottom: -4px; border-left: 1.5px dashed var(--ios-label-2); }
+  /* Notes : titre de section et groupe blanc */
+  .ios-enotes-h { margin: 28px 4px 8px; }
+  .ios-enotes-h span { font-size: var(--ios-sec-title); font-weight: 700; letter-spacing: 0; }
+  .ios-enotes { padding: 0 16px 0 var(--ios-pad); border-radius: var(--ios-r-group); background: var(--ios-cell); }
+  .ios-enotes .notes > li:first-child { border-top: 0; }
+  .ios-enotes .notes > li.ios-erow { grid-template-areas: "what v" "meta eff" "acts acts"; }
+  .ios-enotes .notes > li.ios-erow > .meta { font-size: 13px; font-weight: 400; text-transform: none; letter-spacing: 0; }
+  .ios-enotes .notes > li.ios-erow > .what { font-weight: 400; }
+  .ios-enotes .notes > li.ios-erow > .v { font-size: var(--ios-title-inline); font-weight: 600; }
+  .ios-enotes .ios-eff { font-size: 12px; font-weight: 600; }
+}
+
+/* ---------- v58 : recherche au style C (rond Fermer, titre de section) ---------- */
+.ios-find-x { display: flex; align-items: center; justify-content: center; width: var(--ios-back); height: var(--ios-back); padding: 0; border: 0; border-radius: 50%; background: var(--ios-back-bg); color: var(--ios-label); }
+.ios-find-x svg { width: 20px; height: 20px; stroke-width: 2.25; }
+.ios-find-h { margin: 14px 4px 8px; font-size: var(--ios-sec-title); font-weight: 700; color: var(--ios-label); }
+
+/* ---------- v58 : guide au style C (guide.js) : rond Fermer, tuile à anneau, chapitres à carré numéroté ---------- */
+.gd-x { display: flex; align-items: center; justify-content: center; flex: none; width: var(--ios-back); height: var(--ios-back); padding: 0; border: 0; border-radius: 50%; background: var(--ios-back-bg); color: var(--ios-label); }
+.gd-x svg { width: 20px; height: 20px; stroke-width: 2.25; }
+.gd-x:active { transform: none; opacity: 0.6; }
+.gd-top-c .gd-bar-t { flex: 1; text-align: center; font-size: var(--ios-title-inline); font-weight: 600; }
+.gd-x-sp { flex: none; width: var(--ios-back); }
+.gd-ptile { display: flex; align-self: stretch; text-align: left; align-items: center; gap: 16px; margin-top: 8px; padding: 16px; border-radius: var(--ios-r-group); background: var(--ios-cell); }
+.gd-ring { flex: none; width: 72px; height: 72px; }
+.gd-ring-bg { fill: none; stroke: var(--ios-pill-active); stroke-width: 9; }
+.gd-ring-fg { fill: none; stroke: var(--ios-green); stroke-width: 9; stroke-linecap: round; }
+.gd-ring text { font-size: 18px; font-weight: 700; fill: var(--ios-label); }
+.gd-ptile-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.gd-k { font-size: 13px; font-weight: 600; color: var(--ios-label-2); }
+.gd-ptile-t b { font-size: 20px; font-weight: 700; }
+.gd-ptile-t > span:last-child { font-size: 13px; color: var(--ios-label-2); }
+.gd-sech { align-self: stretch; text-align: left; margin: 28px 4px 8px; font-size: var(--ios-sec-title); font-weight: 700; color: var(--ios-label); }
+.gd-chs .gd-num { width: var(--ios-icon); height: var(--ios-icon); border-radius: var(--ios-r-icon); background: var(--ios-gray); color: var(--ios-white); font-size: 15px; }
+.gd-chr.is-ok .gd-num { background: var(--ios-green); color: var(--ios-white); }
+.gd-chs .gd-num svg { width: 18px; height: 18px; }
+.gd-chs { border: 0; border-radius: var(--ios-r-group); background: var(--ios-cell); }
+.gd-chr { min-height: 60px; }
+
+/* ---------- v58 : assistant au style C (onboard.js) : barre « Étape n sur N », fine barre verte, lignes de 52 ---------- */
+.ob-top-c { gap: 8px; }
+.ob-round { display: flex; align-items: center; justify-content: center; flex: none; width: var(--ios-back); height: var(--ios-back); padding: 0; border: 0; border-radius: 50%; background: var(--ios-back-bg); color: var(--ios-label); }
+.ob-round svg { width: 20px; height: 20px; stroke-width: 2.25; }
+.ob-round[hidden] { display: flex; visibility: hidden; }
+.ob-round:active { transform: none; opacity: 0.6; }
+.ob-bar-t { flex: 1; text-align: center; font-size: var(--ios-title-inline); font-weight: 600; }
+.ob-round-sp { flex: none; width: var(--ios-back); }
+.ob-top-c + .ob-prog { flex: none; height: 3px; margin: 6px 0 0; border-radius: 2px; }
+.ob-prog i { background: var(--ios-green); }
+.ob-list { border: 0; border-radius: var(--ios-r-group); background: var(--ios-cell); }
+.ob-row { min-height: var(--ios-row-h); padding: 6px 16px 6px var(--ios-pad); }
+
+/* ---------- v58 : autres sous-pages au même style ---------- */
+@media (max-width: 700px) {
+  /* À propos, notes reprises de 2e : leur contenu reste une carte blanche (les blocs Synchronisation et Sauvegarde sont en lignes) */
+  .ios-slot #about, .ios-slot #carriedset { padding: var(--ios-pad); border-radius: var(--ios-r-group); background: var(--ios-cell); gap: 12px; }
+}
+/* Années précédentes : titre d'année en section, note de bulletin comme dans les listes (noire, centrée) */
+.yp-year h2 { margin: 0 4px 8px; font-size: var(--ios-sec-title); font-weight: 700; }
+.yp-b { min-width: var(--ios-grade-w); text-align: center; font-family: inherit; font-size: var(--ios-title-inline); font-weight: 600; letter-spacing: 0; font-variant-numeric: tabular-nums; }

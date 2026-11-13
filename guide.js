@@ -159,7 +159,7 @@
     },
     tips: function () {
       var r = function (k, t) { return "<div class='gd-tp'>" + ic(k) + "<span>" + t + "</span></div>"; };
-      return "<div class='gd-tips'>" + r("refresh", "App pas à jour ? Ferme-la complètement, rouvre-la deux fois") + r("wifi", "« Hors connexion » : tes notes restent sur le téléphone") + r("wave", "Vibrations : Réglages → Retours haptiques") + "</div>";
+      return "<div class='gd-tips'>" + r("refresh", "App pas à jour ? Ferme-la complètement, rouvre-la deux fois") + r("wifi", "« Hors connexion » : tes notes restent sur le téléphone") + r("wave", "Vibrations : Réglages → Données → Retours haptiques") + "</div>";
     }
   };
 
@@ -237,12 +237,13 @@
         "Indique la date de fin du semestre 1 de ton gymnase. Elle sépare les notes des boutons <b>Semestre 1</b> et <b>Semestre 2</b>."] },
       { t: "Sauvegarde", v: "backup", p: [
         "<b>Exporter</b> crée un fichier de toutes tes notes, TA et réglages (Fichiers, AirDrop). <b>Importer un fichier</b> remplace ce qu'il y a sur l'appareil.",
-        "<b>Supprimer l'icône efface les notes</b> : exporte régulièrement. Les photos des tests ne sont pas dans la sauvegarde."] },
+        "<b>Supprimer l'icône efface les notes</b> : exporte régulièrement. Les photos des tests ne sont pas dans la sauvegarde.",
+        "En haut de Réglages, la tuile <b>Sauvegarde</b> montre depuis quand tu n'as pas exporté (orange après un mois), et la tuile <b>Synchronisation</b> si tout est à jour."] },
       { t: "Synchronisation", v: "sync", p: [
         "<b>Activer la synchronisation</b> donne un code de 16 caractères. Sur ton autre appareil, touche <b>J'ai déjà un code</b> et tape-le.",
         "Les notes sont chiffrées avec ce code : garde-le précieusement, il ne peut pas être récupéré. Toute personne qui a le code voit et peut modifier les notes."] },
       { t: "Vibrations et dépannage", v: "tips", p: [
-        "<b>Retours haptiques</b> active ou coupe les vibrations. Si l'app ne semble pas à jour, ferme-la complètement et rouvre-la deux fois.",
+        "<b>Retours haptiques</b> (Réglages, section Données) active ou coupe les vibrations. Si l'app ne semble pas à jour, ferme-la complètement et rouvre-la deux fois.",
         "« Hors connexion » : tes notes restent sur le téléphone et se synchroniseront plus tard. Téléphone couché : l'app demande de le remettre à la verticale."] }
     ] },
     { t: "Avec tes parents", d: "2 min", s: [
@@ -260,6 +261,7 @@
 
   /* ---------- Affichage ---------- */
   var root = null, view = "list", c = 0, s = 0, dir = 1, onClose = null;
+  var CLOSE = window.Icons ? Icons.svg("times") : "×";   // rond Fermer (v58, comme les sous-pages)
 
   function allDone() { return CH.every(function (_, i) { return st.done.indexOf(i) >= 0; }); }
   function doneCount() { return CH.filter(function (_, i) { return st.done.indexOf(i) >= 0; }).length; }
@@ -269,20 +271,28 @@
     var h = "", b;
     if (view === "list") {
       var n = doneCount(), resume = st.last && !allDone();
-      h = "<div class='gd-top'><span></span><button type='button' class='link' data-gd='close'>Fermer</button></div>" +
-        "<div class='gd-body'><h1 class='ob-title'>Guide d'utilisation</h1><p class='ob-sub'>" + CH.length + " chapitres, environ 15 minutes. Tu peux t'arrêter et reprendre quand tu veux.</p>" +
-        "<div class='gd-prog'><i style='width:" + Math.round(n / CH.length * 100) + "%'></i></div><p class='gd-count'>" + n + " sur " + CH.length + " chapitres terminés</p>" +
+      // v58 (style C du canvas) : barre « Guide » avec rond Fermer, tuile de progression à anneau vert, titre de section,
+      // chapitres en lignes à carré numéroté (coche verte quand c'est fait), bouton « Continuer : … ».
+      var C = 2 * Math.PI * 30, frac = n / CH.length, nextI = resume ? st.last.c : CH.map(function (_, i) { return i; }).filter(function (i) { return st.done.indexOf(i) < 0; })[0];
+      var cta = allDone() ? "Revoir depuis le début" : nextI != null && CH[nextI] ? (resume ? "Reprendre : " : n ? "Continuer : " : "Commencer : ") + CH[nextI].t : "Commencer";
+      h = "<div class='gd-top gd-top-c'><button type='button' class='gd-x' data-gd='close' aria-label='Fermer le guide'>" + CLOSE + "</button><b class='gd-bar-t'>Guide</b><span class='gd-x-sp'></span></div>" +
+        "<div class='gd-body'><section class='gd-ptile'><svg class='gd-ring' viewBox='0 0 80 80' role='img' aria-label='" + n + " chapitre" + (n > 1 ? "s" : "") + " sur " + CH.length + " terminés'>" +
+        "<circle cx='40' cy='40' r='30' class='gd-ring-bg'/>" + (n ? "<circle cx='40' cy='40' r='30' class='gd-ring-fg' stroke-dasharray='" + (frac * C).toFixed(1) + " " + C.toFixed(1) + "' transform='rotate(-90 40 40)'/>" : "") +
+        "<text x='40' y='46' text-anchor='middle'>" + n + "/" + CH.length + "</text></svg>" +
+        "<span class='gd-ptile-t'><span class='gd-k'>Guide d'utilisation</span><b>" + (allDone() ? "Tout est terminé" : n ? n + " chapitre" + (n > 1 ? "s" : "") + " terminé" + (n > 1 ? "s" : "") : "Pas encore commencé") + "</b>" +
+        "<span>" + CH.length + " chapitres, environ 15 minutes. Tu peux t'arrêter quand tu veux.</span></span></section>" +
+        "<p class='gd-sech'>Chapitres</p>" +
         "<div class='gd-chs'>" + CH.map(function (ch, i) {
           var d = st.done.indexOf(i) >= 0;
           return "<button type='button' class='gd-chr" + (d ? " is-ok" : "") + "' data-gd='chapter' data-i='" + i + "'><span class='gd-num'>" + (d ? IC.check : i + 1) + "</span>" +
-            "<span class='ob-txt'><span class='ob-n'>" + ch.t + "</span><small>" + ch.s.length + " étapes · " + ch.d + "</small></span><span class='gd-go'>›</span></button>";
+            "<span class='ob-txt'><span class='ob-n'>" + ch.t + "</span><small>" + ch.s.length + " étapes · " + ch.d + (d ? " · terminé" : "") + "</small></span><span class='gd-go'>›</span></button>";
         }).join("") + "</div></div>" +
-        "<div class='gd-foot'><button type='button' class='btn' data-gd='start'>" + (allDone() ? "Revoir depuis le début" : resume ? "Reprendre" : "Commencer") + "</button></div>";
+        "<div class='gd-foot'><button type='button' class='btn' data-gd='start'>" + cta + "</button></div>";
     } else if (view === "step") {
       var ch = CH[c], stp = ch.s[s], last = s === ch.s.length - 1;
       h = "<div class='gd-top'><button type='button' class='link' data-gd='list'>‹ Chapitres</button>" +
         "<div class='gd-dots' aria-hidden='true'>" + ch.s.map(function (_, i) { return "<i class='" + (i === s ? "on" : i < s ? "past" : "") + "'></i>"; }).join("") + "</div>" +
-        "<button type='button' class='link' data-gd='close'>Fermer</button></div>" +
+        "<button type='button' class='gd-x' data-gd='close' aria-label='Fermer le guide'>" + CLOSE + "</button></div>" +
         "<div class='gd-body'><p class='gd-kick'>Chapitre " + (c + 1) + " · " + ch.t + " · Étape " + (s + 1) + " sur " + ch.s.length + "</p>" +
         "<div class='gd-vis' aria-hidden='true'>" + V[stp.v.split(":")[0]](stp.v.split(":")[1]) + "</div>" +
         "<h1 class='gd-title'>" + stp.t + "</h1><div class='gd-text'>" + stp.p.map(function (t) { return t.indexOf("<span class='note'>") === 0 ? "<p class='note'>" + t.replace(/^<span class='note'>|<\/span>$/g, "") + "</p>" : "<p>" + t + "</p>"; }).join("") + "</div></div>" +
@@ -291,7 +301,7 @@
       st.last = { c: c, s: s }; save();
     } else {
       var lastCh = c === CH.length - 1;
-      h = "<div class='gd-top'><span></span><button type='button' class='link' data-gd='close'>Fermer</button></div>" +
+      h = "<div class='gd-top'><span></span><button type='button' class='gd-x' data-gd='close' aria-label='Fermer le guide'>" + CLOSE + "</button></div>" +
         "<div class='gd-body'><div class='gd-done'>" + lu("done") + "" +
         "<h1 class='gd-title'>" + (allDone() ? "Formation terminée" : "Chapitre terminé") + "</h1>" +
         "<p class='ob-sub'>" + (allDone() ? "Tu connais maintenant toutes les fonctions de l'app. Tu peux rouvrir ce guide quand tu veux dans Réglages." : "« " + CH[c].t + " » est fait. " + (lastCh ? "" : "Suite : « " + CH[c + 1].t + " ».")) + "</p></div></div>" +
@@ -326,7 +336,8 @@
       if (a === "list") return go("list", -1);
       if (a === "chapter") { c = parseInt(t.dataset.i, 10); s = 0; return go("step", 1); }
       if (a === "start") {
-        var l = st.last && !allDone() ? st.last : { c: 0, s: 0 };
+        var first = CH.map(function (_, i) { return i; }).filter(function (i) { return st.done.indexOf(i) < 0; })[0];
+        var l = st.last && !allDone() ? st.last : { c: allDone() || first == null ? 0 : first, s: 0 };   // même chapitre que le bouton
         c = Math.min(CH.length - 1, l.c); s = Math.min(CH[c].s.length - 1, l.s); return go("step", 1);
       }
       if (a === "prev") { if (s > 0) { s--; } else if (c > 0) { c--; s = CH[c].s.length - 1; } return go("step", -1); }

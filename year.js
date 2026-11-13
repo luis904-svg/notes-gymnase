@@ -57,7 +57,7 @@
     var verdict = v.status === "none" ? "" :
       '<p class="ob-sub">Verdict actuel : <span class="pill ' + v.cls + '">' + esc(v.label) + '</span></p>';
     show(
-      '<div class="ob-top"><button type="button" class="link ob-back" data-yp-close>Annuler</button></div>' +
+      '<div class="ob-top ob-top-c"><button type="button" class="ob-round" data-yp-close aria-label="Annuler">' + (window.Icons ? Icons.svg("times") : "×") + '</button><b class="ob-bar-t">Année scolaire</b><span class="ob-round-sp"></span></div>' +
       '<div class="ob-body"><h1 class="ob-title">Passer en ' + ORD[next] + ' année</h1>' + (verdict || '<p class="ob-sub">Ton année ' + yr.cur + ' est terminée ?</p>') +
       '<div class="ob-list ob-recap">' + items.map(function (t) { return '<div class="ob-row ob-static"><span class="ob-txt"><span class="ob-n" style="font-weight:400">' + esc(t) + '</span></span></div>'; }).join("") + '</div>' +
       '<p class="ob-tip"><b>Tu peux annuler.</b> Réglages → « Annuler le dernier passage » remet tes notes de ' + yr.cur + ' dans le tableau de bord, même après le passage.</p>' +
@@ -84,7 +84,7 @@
   function openHistory() {
     var arch = app().archive().slice().reverse();
     if (!arch.length || root) return;
-    show('<div class="ob-top"><button type="button" class="link ob-back" data-yp-close>‹ Retour</button></div>' +
+    show('<div class="ob-top ob-top-c"><button type="button" class="ob-round" data-yp-close aria-label="Retour">' + (window.Icons ? Icons.svg("chevl") : "‹") + '</button><b class="ob-bar-t">Années précédentes</b><span class="ob-round-sp"></span></div>' +
       '<div class="ob-body"><h1 class="ob-title">Années précédentes</h1><p class="ob-sub">Tes notes et tes moyennes de chaque année terminée.</p>' +
       arch.map(function (e) {
         var rows = app().archiveStats(e), n = e.grades.length;

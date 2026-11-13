@@ -128,13 +128,23 @@
     c.sem.forEach(function (t) { stats.push([t.k, t.v, ""]); });
     if (goal) { stats.push(["Objectif", fmtN(goal), ""]); stats.push(["Écart", yearAvg == null ? "–" : signed(yearAvg - goal), yearAvg == null ? "" : yearAvg >= goal ? "good" : "crit"]); }
     c.extra.forEach(function (x) { stats.push([x.k, x.v, ""]); });
+    // v58 (style C) : sélecteur en haut, grande tuile (moyenne, variation, courbe), puis une tuile par chiffre clé avec une
+    // petite barre de 1 à 6 (seuil 4) quand c'est une note. Chiffres en noir ; la couleur ne vit que dans la barre.
+    function bar(v) {
+      var x = parseFloat(String(v).replace("−", "-")); if (!(x >= 1 && x <= 6)) return "";
+      var t = roundHalf(x) < 4 ? "crit" : roundHalf(x) < 4.5 ? "warn" : "ok";
+      return '<span class="ios-ebar is-' + t + '"><i style="width:' + ((x - 1) / 5 * 100).toFixed(1) + '%"></i></span>';
+    }
     panel.innerHTML =
-      '<div class="ios-evalue"><span class="ios-evalue-n">' + fmt2(last) + '</span>' +
-      (n > 1 ? '<span class="ios-evalue-d ' + (up ? "is-up" : "is-down") + '">' + signed(d) + " (" + (d >= 0 ? "+" : "−") + Math.abs(first ? d / first * 100 : 0).toFixed(1) + ' %)</span>' : "") + '</div>' +
-      '<p class="ios-ecap">' + LAB[range] + ' · moyenne exacte, bulletin ' + roundHalf(last) + '</p>' +
       '<div class="ios-etop">' + btns + '<div class="ios-escrub" aria-live="polite"><span class="ios-escrub-d"></span><b class="ios-escrub-v"></b></div></div>' +
-      chartHtml(pts, up) +
-      '<div class="ios-estats">' + stats.map(function (st) { return '<div class="ios-estat"><span>' + st[0] + '</span><b' + (st[2] ? ' class="ios-tone-' + st[2] + '"' : "") + '>' + st[1] + '</b></div>'; }).join("") + '</div>';
+      '<section class="ios-ehero"><span class="ios-dk">Moyenne · ' + LAB[range] + '</span>' +
+      '<div class="ios-evalue"><span class="ios-evalue-n">' + fmt2(last) + '</span><span class="ios-evalue-b">bulletin ' + roundHalf(last) + '</span></div>' +
+      (n > 1 ? '<p class="ios-ecap">' + (Math.abs(d) < 0.005 ? "stable" : (up ? "▲ " : "▼ ") + Math.abs(d).toFixed(2)) + " depuis le " + fmtLong(pts[0].date) + '</p>' : '<p class="ios-ecap">1re note</p>') +
+      chartHtml(pts, up) + '<p class="ios-ehint">Glisse le doigt sur la courbe pour voir chaque note.</p></section>' +
+      '<div class="ios-estats">' + stats.map(function (st) {
+        var grade = /^(Bulletin|Plus haute|Plus basse|Objectif|Semestre|Année)/.test(st[0]);
+        return '<div class="ios-estat"><span class="ios-dk">' + st[0] + '</span>' + (grade ? bar(st[1]) : "") + '<b>' + st[1] + '</b></div>';
+      }).join("") + '</div>';
     rest(panel);
   }
 
@@ -243,7 +253,7 @@
 
     // 4. Notes.
     if (tiles.length) {
-      var hd = el("div", "ios-enotes-h", '<span>Notes</span><small>les plus récentes d\'abord</small>'); page.appendChild(hd);
+      var hd = el("div", "ios-enotes-h", '<span>Notes</span><small>les plus récentes d\'abord</small>'); page.appendChild(hd);   // titre de section (style C)
       if (notesUl) {
         var recs = A.records(), coll = A.collapse(recs), yearPts = A.series ? A.series(id, "year") : [], byDate = {};
         yearPts.forEach(function (pt, i) { byDate[pt.date] = { avg: pt.avg, prev: i ? yearPts[i - 1].avg : null }; });

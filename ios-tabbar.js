@@ -82,7 +82,7 @@
     var nq = norm(q);
     var items = subjects().filter(function (s) { return !nq || norm(s.name.toLowerCase()).indexOf(nq) >= 0; });
     if (!items.length) return '<p class="ios-find-none">Aucune branche ne correspond.</p>';
-    return '<div class="ios-grp ios-find-list">' + items.map(function (s) {
+    return '<p class="ios-grp-head ios-find-h">Branches</p><div class="ios-grp ios-find-list">' + items.map(function (s) {
       var a = app().annualAvg(s.id), tone = a == null ? "none" : roundHalf(a) < 4 ? "crit" : a < 4.5 ? "warn" : "good";
       return '<div class="ios-find-row"><button type="button" class="ios-find-go" data-find="' + esc(s.id) + '">' +
         '<span class="ios-find-n">' + esc(s.name) + '</span><span class="ios-find-v ios-tone-' + tone + '">' + fmt(a) + '</span></button>' +
@@ -95,7 +95,7 @@
     page = document.createElement("div"); page.className = "ios-find"; page.setAttribute("role", "dialog"); page.setAttribute("aria-modal", "true"); page.setAttribute("aria-label", "Rechercher une branche");
     page.innerHTML = '<div class="ios-find-top"><label class="ios-find-field">' + (window.Icons ? Icons.svg("search") : "") +
       '<input type="search" enterkeyhint="search" autocomplete="off" placeholder="Rechercher une branche" aria-label="Rechercher une branche"></label>' +
-      '<button type="button" class="link ios-find-x">Annuler</button></div><div class="ios-find-body"></div>';
+      '<button type="button" class="ios-find-x" aria-label="Fermer la recherche">' + (window.Icons ? Icons.svg("times") : "×") + '</button></div><div class="ios-find-body"></div>';
     document.body.appendChild(page); document.body.classList.add("ios-find-open");
     field = page.querySelector("input"); list = page.querySelector(".ios-find-body");
     list.innerHTML = rows("");

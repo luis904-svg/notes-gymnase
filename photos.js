@@ -111,15 +111,18 @@
         var u = URL.createObjectURL(p.blob); urls.push(u);
         return '<span class="ios-ph-thumb"><img src="' + u + '" alt="Page ' + (k + 1) + '"><button type="button" class="ios-ph-x" data-ph-x="' + p.id + '" aria-label="Retirer la page ' + (k + 1) + '">×</button></span>';
       }).join("");
-      $("#ph-add", box).textContent = l.length || had ? "Ajouter une page" : "Photographier le test";
+      $("#ph-add .ios-ph-t", box).textContent = l.length || had ? "Ajouter une page" : "Photographier le test";
       $("#ph-info", box).textContent = (had ? had + " photo" + (had > 1 ? "s" : "") + " déjà jointe" + (had > 1 ? "s" : "") + " à cette note. " : "") +
         "Les photos restent sur cet appareil : elles ne sont ni synchronisées ni dans la sauvegarde.";
     }, function () {});
   }
   if (form && msg) {
     box = document.createElement("div"); box.className = "ios-ph-box";
-    box.innerHTML = '<div class="ios-ph-list" id="ph-list"></div><div class="ios-ph-btns"><button type="button" class="btn-ghost" id="ph-add">Photographier le test</button>' +
-      '<button type="button" class="link" id="ph-lib">Choisir une photo</button></div><p class="muted small ios-ph-info" id="ph-info"></p>';
+    // Sur téléphone (v58, style C), ios.css montre les deux boutons comme des lignes à carré d'icône dans un groupe.
+    var I = window.Icons ? Icons.inner : {}, sq = function (c, n) { return '<i class="ios-ph-ic ios-ic ios-ic-' + c + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + (I[n] || "") + '</svg></i>'; };
+    var chev = '<svg class="ios-ph-chev ios-chev" viewBox="0 0 24 24" aria-hidden="true">' + (I.chevr || "") + '</svg>';
+    box.innerHTML = '<div class="ios-ph-list" id="ph-list"></div><div class="ios-ph-btns"><button type="button" class="btn-ghost" id="ph-add">' + sq("blue", "camera") + '<span class="ios-ph-t">Photographier le test</span>' + chev + '</button>' +
+      '<button type="button" class="link" id="ph-lib">' + sq("gray", "doc") + '<span class="ios-ph-t">Choisir une photo</span>' + chev + '</button></div><p class="muted small ios-ph-info" id="ph-info"></p>';
     msg.before(box);
     box.addEventListener("click", function (e) {
       var x = e.target.closest("[data-ph-x]");
