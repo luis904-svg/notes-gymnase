@@ -1,7 +1,7 @@
 /* ios-dash.js : Accueil « résumé à tuiles » (proposition C du canvas Claude Design, v51), téléphone seulement (≤ 700 px).
    Le moteur (index.html) et cert.js dessinent toujours leurs panneaux ; après chaque rendu, ce module les reprend pour que
    toute la page parle une seule langue (celle de Réglages : titres de section au-dessus de groupes blancs) :
-   - en tête, #ios-dtop : le verdict en bandeau (icône ronde verte, orange, rouge ou grise) puis une tuile par condition
+   - en tête, #ios-dtop : une tuile par condition (le bandeau du verdict est retiré en v59)
      du verdict (.metric du moteur ou de cert.js : anneau avec encoche au minimum, ou pastilles pour « / 4 max ») et une
      tuile « Moyenne générale » (courbe remplie, NotesApp.general). Le panneau d'origine (#promo) est masqué ;
    - « À surveiller » : chaque alerte devient une ligne à carré d'icône coloré ; toucher = détail de la branche ;
@@ -80,13 +80,9 @@
     var promo = document.getElementById("promo"); if (!promo) return;
     var panel = promo.closest(".panel"), box = document.getElementById("ios-dtop");
     if (!box) { box = document.createElement("div"); box.id = "ios-dtop"; box.className = "ios-dtop"; panel.parentNode.insertBefore(box, panel); }
-    var pill = promo.querySelector(".pill"), p = promo.querySelector(".verdict p"), h = document.getElementById("h-promo");
-    var m = pill && pill.className.match(/t-(good|warn|crit|none)/), cls = m ? m[1] : "none";
-    var ic = { good: "check", warn: "info", crit: "times", none: "clock" }[cls];
-    box.innerHTML = '<section class="ios-dtile ios-dverdict is-' + cls + '" role="status"><span class="ios-dverdict-ic">' + icon(ic) + '</span>' +
-      '<span class="ios-dverdict-t"><span class="ios-dk">' + esc(h ? h.textContent : "") + '</span><b>' + esc(pill ? pill.textContent : "") + '</b>' +
-      (p ? '<span>' + esc(p.textContent) + '</span>' : "") + '</span></section>' +
-      '<div class="ios-dtiles">' + [].map.call(promo.querySelectorAll(".metric"), metricTile).join("") + avgTile() + '</div>';
+    // v59 (demande de l'utilisateur) : plus de bandeau du verdict (« Promotion assurée »…) en tête : seulement les tuiles.
+    box.innerHTML =
+    '<div class="ios-dtiles">' + [].map.call(promo.querySelectorAll(".metric"), metricTile).join("") + avgTile() + '</div>';
   }
 
   /* ---------- À surveiller ---------- */

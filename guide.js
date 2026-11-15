@@ -188,7 +188,7 @@
     { t: "Lire le tableau de bord", d: "3 min", s: [
       { t: "Le verdict de promotion", v: "promo", p: [
         "Le verdict (<b>Promotion assurée</b>, <b>Marge faible</b>, <b>Cas limite</b> ou <b>En danger</b>) vérifie trois règles : total des notes, groupe français + L2/L3 + maths + OS d'au moins 16, et 4 notes sous 4 au maximum. Tant qu'une branche n'a aucune note, il reste sur <b>Verdict incomplet</b>.",
-        "Sur téléphone, le verdict est en tête de l'Accueil, suivi d'une <b>tuile par règle</b> : un anneau qui se remplit, avec une encoche au minimum à atteindre, et des pastilles pour les notes sous 4. La dernière tuile montre ta <b>moyenne générale</b> et sa courbe.",
+        "Sur téléphone, l'Accueil montre en tête une <b>tuile par règle</b> : un anneau qui se remplit, avec une encoche au minimum à atteindre, et des pastilles pour les notes sous 4. La dernière tuile montre ta <b>moyenne générale</b> et sa courbe.",
         "<span class='note'>En 3e année, ce verdict est remplacé par celui du certificat de maturité (étape suivante).</span>"] },
       { t: "En 3e : le certificat de maturité", v: "promo", p: [
         "En 3e, l'en-tête montre une pastille (<b>Bonne voie</b>, <b>Serré</b> ou <b>Compliqué</b>, puis <b>Maturité réussie</b> ou <b>non réussie</b> quand tous les examens sont saisis) et trois jauges : le <b>total des 14 notes avec double compensation</b> (seuil 56), le <b>total des examens</b> (seuil 38.5) et les <b>notes sous 4</b> (4 au maximum).",
