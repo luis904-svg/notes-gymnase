@@ -131,23 +131,38 @@
       $(d.points ? "#f-pts" : "#f-val").focus({ preventScroll: true });
     }
     if (t.dataset.taName && (d = defOf(t.dataset.taName))) {
-      var name = window.prompt("Nom du TA", d.label || ""); if (name == null) return;
-      name = name.trim().slice(0, 50); if (!name || name === d.label) return;
-      app().upsert([Object.assign({}, d, { label: name })]); hap("success");
+      var dn = d;
+      window.IOSDialog.prompt({
+        title: "Renommer le TA", value: dn.label || "", maxlength: 50, ok: "Renommer",
+        validate: function (v) { return v.trim() ? "" : "Donne un nom au TA."; }
+      }).then(function (name) {
+        if (name == null) return;
+        name = name.trim().slice(0, 50); if (!name || name === dn.label) return;
+        app().upsert([Object.assign({}, dn, { label: name })]); hap("success");
+      });
     }
     if (t.dataset.taPct && (d = defOf(t.dataset.taPct))) {
-      var s = window.prompt("% des points qui donne 4 (de " + PCT_MIN + " à " + PCT_MAX + ")", String(pctOf(d))); if (s == null) return;
-      var pct = num(s);
-      if (!isFinite(pct) || pct < PCT_MIN || pct > PCT_MAX) { hap("error"); window.alert("Le % du 4 doit être entre " + PCT_MIN + " et " + PCT_MAX + "."); return; }
-      var nd = Object.assign({}, d, { pct: pct });
-      // La valeur indicative de chaque ETA suit le nouveau barème.
-      var upd = etasOf(d.id).map(function (x) { return x.max > 0 ? Object.assign({}, x, { value: etaValue(nd, +x.pts || 0, +x.max) }) : x; });
-      app().upsert(upd.concat([nd])); hap("success");
+      var dp = d;
+      window.IOSDialog.prompt({
+        title: "% du 4", message: "Part des points qui donne la note 4, de " + PCT_MIN + " à " + PCT_MAX + " %.", value: String(pctOf(dp)), inputmode: "decimal", maxlength: 5, ok: "Enregistrer",
+        validate: function (v) { var n = num(v); return isFinite(n) && n >= PCT_MIN && n <= PCT_MAX ? "" : "Le % du 4 doit être entre " + PCT_MIN + " et " + PCT_MAX + "."; }
+      }).then(function (s) {
+        if (s == null) return;
+        var pct = num(s), nd = Object.assign({}, dp, { pct: pct });
+        // La valeur indicative de chaque ETA suit le nouveau barème.
+        var upd = etasOf(dp.id).map(function (x) { return x.max > 0 ? Object.assign({}, x, { value: etaValue(nd, +x.pts || 0, +x.max) }) : x; });
+        app().upsert(upd.concat([nd])); hap("success");
+      });
     }
     if (t.dataset.taDel && (d = defOf(t.dataset.taDel))) {
-      var n = etasOf(d.id).length;
-      if (!window.confirm("Supprimer le TA « " + (d.label || "TA") + " » et " + (n > 1 ? "ses " + n + " ETA" : "son ETA") + " ?")) return;
-      app().remove([d.id].concat(etasOf(d.id).map(function (x) { return x.id; }))); hap("heavy");
+      var dd = d, n = etasOf(dd.id).length;
+      window.IOSDialog.confirm({
+        title: "Supprimer le TA ?", ok: "Supprimer", danger: true,
+        message: "« " + (dd.label || "TA") + " » " + (n === 0 ? "sera supprimé" : n === 1 ? "et son ETA seront supprimés" : "et ses " + n + " ETA seront supprimés") + ". Cette action est définitive."
+      }).then(function (go) {
+        if (!go) return;
+        app().remove([dd.id].concat(etasOf(dd.id).map(function (x) { return x.id; }))); hap("heavy");
+      });
     }
   });
 

@@ -140,7 +140,8 @@
       '<section class="ios-ehero"><span class="ios-dk">Moyenne · ' + LAB[range] + '</span>' +
       '<div class="ios-evalue"><span class="ios-evalue-n">' + fmt2(last) + '</span><span class="ios-evalue-b">bulletin ' + roundHalf(last) + '</span></div>' +
       (n > 1 ? '<p class="ios-ecap">' + (Math.abs(d) < 0.005 ? "stable" : (up ? "▲ " : "▼ ") + Math.abs(d).toFixed(2)) + " depuis le " + fmtLong(pts[0].date) + '</p>' : '<p class="ios-ecap">1re note</p>') +
-      chartHtml(pts, up) + '<p class="ios-ehint">Glisse le doigt sur la courbe pour voir chaque note.</p></section>' +
+      (n > 1 ? chartHtml(pts, up) + '<p class="ios-ehint">Glisse le doigt sur la courbe pour voir chaque note.</p>'
+             : '<p class="ios-ehint">Ajoute une 2e note pour voir l\'évolution de la moyenne.</p>') + '</section>' +
       '<div class="ios-estats">' + stats.map(function (st) {
         var grade = /^(Bulletin|Plus haute|Plus basse|Objectif|Semestre|Année)/.test(st[0]);
         return '<div class="ios-estat"><span class="ios-dk">' + st[0] + '</span>' + (grade ? bar(st[1]) : "") + '<b>' + st[1] + '</b></div>';

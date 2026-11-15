@@ -60,7 +60,9 @@
       card.classList.add("ios-srow");
       card.setAttribute("aria-label", name + " : " + (val === "–" ? "pas encore de note" : "bulletin " + val) + ", " + effLbl + ". Voir le détail.");
       // Ligne v55 (demande de l'utilisateur) : nom et petite ligne à gauche, la note de bulletin seule à droite, en noir.
-      card.innerHTML = '<span class="ios-srow-l"><b>' + esc(name) + '</b><span class="' + (need ? "ios-srow-need" : "") + '">' + esc(sub) + '</span></span>' +
+      var num = parseFloat(String(val).replace(",", ".")), bar = "";
+      if (isFinite(num)) bar = '<span class="ios-srow-bar' + (tone === "crit" ? " is-crit" : tone === "warn" ? " is-warn" : "") + '" aria-hidden="true"><i style="width:' + Math.max(0, Math.min(100, (num - 1) / 5 * 100)).toFixed(1) + '%"></i><s></s></span>';
+      card.innerHTML = '<span class="ios-srow-l"><b>' + esc(name) + '</b><span class="' + (need ? "ios-srow-need" : "") + '">' + esc(sub) + '</span>' + bar + '</span>' +
         '<span class="ios-srow-v">' + esc(val) + '</span>';
     });
   }

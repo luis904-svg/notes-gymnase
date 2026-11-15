@@ -203,7 +203,7 @@
       { t: "Alertes et périodes", v: "watch", p: [
         "<b>À surveiller</b> liste les branches en difficulté (touche une ligne pour ouvrir la branche). Les boutons <b>Année</b>, <b>Semestre 1</b> et <b>Semestre 2</b> filtrent tout le tableau de bord."] },
       { t: "La barre du bas", v: "scrub", p: [
-        "Un appui court change d'onglet. Un <b>appui long</b> fait grossir la pastille : glisse-la sans lever le doigt et relâche sur l'onglet voulu.",
+        "Trois onglets, chacun avec son nom sous l'icône : <b>Accueil</b>, <b>Ajouter</b> et <b>Réglages</b>. Un appui court change d'onglet. Un <b>appui long</b> fait grossir la pastille : glisse-la sans lever le doigt et relâche sur l'onglet voulu.",
         "Si tu relâches le doigt bien au-dessus de la barre, rien ne change. Un <b>balayage rapide</b> sur la barre passe à l'onglet voisin, et toucher l'onglet déjà ouvert revient au début (Réglages revient à sa page principale).",
         "La barre reste toujours en bas, sauf dans le détail d'une branche, où elle s'efface (le chevron ou un glissement depuis le bord gauche te ramène). La <b>loupe</b> à droite cherche une branche : touche-la pour ouvrir son détail, ou <b>+</b> pour y ajouter une note. Un chiffre rouge sur Accueil compte les branches sous 4 et un point rouge sur Réglages signale une synchronisation en erreur."] }
     ] },
@@ -243,7 +243,7 @@
         "<b>Activer la synchronisation</b> donne un code de 16 caractères. Sur ton autre appareil, touche <b>J'ai déjà un code</b> et tape-le.",
         "Les notes sont chiffrées avec ce code : garde-le précieusement, il ne peut pas être récupéré. Toute personne qui a le code voit et peut modifier les notes."] },
       { t: "Vibrations et dépannage", v: "tips", p: [
-        "<b>Retours haptiques</b> (Réglages, section Données) active ou coupe les vibrations. Si l'app ne semble pas à jour, ferme-la complètement et rouvre-la deux fois.",
+        "La section <b>Préférences</b> de Réglages réunit <b>Apparence</b> (clair, sombre, ou <b>Auto</b> qui suit ton iPhone ; le choix reste sur cet appareil) et <b>Retours haptiques</b> (active ou coupe les vibrations). Si l'app ne semble pas à jour, ferme-la complètement et rouvre-la deux fois.",
         "« Hors connexion » : tes notes restent sur le téléphone et se synchroniseront plus tard. Téléphone couché : l'app demande de le remettre à la verticale."] }
     ] },
     { t: "Avec tes parents", d: "2 min", s: [

@@ -4,12 +4,16 @@
    Valeurs : mesures sur Réglages iOS 27.2 (voir design/DESIGN-ios.md). Nouvelles classes : préfixe ios-. */
 
 /* TOKENS */
+/* Lot 3 (Dynamic Type, v61) : toutes les tailles de texte sont en rem, base 17 px = corps « body » d'iOS à la taille par défaut.
+   Safari et l'app installée prennent la taille du réglage « Taille du texte » de l'iPhone par -apple-system-body ; ailleurs 17 px. */
+html { font-size: 17px; }
+@supports (font: -apple-system-body) { html { font: -apple-system-body; } }
 :root {
   /* Surfaces et textes (mesurés, clair) */
   --ios-bg: #F2F2F7;
   --ios-cell: #FFFFFF;
   --ios-label: #000000;
-  --ios-label-2: rgba(60, 60, 67, 0.6);
+  --ios-label-2: #6C6C70;       /* v60 : gris secondaire à 5,2:1 sur blanc et 4,7:1 sur le fond (avant : rgba(60,60,67,.6) = 3,3:1) */
   --ios-sep: rgba(60, 60, 67, 0.12);
   --ios-bar-hairline: #DADADE;
   --ios-fill: rgba(120, 120, 128, 0.12);
@@ -18,8 +22,13 @@
   /* Couleurs système iOS 26/27 (HIG) */
   --ios-blue: #0088FF;
   --ios-blue-soft: rgba(0, 136, 255, 0.12);
+  --ios-blue-btn: #0A64C2;      /* v60 : fond des boutons à texte blanc (5,8:1) ; le #0088FF avec du blanc ne fait que 3,5:1 */
+  --ios-seg-active: var(--ios-cell);   /* v63 : segment actif des sélecteurs (blanc en clair, gris en sombre) */
+  --ios-track: var(--ios-bg);          /* v63 : piste des barres et des anneaux, posée sur une carte */
+  --ios-green-btn: #1E7B35;     /* v63 : fond vert à texte blanc (5,3:1), identique en clair et en sombre */
+  --ios-blue-text: #0A64C2;     /* v60 : bleu des textes et liens, 5,8:1 sur blanc ; #0088FF reste pour les aplats et icônes */
   --ios-green: #34C759;
-  --ios-green-text: #248A3D;
+  --ios-green-text: #1E7B35;   /* v60 : 5,3:1 sur blanc (avant #248A3D = 4,4:1) */
   --ios-green-soft: rgba(52, 199, 89, 0.14);
   --ios-orange: #FF8D28;
   --ios-orange-soft: rgba(255, 141, 40, 0.14);
@@ -50,9 +59,9 @@
   --ios-r-sheet: 40px;
   /* Barre de titre : grand titre (34 pt gras) qui se réduit en titre inline (17 pt semi-gras) */
   --ios-bar-h: 44px;
-  --ios-title-large: 34px;
+  --ios-title-large: 2rem;
   --ios-title-large-weight: 700;
-  --ios-title-inline: 17px;
+  --ios-title-inline: 1rem;
   --ios-title-inline-weight: 600;
   --ios-dur-title: 150ms;
   --ios-back: 36px;
@@ -79,7 +88,7 @@
   --ios-pill-icon: 26px;
   --ios-pad: 20px;
   /* Détail d'une matière : grand chiffre de la moyenne */
-  --ios-hero-num: 56px;
+  --ios-hero-num: 3.2941rem;
   /* Animations (objectif 8) : ressort d'ouverture, fondus, entrée en scène décalée, écran de réussite */
   --ios-dur-spring: 400ms;
   --ios-dur-fade: 200ms;
@@ -102,7 +111,12 @@
   --ios-ph-thumb: 72px;
   --ios-ph-z: 1000;
   /* Barre du bas v44 (ios-tabbar.js) : dock toujours en bas, accessoire du verdict, bouton Rechercher, pastilles */
+  --ios-dlg-z: 1500;           /* v64 : feuilles de saisie et de confirmation (ios-dialog.js), au-dessus de la visionneuse de photos */
+  --ios-dlg-w: 420px;
+  --ios-dlg-btn: 52px;
   --ios-dock-gap: 8px;
+  --ios-dock-fade: 28px;       /* v60 : dégradé du fond sous la barre du bas (le contenu s'efface au lieu d'être tranché) */
+  --ios-hit: 44px;             /* v60 : zone de touche minimale (HIG : 44 × 44 pt) */
   --ios-find-z: 60;
   --ios-badge: 18px;
   --ios-badge-dot: 10px;
@@ -114,18 +128,18 @@
   /* Accueil « résumé à tuiles » (v51, ios-dash.js, proposition C du canvas) : valeurs de la maquette validée */
   --ios-orange-text: #B25000;
   --ios-grade-w: 44px;         /* colonne de la note (branches, recherche) : la note y est centrée (v57) */  /* texte orange sur fond clair (contraste 5,2:1) */
-  --ios-sec-title: 22px;       /* titre de section au-dessus d'un groupe */
+  --ios-sec-title: 1.2941rem;       /* titre de section au-dessus d'un groupe */
   --ios-tile-gap: 12px;
   --ios-tile-pad: 16px;
-  --ios-tile-big: 28px;
+  --ios-tile-big: 1.6471rem;
   --ios-ring: 84px;
   --ios-ring-w: 9px;
   --ios-pip: 22px;
   --ios-verdict-ic: 48px;
   --ios-hb-h: 28px;            /* ligne de la barre horizontale « Moyennes par branche » */
   --ios-hb-bar: 14px;
-  --ios-hb-name: 72px;
-  --ios-spark-fill: 0.28;      /* opacité du haut du dégradé sous la courbe */
+  --ios-hb-name: 4.2353rem;    /* v61 : en rem, la colonne des noms grandit avec le texte */
+  --ios-spark-fill: 0;         /* v64 : plus de dégradé sous la courbe (décor sans information) ; avant : 0.28 */      /* opacité du haut du dégradé sous la courbe */
 
   /* Variables historiques de l'app, réaffectées à iOS */
   --bg: var(--ios-bg);
@@ -155,6 +169,90 @@
 /* Ressort amorti (dépassement d'environ 8 %), échantillonné ; remplace le repli quand linear() existe. */
 @supports (animation-timing-function: linear(0, 1)) {
   :root { --ios-spring: linear(0, 0.051, 0.173, 0.331, 0.498, 0.655, 0.79, 0.898, 0.978, 1.033, 1.066, 1.081, 1.083, 1.077, 1.065, 1.052, 1.038, 1.025, 1.015, 1.006, 1, 0.996, 0.994, 0.993, 0.993, 1); }
+}
+/* ---------- Mode sombre (v63, lot 8) ----------
+   html[data-theme] vaut « light » ou « dark » : posé par le script de l'en-tête (build.py), qui suit le réglage de l'iPhone
+   (Automatique) ou le choix fait dans Réglages > Apparence. Valeurs : système iOS sombre (HIG iOS 26), fond #000 et carte #1C1C1E
+   mesurés (DESIGN-ios.md). Contrastes calculés : gris 6,6:1 sur la carte, bleu de texte 5,9:1, rouge de texte 6,0:1. */
+:root[data-theme="dark"] {
+  --ios-bg: #000000;
+  --ios-cell: #1C1C1E;
+  --ios-label: #FFFFFF;
+  --ios-label-2: #A1A1A6;
+  --ios-sep: rgba(84, 84, 88, 0.6);
+  --ios-bar-hairline: #2C2C2E;
+  --ios-fill: rgba(120, 120, 128, 0.36);
+  --ios-scrim: rgba(0, 0, 0, 0.5);
+  --ios-blue: #0091FF;
+  --ios-blue-soft: rgba(0, 145, 255, 0.2);
+  --ios-blue-text: #3D9BFF;
+  --ios-blue-btn: #0A74E0;
+  --ios-green: #30D158;
+  --ios-green-text: #30D158;
+  --ios-green-soft: rgba(48, 209, 88, 0.2);
+  --ios-orange: #FF9230;
+  --ios-orange-soft: rgba(255, 146, 48, 0.2);
+  --ios-orange-text: #FF9F0A;
+  --ios-red: #FF4245;
+  --ios-red-soft: rgba(255, 66, 69, 0.2);
+  --ios-red-text: #FF6961;
+  --ios-purple: #BF5AF2;
+  --ios-pink: #FF375F;
+  --ios-teal: #64D2FF;
+  --ios-press-row: rgba(235, 235, 245, 0.18);
+  --ios-press-card: rgba(235, 235, 245, 0.1);
+  --ios-gray: #8E8E93;
+  --ios-chev: rgba(235, 235, 245, 0.3);
+  --ios-pill: #1C1C1E;
+  --ios-pill-active: #3A3A3C;
+  --ios-back-bg: #2C2C2E;
+  --ios-seg-active: #636366;
+  --ios-track: #2C2C2E;
+}
+/* Les variables historiques de l'app (index.html les redéfinit pour le sombre avec la même force) : on les réaffecte ici aussi. */
+:root[data-theme] {
+  --bg: var(--ios-bg);
+  --surface: var(--ios-cell);
+  --nav: var(--ios-bg);
+  --ink: var(--ios-label);
+  --muted: var(--ios-label-2);
+  --line: var(--ios-sep);
+  --fill: var(--ios-fill);
+  --accent: var(--ios-blue);
+  --accent-focus: var(--ios-blue);
+  --accent-soft: var(--ios-blue-soft);
+  --good: var(--ios-green-text);
+  --good-soft: var(--ios-green-soft);
+  --warn: var(--ios-orange);
+  --warn-soft: var(--ios-orange-soft);
+  --crit: var(--ios-red);
+  --crit-soft: var(--ios-red-soft);
+  /* Plus de verre ni de taches de couleur */
+  --glass: var(--ios-cell);
+  --glass-strong: var(--ios-cell);
+  --glass-hi: var(--ios-clear);
+  --blob1: var(--ios-clear);
+  --blob2: var(--ios-clear);
+  --blob3: var(--ios-clear);
+}
+/* Contraste renforcé (Réglages > Accessibilité > Affichage) : textes encore plus marqués, clair et sombre */
+@media (prefers-contrast: more) {
+  :root:not([data-theme="dark"]) {
+    --ios-label-2: #48484A;
+    --ios-blue-text: #00509E;
+    --ios-green-text: #176A2C;
+    --ios-orange-text: #8A3E00;
+    --ios-red-text: #B00012;
+    --ios-sep: rgba(60, 60, 67, 0.36);
+  }
+  :root[data-theme="dark"] {
+    --ios-label-2: #EBEBF5;
+    --ios-blue-text: #66B2FF;
+    --ios-green-text: #66E08A;
+    --ios-orange-text: #FFB84D;
+    --ios-red-text: #FF8A85;
+    --ios-sep: rgba(235, 235, 245, 0.36);
+  }
 }
 /* FIN TOKENS */
 
@@ -201,9 +299,9 @@ header.top.scrolled { border-bottom-color: var(--ios-bar-hairline); box-shadow: 
 .bar i, .bars-legend .lg-val { background: var(--ios-green); }
 .bars .bar.good rect { fill: var(--ios-green); }
 
-/* ---------- Téléphone : barre d'onglets en pilule flottante opaque, icônes seules ----------
+/* ---------- Téléphone : barre d'onglets en pilule flottante opaque, icônes et libellés (v62) ----------
    Pilule gris clair aplat (pas de verre ni d'ombre), pastille plus foncée sous l'onglet actif : c'est l'indicateur
-   .ind de fx.js (placé sans animation). Les libellés restent pour les lecteurs d'écran. */
+   .ind de fx.js (placé sans animation). Libellés visibles depuis la v62 (lot 5). */
 @media (max-width: 700px) {
   .tabbar {
     left: 0; right: 0; margin: 0 auto; width: min(var(--ios-pill-w), calc(100% - 2 * var(--ios-pill-side)));
@@ -217,7 +315,11 @@ header.top.scrolled { border-bottom-color: var(--ios-bar-hairline); box-shadow: 
   .tabbar button[aria-current="page"] { background: var(--ios-clear); color: var(--ink); }
   .tabbar svg { width: var(--ios-pill-icon); height: var(--ios-pill-icon); }
   .tabbar button[aria-current="page"] svg { stroke-width: 2.25; }
-  .tabbar button span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  /* Lot 5 (v62) : libellés visibles sous les icônes (HIG tab-bars : « Include tab labels », un seul mot). 11 pt au repos,
+     plafonnés à 15 px aux grandes tailles de texte pour que la pilule de 68 pt ne grandisse pas. */
+  .tabbar button span { position: static; width: auto; height: auto; overflow: visible; clip: auto; white-space: nowrap;
+    font-size: min(0.6471rem, 15px); font-weight: 500; line-height: 1.2; letter-spacing: 0; color: inherit; }
+  .tabbar button[aria-current="page"] span { font-weight: 600; }
   .tabbar .ind { background: var(--ios-pill-active); top: var(--ios-pill-pad); bottom: var(--ios-pill-pad); }
   body { padding-bottom: calc(var(--ios-tab-h) + 2 * var(--ios-pill-pad) + var(--ios-pill-bottom) + 24px + env(safe-area-inset-bottom, 0px)); }
   .sheet-box { border-radius: var(--ios-r-sheet) var(--ios-r-sheet) 0 0; }
@@ -283,7 +385,7 @@ button:active, button.is-pressed { transform: scale(var(--ios-press-scale)); tra
   }
   .ios-bar.is-on { border-bottom-color: var(--ios-bar-hairline); }
   .ios-bar-title {
-    font-size: var(--ios-title-inline); font-weight: var(--ios-title-inline-weight); letter-spacing: -0.022em; color: var(--ink);
+    font-size: min(var(--ios-title-inline), 26px); max-width: calc(100% - 2 * (var(--ios-back) + var(--ios-pill-side) + 8px)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;   /* v61 : la barre fixe de 44 pt ne grandit pas */ font-weight: var(--ios-title-inline-weight); letter-spacing: -0.022em; color: var(--ink);
     opacity: 0; transition: opacity var(--ios-dur-title) ease;
   }
   .ios-bar.is-on .ios-bar-title { opacity: 1; }
@@ -326,19 +428,19 @@ html.noanim *, html.noanim *::before, html.noanim *::after {
   .ios-page:not(.ios-page-main) > .ios-grp:first-child { margin-top: 0; }
   .ios-page > .ios-grp-head + .ios-grp, .ios-page > .ios-grp + .ios-grp-foot { margin-top: 8px; }
   .ios-grp { background: var(--ios-cell); border-radius: var(--ios-r-group); overflow: hidden; }
-  .ios-grp-head, .ios-grp-foot { margin-left: var(--ios-pad); margin-right: var(--ios-pad); font-size: 13px; line-height: 1.4; color: var(--muted); }
+  .ios-grp-head, .ios-grp-foot { margin-left: var(--ios-pad); margin-right: var(--ios-pad); font-size: 0.7647rem; line-height: 1.4; color: var(--muted); }
   .ios-grp-head { margin-bottom: 0; }
 
   .ios-row {
     position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: var(--ios-row-h);
     padding: 0 16px 0 var(--ios-pad); border: 0; border-radius: 0; background: var(--ios-clear); color: var(--ink);
-    text-align: left; font-size: 17px; letter-spacing: -0.022em;
+    text-align: left; font-size: 1rem; letter-spacing: -0.022em;
   }
   button.ios-row { cursor: pointer; transition: background-color var(--ios-dur-highlight-out) ease-out; }
   button.ios-row:active, button.ios-row.is-pressed { background-color: var(--ios-press-row); transform: none; transition: none; }
   .ios-row + .ios-row::before { content: ""; position: absolute; top: 0; left: var(--ios-pad); right: 0; height: var(--ios-hair); background: var(--ios-sep); }
   .ios-row + .ios-row.has-ic::before { left: calc(var(--ios-pad) + var(--ios-icon) + 12px); }
-  .ios-row-l { flex: 1; min-width: 0; }
+  .ios-row-l { flex: 1; min-width: 0; overflow-wrap: anywhere; }
   .ios-val { flex: none; max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
   .ios-chev { flex: none; width: 14px; height: 14px; fill: none; stroke: var(--ios-chev); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
   .ios-ic { flex: none; display: flex; align-items: center; justify-content: center; width: var(--ios-icon); height: var(--ios-icon); border-radius: var(--ios-r-icon); }
@@ -350,16 +452,16 @@ html.noanim *, html.noanim *::before, html.noanim *::after {
   .ios-ic-gray { background: var(--ios-gray); }
 
   .ios-prof { min-height: 84px; gap: 14px; }
-  .ios-avatar { flex: none; display: flex; align-items: center; justify-content: center; width: var(--ios-avatar); height: var(--ios-avatar); border-radius: 50%; background: var(--ios-blue); color: var(--ios-white); font-size: 20px; font-weight: 600; }
+  .ios-avatar { flex: none; display: flex; align-items: center; justify-content: center; width: var(--ios-avatar); height: var(--ios-avatar); border-radius: 50%; background: var(--ios-blue); color: var(--ios-white); font-size: min(1.1765rem, 1.35rem, 26px); font-weight: 600; }   /* initiales : suivent le texte, mais restent dans le rond */
   .ios-prof-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-  .ios-prof-t b { font-size: 20px; font-weight: 600; }
-  .ios-prof-t span { font-size: 14px; color: var(--muted); }
+  .ios-prof-t b { font-size: 1.1765rem; font-weight: 600; }
+  .ios-prof-t span { font-size: 0.8235rem; color: var(--muted); }
 
-  .ios-page .ios-row input.ios-date[type="date"] { flex: none; margin-left: auto; width: 150px; min-width: 0; padding: 6px 10px; border: 0; border-radius: 8px; background: var(--ios-fill); color: var(--ink); font-size: 17px; }
-  .ios-page .ios-row input.ios-in[type="number"] { flex: none; width: 110px; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 0; background: var(--ios-clear); box-shadow: none; text-align: right; font-size: 17px; color: var(--ink); outline: none; }
+  .ios-page .ios-row input.ios-date[type="date"] { flex: none; margin-left: auto; width: 150px; min-width: 0; padding: 6px 10px; border: 0; border-radius: 8px; background: var(--ios-fill); color: var(--ink); font-size: 1rem; }
+  .ios-page .ios-row input.ios-in[type="number"] { flex: none; width: 110px; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 0; background: var(--ios-clear); box-shadow: none; text-align: right; font-size: 1rem; color: var(--ink); outline: none; }
   .ios-page .ios-row input.ios-in::placeholder { color: var(--muted); }
   .ios-row > input[switch] { flex: none; }
-  .ios-copy { margin: 32px 0 0; text-align: center; font-size: 13px; color: var(--muted); }
+  .ios-copy { margin: 32px 0 0; text-align: center; font-size: 0.7647rem; color: var(--muted); }
 
   /* Blocs d'autres modules déplacés dans une sous-page */
   .ios-slot .backup { margin: 0; padding: var(--ios-pad); border: 0; border-radius: var(--ios-r-group); background: var(--ios-cell); }
@@ -370,14 +472,14 @@ html.noanim *, html.noanim *::before, html.noanim *::after {
 /* ---------- Calendrier de la page « Fin du semestre 1 » ---------- */
 @media (max-width: 700px) {
   .ios-cal { padding: 8px 12px 14px; }
-  .ios-cal-head { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px 10px; font-size: 17px; }
+  .ios-cal-head { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px 10px; font-size: 1rem; }
   .ios-cal-head b { font-weight: 600; text-transform: capitalize; }
   .ios-cal-head span { display: flex; gap: 6px; }
   .ios-cal-head button { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; background: var(--ios-clear); }
   .ios-cal-head .ios-chev { stroke: var(--ios-blue); }
   .ios-cal-wd, .ios-cal-days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); row-gap: 4px; text-align: center; }
-  .ios-cal-wd { padding-bottom: 6px; font-size: 13px; font-weight: 600; color: var(--muted); }
-  .ios-day { justify-self: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; background: var(--ios-clear); font-size: 19px; color: var(--ink); }
+  .ios-cal-wd { padding-bottom: 6px; font-size: 0.7647rem; font-weight: 600; color: var(--muted); }
+  .ios-day { justify-self: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; background: var(--ios-clear); font-size: 1.1176rem; color: var(--ink); }
   .ios-day.is-today { color: var(--ios-blue); font-weight: 600; }
   .ios-day.is-sel { background: var(--ios-blue); color: var(--ios-white); font-weight: 600; }
 }
@@ -389,11 +491,11 @@ html.noanim *, html.noanim *::before, html.noanim *::after {
   body.ios-detail-open #view-dash, body.ios-detail-open header.top, body.ios-detail-open #demo { display: none; }
   .ios-dpage { display: flex; flex-direction: column; gap: 16px; padding-bottom: 8px; }
   .ios-dpage .ios-large { margin-bottom: 0; }
-  .ios-dpage .ios-sub { margin: -12px 0 0; font-size: 15px; color: var(--muted); }
+  .ios-dpage .ios-sub { margin: -12px 0 0; font-size: 0.8824rem; color: var(--muted); }
   .ios-dpage > .ios-grp-head { margin: 8px var(--ios-pad) -8px; }
   .ios-dpage .tiles { gap: 10px; }
   .ios-dpage .tile { padding: 14px 12px; border-radius: var(--ios-r-group); background: var(--ios-cell); }
-  .ios-dpage .need { padding: 14px var(--ios-pad); border-radius: var(--ios-r-group); background: var(--ios-cell); font-size: 15px; }
+  .ios-dpage .need { padding: 14px var(--ios-pad); border-radius: var(--ios-r-group); background: var(--ios-cell); font-size: 0.8824rem; }
   .ios-dpage .ios-row { cursor: default; }
   .ios-chart { padding: 12px 8px; }
   .ios-notes { padding: 0 var(--ios-pad); }
@@ -409,15 +511,15 @@ html.noanim *, html.noanim *::before, html.noanim *::after {
 .notes li.ios-ta-li { display: block; padding: 0; }
 .ios-ta > summary { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 2px 12px; padding: 12px 0; align-items: baseline; cursor: pointer; list-style: none; }
 .ios-ta > summary::-webkit-details-marker { display: none; }
-.ios-ta > summary .ios-ta-chev { grid-row: span 2; align-self: center; color: var(--ios-chev); font-size: 22px; line-height: 1; transition: transform var(--ios-dur-seg) var(--ios-ease-out); }
+.ios-ta > summary .ios-ta-chev { grid-row: span 2; align-self: center; color: var(--ios-chev); font-size: 1.2941rem; line-height: 1; transition: transform var(--ios-dur-seg) var(--ios-ease-out); }
 .ios-ta[open] > summary .ios-ta-chev { transform: rotate(90deg); }
 html.noanim .ios-ta > summary .ios-ta-chev { transition: none; }
 .notes .ios-eta-list { list-style: none; margin: 0; padding: 0 0 0 14px; border-left: 2px solid var(--ios-blue-soft); }
 .notes .ios-eta-list li.ios-eta { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: baseline; padding: 6px 0; border-top: var(--ios-hair) solid var(--ios-sep); }
 .notes .ios-eta-list li.ios-eta:first-child { border-top: 0; }
-.ios-eta-v { font-family: var(--mono); font-weight: 600; font-size: 16px; min-width: 2.4em; }
+.ios-eta-v { font-family: var(--mono); font-weight: 600; font-size: 0.9412rem; min-width: 2.4em; }
 .ios-eta-v.crit { color: var(--crit); }
-.ios-eta-what { font-size: 14px; min-width: 0; overflow-wrap: anywhere; }
+.ios-eta-what { font-size: 0.8235rem; min-width: 0; overflow-wrap: anywhere; }
 .notes .ios-eta .acts { grid-row: auto; }
 .ios-ta-acts { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 0 12px 6px; }
 .row2:has(> .ios-ta-off) { grid-template-columns: 1fr; }
@@ -429,7 +531,7 @@ html.noanim .ios-ta > summary .ios-ta-chev { transition: none; }
 .ios-ph-list:empty { display: none; }
 .ios-ph-thumb { position: relative; width: var(--ios-ph-thumb); height: var(--ios-ph-thumb); }
 .ios-ph-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: var(--ios-r-icon); display: block; }
-.ios-ph-x { position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border: 0; border-radius: 50%; background: var(--ios-gray); color: var(--ios-white); font-size: 16px; line-height: 1; padding: 0; cursor: pointer; }
+.ios-ph-x { position: absolute; top: -10px; right: -10px; width: 28px; height: 28px; border: 0; border-radius: 50%; background: var(--ios-gray); color: var(--ios-white); font-size: 0.9412rem; line-height: 1; padding: 0; cursor: pointer; }
 .ios-ph-info { margin: 0; }
 .ios-ph-badge { color: var(--ios-blue); }
 .notes li[data-photos] { cursor: pointer; }
@@ -443,7 +545,7 @@ html.noanim .ios-ta > summary .ios-ta-chev { transition: none; }
 .ios-ph-track::-webkit-scrollbar { display: none; }
 .ios-ph-page { flex: 0 0 100%; scroll-snap-align: center; scroll-snap-stop: always; display: flex; align-items: center; justify-content: center; }
 .ios-ph-page img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
-.ios-ph-msg { margin: 0; padding: 0 var(--ios-pad); font-size: 13px; color: var(--ios-red); }
+.ios-ph-msg { margin: 0; padding: 0 var(--ios-pad); font-size: 0.7647rem; color: var(--ios-red); }
 .ios-ph-msg:empty { display: none; }
 
 /* ---------- Barre du bas glissée (fx.js) : la pastille grossit et suit le doigt ; pas de défilement pendant le geste ---------- */
@@ -454,7 +556,7 @@ html.noanim .ios-ta > summary .ios-ta-chev { transition: none; }
 html.noanim .tabbar .ind { transition: none; }
 
 /* ---------- Profil modifiable (ios-settings.js) : liste de choix, champ de classe, confirmation ---------- */
-.ios-row-s { display: block; font-size: 13px; line-height: 1.3; color: var(--ios-label-2); font-weight: 400; margin-top: 2px; }
+.ios-row-s { display: block; font-size: 0.7647rem; line-height: 1.3; color: var(--ios-label-2); font-weight: 400; margin-top: 2px; }
 .ios-opt { text-align: left; }
 .ios-opt:disabled { opacity: 1; cursor: default; }
 .ios-opt:disabled .ios-row-l { color: var(--ios-label-2); }
@@ -472,7 +574,7 @@ html.noanim .tabbar .ind { transition: none; }
     flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; padding: var(--ios-pad); }
   .ios-rotate svg { width: var(--ios-rotate-icon); height: var(--ios-rotate-icon); fill: none; stroke: var(--ios-blue); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; margin-bottom: 8px; }
   .ios-rotate-t { margin: 0; font-size: var(--ios-title-inline); font-weight: var(--ios-title-inline-weight); }
-  .ios-rotate-s { margin: 0; font-size: 15px; color: var(--ios-label-2); }
+  .ios-rotate-s { margin: 0; font-size: 0.8824rem; color: var(--ios-label-2); }
 }
 
 /* ---------- Animations (ios-anim.js, objectif 8) ----------
@@ -499,7 +601,7 @@ html.noanim .tabbar .ind { transition: none; }
 .ios-done-in { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .ios-done-ic { width: var(--ios-done-icon); height: var(--ios-done-icon); color: var(--ios-green); stroke-width: 1.5; margin-bottom: 8px; animation: iosDonePop var(--ios-dur-spring) var(--ios-spring) backwards; }
 .ios-done-t { margin: 0; font-size: var(--ios-title-inline); font-weight: var(--ios-title-inline-weight); color: var(--ios-label); }
-.ios-done-s { margin: 0; font-size: 15px; color: var(--ios-label-2); }
+.ios-done-s { margin: 0; font-size: 0.8824rem; color: var(--ios-label-2); }
 .ios-done-burst { position: absolute; left: 50%; top: calc(var(--ios-done-icon) / 2); width: 0; height: 0; }
 .ios-confetti { position: absolute; left: 0; top: 0; width: var(--ios-confetti); height: var(--ios-confetti); border-radius: 50%; opacity: 0;
   animation: iosConfetti var(--ios-dur-confetti) var(--ios-ease-out) forwards; }
@@ -513,22 +615,22 @@ html.noanim .tabbar .ind { transition: none; }
   .ios-hero { padding: 16px var(--ios-pad) 8px; }
   .ios-hero-top { display: flex; align-items: center; gap: 16px; }
   .ios-hero-num { font-size: var(--ios-hero-num); line-height: 1; font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
-  .ios-hero-side { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 13px; color: var(--ios-label-2); }
+  .ios-hero-side { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 0.7647rem; color: var(--ios-label-2); }
   .ios-hero-side b { font-size: var(--ios-title-inline); font-weight: var(--ios-title-inline-weight); color: var(--ios-label); }
   .ios-hero-st { font-weight: 600; }
   .ios-hero-chart { margin: 10px -12px 0; }
   .ios-hero-chart svg { display: block; width: 100%; height: auto; }
-  .ios-need { padding: 14px var(--ios-pad); font-size: 15px; }
+  .ios-need { padding: 14px var(--ios-pad); font-size: 0.8824rem; }
   .ios-cert { padding: 14px var(--ios-pad); }
   .ios-dpage .ios-val.mono { font-variant-numeric: tabular-nums; }
   /* Liste des notes : valeur à gauche ; intitulé, puis date et coefficient, puis actions. */
   .ios-notes .notes > li:not(.ios-ta-li) { grid-template-columns: 3.4em minmax(0, 1fr); gap: 2px 12px; align-items: center; }
   .ios-notes .notes > li:not(.ios-ta-li) > .v { grid-column: 1; grid-row: 1 / span 3; align-self: center; }
   .ios-notes .notes > li:not(.ios-ta-li) > .what { grid-column: 2; grid-row: 1; font-size: var(--ios-title-inline); }
-  .ios-notes .notes > li:not(.ios-ta-li) > .meta { grid-column: 2; grid-row: 2; font-size: 13px; }
+  .ios-notes .notes > li:not(.ios-ta-li) > .meta { grid-column: 2; grid-row: 2; font-size: 0.7647rem; }
   .ios-notes .notes > li:not(.ios-ta-li) > .acts { grid-column: 2; grid-row: 3; margin-left: -8px; }
   .ios-notes .ios-ta > summary { grid-template-columns: 3.4em minmax(0, 1fr) auto; }
-  .ios-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 28px 8px 24px; color: var(--ios-label-2); font-size: 15px; }
+  .ios-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 28px 8px 24px; color: var(--ios-label-2); font-size: 0.8824rem; }
   .ios-empty b { font-size: var(--ios-title-inline); color: var(--ios-label); }
   .ios-empty-ic { width: 44px; height: 44px; color: var(--ios-chev); stroke-width: 1.5; margin-bottom: 4px; }
   .ios-empty .btn { margin-top: 10px; }
@@ -557,18 +659,18 @@ html.noanim .tabbar .ind { transition: none; }
 .ob-next, .gd-foot .btn, .gd-foot .btn-ghost { border-radius: 999px; }
 .ob-parent { margin-top: 4px; max-width: 320px; }
 .gd-vis { border: 0; border-radius: var(--ios-r-group); background: var(--ios-cell); }
-.gd-list, .gd-form, .gd-tile, .gd-tp, .gd-tabs { box-shadow: none; background: var(--ios-bg); }
+.gd-list, .gd-form, .gd-tile, .gd-tp, .gd-tabs { box-shadow: none; background: var(--ios-track); }
 .gd-done svg { color: var(--ios-green); stroke-width: 1.5; }
 .gd-done circle, .gd-done path { stroke-dasharray: none; stroke-dashoffset: 0; animation: none; }
 .gd-val { margin-left: auto; color: var(--ios-label-2); }
 .gd-r .gd-val { display: inline; color: var(--ios-label-2); }
-.gd-n.gd-sub { padding-left: 18px; font-size: 12px; }
+.gd-n.gd-sub { padding-left: 18px; font-size: 0.7059rem; }
 .gd-wide { width: 100%; max-width: 300px; }
 .gd-thumbs { display: flex; gap: 8px; justify-content: center; }
 .gd-thumbs i { width: 44px; height: 58px; border-radius: var(--ios-r-icon); background: var(--ios-fill); }
-.gd-banner { display: flex; align-items: center; gap: 10px; width: 100%; max-width: 310px; padding: 10px 12px; border-radius: 18px; background: var(--ios-bg); text-align: left; font-size: 13px; }
+.gd-banner { display: flex; align-items: center; gap: 10px; width: 100%; max-width: 310px; padding: 10px 12px; border-radius: 18px; background: var(--ios-track); text-align: left; font-size: 0.7647rem; }
 .gd-banner img { width: 34px; height: 34px; border-radius: 8px; flex: none; }
-.gd-banner small { display: block; color: var(--ios-label-2); font-size: 12px; }
+.gd-banner small { display: block; color: var(--ios-label-2); font-size: 0.7059rem; }
 .hl { background: var(--ios-bg); flex-direction: column; gap: 22px; }
 .hl-s1 { stop-color: var(--ios-blue); stop-opacity: 0.55; } .hl-s2 { stop-color: var(--ios-blue); } .hl-s3 { stop-color: var(--ios-blue); stop-opacity: 0.8; }
 .hl-sub { margin: 0; font-size: var(--ios-title-inline); font-weight: var(--ios-title-inline-weight); color: var(--ios-label-2); opacity: 0; transition: opacity var(--ios-dur-fade) ease-out; }
@@ -586,7 +688,7 @@ html.noanim .tabbar .ind { transition: none; }
 #notif .row { display: flex; align-items: center; justify-content: space-between; min-height: var(--ios-bar-h); font-size: var(--ios-title-inline); }
 #notif .btns { margin: 2px 0; }
 /* ETA : la date passe sous l'intitulé au lieu de couper la ligne. */
-.ios-eta-d { display: block; font-size: 13px; }
+.ios-eta-d { display: block; font-size: 0.7647rem; }
 /* Assistant : le bouton du guide occupe toute la largeur, comme les autres. */
 .ob-foot > .btn { width: 100%; min-height: 52px; font-size: var(--ios-title-inline); font-weight: var(--ios-title-inline-weight); border-radius: 999px; }
 .gd-done svg, .gd-done svg path, .gd-done svg circle { stroke-width: 1.5; }
@@ -653,7 +755,7 @@ html.noanim .tabbar .ind.ios-ind-ready { transition: none; }
   .ios-find-btn:active, .ios-find-btn.is-pressed { transform: none; background: var(--ios-pill-active); }
   /* Pastilles des onglets */
   .ios-badge { position: absolute; top: 4px; left: calc(50% + 6px); min-width: var(--ios-badge); height: var(--ios-badge); padding: 0 5px; border-radius: 999px;
-    background: var(--ios-red); color: var(--ios-white); font-size: 12px; font-style: normal; font-weight: 600; line-height: var(--ios-badge); text-align: center;
+    background: var(--ios-red); color: var(--ios-white); font-size: 0.7059rem; font-style: normal; font-weight: 600; line-height: var(--ios-badge); text-align: center;
     font-variant-numeric: tabular-nums; pointer-events: none; }
   .ios-badge[hidden] { display: none; }
   .ios-badge.ios-badge-dot { min-width: 0; width: var(--ios-badge-dot); height: var(--ios-badge-dot); padding: 0; top: 10px; left: calc(50% + 8px); }
@@ -704,27 +806,27 @@ body.ios-find-open { overflow: hidden; }
   body.ios-detail-open .ios-bar:not(.ios-bar-ghost) .ios-fadd { display: flex; }
 
   .ios-epage { gap: 0; }
-  .ios-epage .ios-large { font-size: 28px; font-weight: 800; margin: 0; }
+  .ios-epage .ios-large { font-size: 1.6471rem; font-weight: 800; margin: 0; }
   .ios-epage > .ios-sub { margin: 2px 0 0; padding-bottom: 12px; border-bottom: var(--ios-hair) solid var(--ios-sep); }
   .ios-epanel { display: flex; flex-direction: column; }
   .ios-evalue { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; margin-top: 12px; }
-  .ios-evalue-n { font-size: 34px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
-  .ios-evalue-d { font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .ios-evalue-n { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .ios-evalue-d { font-size: 1rem; font-weight: 600; font-variant-numeric: tabular-nums; }
   .ios-evalue-d.is-up { color: var(--ios-green-text); } .ios-evalue-d.is-down { color: var(--ios-red-text); }
-  .ios-ecap { margin: 2px 0 0; font-size: 13px; color: var(--ios-label-2); }
+  .ios-ecap { margin: 2px 0 0; font-size: 0.7647rem; color: var(--ios-label-2); }
   /* v49 : pendant le glissement, la barre « date · moyenne » prend la place des boutons, comme dans Bourse. */
   .ios-etop { position: relative; margin-top: 14px; }
   .ios-escrub { position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 12px;
     border-radius: 8px; background: var(--ios-back-bg); visibility: hidden; }
-  .ios-escrub-d { font-size: 13px; font-weight: 600; color: var(--ios-label-2); }
-  .ios-escrub-v { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .ios-escrub-d { font-size: 0.7647rem; font-weight: 600; color: var(--ios-label-2); }
+  .ios-escrub-v { font-size: 0.8824rem; font-weight: 700; font-variant-numeric: tabular-nums; }
   .ios-etop.is-live .ios-escrub { visibility: visible; }
   .ios-etop.is-live .ios-erange { visibility: hidden; }
   .ios-erange { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
-  .ios-erange button { border: 0; border-radius: 8px; padding: 7px 0; background: var(--ios-clear); color: var(--ios-label-2); font: inherit; font-size: 13px; font-weight: 600; }
+  .ios-erange button { border: 0; border-radius: 8px; padding: 7px 0; background: var(--ios-clear); color: var(--ios-label-2); font: inherit; font-size: 0.7647rem; font-weight: 600; }
   .ios-erange button[aria-pressed="true"] { background: var(--ios-back-bg); color: var(--ios-label); }
   .ios-erange button:active, .ios-erange button.is-pressed { transform: none; opacity: 0.6; }
-  .ios-eempty { margin: 18px 0 6px; font-size: 15px; color: var(--ios-label-2); }
+  .ios-eempty { margin: 18px 0 6px; font-size: 0.8824rem; color: var(--ios-label-2); }
   /* v48 : on glisse un doigt sur la courbe (ios-detail.js) ; la page défile toujours à la verticale. */
   .ios-echart { position: relative; margin-top: 12px; touch-action: pan-y; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; cursor: crosshair; border-radius: 12px; }
   .ios-echart:focus-visible { outline: 2px solid var(--ios-blue); outline-offset: 4px; }
@@ -736,7 +838,7 @@ body.ios-find-open { overflow: hidden; }
   .ios-echart-svg { display: block; width: 100%; height: auto; overflow: visible; }
   .ios-echart-grid { stroke: var(--ios-fill); }
   .ios-echart-thr { stroke: var(--ios-chev); stroke-dasharray: 2 4; }
-  .ios-echart-y, .ios-echart-x { font-size: 11px; fill: var(--ios-label-2); }
+  .ios-echart-y, .ios-echart-x { font-size: 0.6471rem; fill: var(--ios-label-2); }
   .ios-echart-area { fill: var(--ios-green-soft); } .ios-echart-area.is-down { fill: var(--ios-red-soft); }
   .ios-echart-line { fill: none; stroke: var(--ios-green); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
   .ios-echart-line.is-down { stroke: var(--ios-red); }
@@ -745,22 +847,22 @@ body.ios-find-open { overflow: hidden; }
   .ios-echart.is-live .ios-echart-dot.is-near { background: var(--ios-label-2); }
   .ios-estats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; margin-top: 18px; }
   .ios-estat { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 9px 0; border-top: var(--ios-hair) solid var(--ios-sep); min-width: 0; }
-  .ios-estat span { font-size: 13px; color: var(--ios-label-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .ios-estat b { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ios-estat span { font-size: 0.7647rem; color: var(--ios-label-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ios-estat b { font-size: 0.8824rem; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .ios-estat b.ios-tone-warn { color: var(--ios-label); }
   .ios-epage > .ios-need, .ios-epage > .ios-cert { margin-top: 16px; }
   .ios-enotes-h { display: flex; align-items: baseline; justify-content: space-between; margin: 26px 0 8px; }
-  .ios-enotes-h span { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
-  .ios-enotes-h small { font-size: 13px; color: var(--ios-label-2); }
+  .ios-enotes-h span { font-size: 1.2941rem; font-weight: 800; letter-spacing: -0.02em; }
+  .ios-enotes-h small { font-size: 0.7647rem; color: var(--ios-label-2); }
   /* Notes : liste du moteur ; chaque ligne = date et coef, intitulé, note et effet sur la moyenne. */
   .ios-enotes .notes > li { border-top: var(--ios-hair) solid var(--ios-sep); }
   .ios-enotes .notes > li.ios-ta-li { padding: 0; }
   .ios-enotes .notes > li.ios-erow { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "meta v" "what eff" "acts acts"; gap: 2px 12px; align-items: center; padding: 12px 0; cursor: pointer; }
-  .ios-enotes .notes > li.ios-erow > .meta { grid-area: meta; font-size: 12px; font-weight: 600; color: var(--ios-label-2); text-transform: uppercase; letter-spacing: 0.02em; }
+  .ios-enotes .notes > li.ios-erow > .meta { grid-area: meta; font-size: 0.7059rem; font-weight: 600; color: var(--ios-label-2); text-transform: uppercase; letter-spacing: 0.02em; }
   .ios-enotes .notes > li.ios-erow > .what { grid-area: what; font-size: var(--ios-title-inline); font-weight: 600; color: var(--ios-label); }
-  .ios-enotes .notes > li.ios-erow > .v { grid-area: v; justify-self: end; font-family: inherit; font-size: 20px; font-weight: 700; letter-spacing: 0; font-variant-numeric: tabular-nums; color: var(--ios-label); }
+  .ios-enotes .notes > li.ios-erow > .v { grid-area: v; justify-self: end; font-family: inherit; font-size: 1.1765rem; font-weight: 700; letter-spacing: 0; font-variant-numeric: tabular-nums; color: var(--ios-label); }
   .ios-enotes .notes > li.ios-erow > .v.crit { color: var(--ios-red-text); }
-  .ios-eff { grid-area: eff; justify-self: end; font-size: 12px; font-weight: 700; color: var(--ios-white); border-radius: 6px; padding: 2px 7px; font-variant-numeric: tabular-nums; background: var(--ios-gray); }
+  .ios-eff { grid-area: eff; justify-self: end; font-size: 0.7059rem; font-weight: 700; color: var(--ios-white); border-radius: 6px; padding: 2px 7px; font-variant-numeric: tabular-nums; background: var(--ios-gray); }
   .ios-eff.is-up { background: var(--ios-green); } .ios-eff.is-down { background: var(--ios-red); }
   .ios-enotes .notes > li.ios-erow > .acts { display: none; grid-area: acts; margin: 6px 0 0 -8px; }
   .ios-enotes .notes > li.ios-erow.ios-open > .acts { display: flex; flex-wrap: wrap; gap: 4px 12px; }
@@ -778,7 +880,7 @@ body.ios-find-open { overflow: hidden; }
   #subjects .card.ios-srow:active, #subjects .card.ios-srow.is-pressed { box-shadow: inset 0 0 0 100vmax var(--ios-press-card); }
   .ios-srow-l { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
   .ios-srow-l b { color: var(--ios-label); font-size: var(--ios-title-inline); font-weight: 600; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .ios-srow-l > span { font-size: 13px; color: var(--ios-label-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ios-srow-l > span { font-size: 0.7647rem; color: var(--ios-label-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ios-srow-l > span.ios-srow-need { color: var(--ios-red-text); white-space: normal; }
   .ios-srow-v { min-width: var(--ios-grade-w); text-align: center; font-size: var(--ios-title-inline); font-weight: 600; color: var(--ios-label); font-variant-numeric: tabular-nums; }
 }
@@ -811,10 +913,10 @@ body.ios-find-open { overflow: hidden; }
   /* Tuiles */
   .ios-dtile { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: var(--ios-tile-pad); border-radius: var(--ios-r-group); background: var(--ios-cell); }
   .ios-dtiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ios-tile-gap); }
-  .ios-dk { font-size: 13px; font-weight: 600; color: var(--ios-label-2); }
+  .ios-dk { font-size: 0.7647rem; font-weight: 600; color: var(--ios-label-2); }
   .ios-dbig { margin-top: auto; font-size: var(--ios-tile-big); font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
-  .ios-dbig small { font-size: 15px; font-weight: 400; color: var(--ios-label-2); }
-  .ios-dfoot { font-size: 13px; color: var(--ios-label-2); }
+  .ios-dbig small { font-size: 0.8824rem; font-weight: 400; color: var(--ios-label-2); }
+  .ios-dfoot { font-size: 0.7647rem; color: var(--ios-label-2); }
   .ios-dring { width: var(--ios-ring); height: var(--ios-ring); align-self: center; margin: 4px 0; }
   .ios-dring-bg { fill: none; stroke: var(--ios-pill-active); stroke-width: var(--ios-ring-w); }
   .ios-dring-fg { fill: none; stroke: var(--ios-green); stroke-width: var(--ios-ring-w); stroke-linecap: round; }
@@ -829,8 +931,8 @@ body.ios-find-open { overflow: hidden; }
   .ios-dverdict.is-good .ios-dverdict-ic { background: var(--ios-green); } .ios-dverdict.is-warn .ios-dverdict-ic { background: var(--ios-orange); } .ios-dverdict.is-crit .ios-dverdict-ic { background: var(--ios-red); }
   .ios-dverdict-ic svg { width: 26px; height: 26px; stroke-width: 2.5; }
   .ios-dverdict-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  .ios-dverdict-t b { font-size: 20px; font-weight: 700; }
-  .ios-dverdict-t b + span { font-size: 13px; color: var(--ios-label-2); }
+  .ios-dverdict-t b { font-size: 1.1765rem; font-weight: 700; }
+  .ios-dverdict-t b + span { font-size: 0.7647rem; color: var(--ios-label-2); }
 
   /* À surveiller : lignes à carré d'icône */
   #alerts { gap: 0; }
@@ -844,17 +946,17 @@ body.ios-find-open { overflow: hidden; }
   .ios-arow-ic svg { width: 18px; height: 18px; stroke-width: 2.25; }
   .ios-arow-t { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
   .ios-arow-t b { font-weight: 400; }
-  .ios-arow-t span { font-size: 13px; color: var(--ios-label-2); }
+  .ios-arow-t span { font-size: 0.7647rem; color: var(--ios-label-2); }
   .ios-arow-chev { display: flex; color: var(--ios-chev); }
   .ios-arow-chev svg { width: 16px; height: 16px; stroke-width: 2.5; }
 
   /* Moyennes par branche : barres horizontales de 1 à 6, seuil 4 en pointillé (60 % de la piste) */
   .ios-hbs { display: flex; flex-direction: column; padding: 14px 16px 14px var(--ios-pad); }
-  .ios-hb { display: grid; grid-template-columns: var(--ios-hb-name) minmax(0, 1fr) 30px; align-items: center; gap: 8px; height: var(--ios-hb-h); font-size: 15px; cursor: pointer; }
+  .ios-hb { display: grid; grid-template-columns: var(--ios-hb-name) minmax(0, 1fr) minmax(1.7647rem, auto); align-items: center; gap: 8px; min-height: var(--ios-hb-h); font-size: 0.8824rem; cursor: pointer; }
   .ios-hb-n { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .ios-hb b { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
   .ios-hb.is-warn b { color: var(--ios-orange-text); } .ios-hb.is-crit b { color: var(--ios-red-text); } .ios-hb.is-none b { color: var(--ios-label-2); font-weight: 400; }
-  .ios-hb-t { position: relative; height: var(--ios-hb-bar); border-radius: calc(var(--ios-hb-bar) / 2); background: var(--ios-bg); }
+  .ios-hb-t { position: relative; height: var(--ios-hb-bar); border-radius: calc(var(--ios-hb-bar) / 2); background: var(--ios-track); }
   .ios-hb-t i { position: absolute; top: 0; bottom: 0; left: 0; border-radius: inherit; background: var(--ios-green); }
   .ios-hb.is-warn .ios-hb-t i { background: var(--ios-orange); } .ios-hb.is-crit .ios-hb-t i { background: var(--ios-red); }
   .ios-hb-t::after { content: ""; position: absolute; left: 60%; top: calc((var(--ios-hb-bar) - var(--ios-hb-h)) / 2); bottom: calc((var(--ios-hb-bar) - var(--ios-hb-h)) / 2); border-left: 1.5px dashed var(--ios-label-2); }
@@ -867,7 +969,7 @@ body.ios-find-open { overflow: hidden; }
   #notes > li.ios-dnote:first-child { background: var(--ios-clear); }
   #notes > li.ios-dnote:active { background-color: var(--ios-press-row); }
   #notes > li.ios-dnote > .what { grid-area: what; font-size: var(--ios-title-inline); }
-  #notes > li.ios-dnote > .meta { grid-area: meta; grid-column: auto; font-size: 13px; }
+  #notes > li.ios-dnote > .meta { grid-area: meta; grid-column: auto; font-size: 0.7647rem; }
   #notes > li.ios-dnote > .v { grid-area: v; grid-row: auto; justify-self: end; font-family: inherit; font-size: var(--ios-title-inline); font-weight: 600; letter-spacing: 0; font-variant-numeric: tabular-nums; }
   #notes > li.ios-dnote > .v.crit { color: var(--ios-red-text); }
   #notes > li.ios-dnote > .acts { grid-area: acts; grid-row: auto; display: none; margin: 6px 0 0 -8px; }
@@ -918,14 +1020,14 @@ body.ios-find-open { overflow: hidden; }
   .ios-slot .backup > .ios-grp-head:first-child { margin-top: 4px; }
   .ios-act { color: var(--ios-blue); }
   .ios-act.is-danger { color: var(--ios-red-text); }
-  .ios-sy-code { justify-content: center; min-height: 64px; font-size: 22px; font-weight: 600; letter-spacing: 1.5px; }
+  .ios-sy-code { justify-content: center; min-height: 64px; font-size: 1.2941rem; font-weight: 600; letter-spacing: 1.5px; }
   .ios-stat { display: flex; align-items: center; gap: 14px; padding: var(--ios-tile-pad); border-radius: var(--ios-r-group); background: var(--ios-cell); }
   .ios-stat-ic { display: flex; align-items: center; justify-content: center; flex: none; width: var(--ios-verdict-ic); height: var(--ios-verdict-ic); border-radius: 50%; color: var(--ios-white); background: var(--ios-gray); }
   .ios-stat.is-ok .ios-stat-ic { background: var(--ios-green); } .ios-stat.is-warn .ios-stat-ic { background: var(--ios-orange); } .ios-stat.is-crit .ios-stat-ic { background: var(--ios-red); }
   .ios-stat-ic svg { width: 26px; height: 26px; stroke-width: 2.5; }
   .ios-stat-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-  .ios-stat-t b { font-size: 20px; font-weight: 700; }
-  .ios-stat-t > span:not(.ios-dk) { font-size: 13px; color: var(--ios-label-2); }
+  .ios-stat-t b { font-size: 1.1765rem; font-weight: 700; }
+  .ios-stat-t > span:not(.ios-dk) { font-size: 0.7647rem; color: var(--ios-label-2); }
 }
 
 /* ---------- v58 : formulaire Ajouter au style C (ios-add.js) ---------- */
@@ -938,8 +1040,8 @@ body.ios-find-open { overflow: hidden; }
   .ios-add-grp { display: flex; flex-direction: column; gap: 14px; padding: 18px var(--ios-pad); border-radius: var(--ios-r-group); background: var(--ios-cell); }
   #f-type { display: none; }
   .ios-tseg { display: flex; padding: 3px; border-radius: 10px; background: var(--ios-fill); }
-  .ios-tseg button { flex: 1; min-height: 34px; padding: 0; border: 0; border-radius: 8px; background: var(--ios-clear); color: var(--ios-label); font: inherit; font-size: 15px; }
-  .ios-tseg button[aria-pressed="true"] { background: var(--ios-cell); font-weight: 600; box-shadow: 0 1px 3px var(--ios-sep); }
+  .ios-tseg button { flex: 1; min-height: 34px; padding: 0; border: 0; border-radius: 8px; background: var(--ios-clear); color: var(--ios-label); font: inherit; font-size: 0.8824rem; }
+  .ios-tseg button[aria-pressed="true"] { background: var(--ios-seg-active); font-weight: 600; box-shadow: 0 1px 3px var(--ios-sep); }
   .ios-tseg button:active { transform: none; opacity: 0.6; }
   #form .chips button.is-on { background: var(--ios-green); color: var(--ios-white); font-weight: 600; }
   /* Photo : deux lignes à carré d'icône dans un groupe, puis les vignettes et la note de bas */
@@ -952,7 +1054,7 @@ body.ios-find-open { overflow: hidden; }
   #form .ios-ph-ic { display: flex; }
   #form .ios-ph-t { flex: 1; min-width: 0; }
   #form .ios-ph-chev { display: block; }
-  #form .ios-ph-info { margin: 0 var(--ios-pad); font-size: 13px; }
+  #form .ios-ph-info { margin: 0 var(--ios-pad); font-size: 0.7647rem; }
   #form .ios-ph-list:empty { display: none; }
   #form > .btns { margin-top: 20px; }
   #form > .btns #f-submit { flex: 1; min-height: 52px; border-radius: 26px; font-weight: 600; }
@@ -964,19 +1066,19 @@ body.ios-find-open { overflow: hidden; }
   .ios-epanel { gap: var(--ios-tile-gap); margin-top: 12px; }
   .ios-etop { margin-top: 0; }
   .ios-erange { display: flex; gap: 0; padding: 3px; border-radius: 22px; background: var(--ios-fill); }
-  .ios-erange button { flex: 1; min-height: 36px; border-radius: 19px; font-size: 15px; font-weight: 400; color: var(--ios-label); }
-  .ios-erange button[aria-pressed="true"] { background: var(--ios-cell); font-weight: 600; box-shadow: 0 1px 3px var(--ios-sep); }
+  .ios-erange button { flex: 1; min-height: 36px; border-radius: 19px; font-size: 0.8824rem; font-weight: 400; color: var(--ios-label); }
+  .ios-erange button[aria-pressed="true"] { background: var(--ios-seg-active); font-weight: 600; box-shadow: 0 1px 3px var(--ios-sep); }
   .ios-escrub { border-radius: 22px; }
   .ios-ehero { display: flex; flex-direction: column; padding: var(--ios-tile-pad); border-radius: var(--ios-r-group); background: var(--ios-cell); }
   .ios-ehero .ios-evalue { margin-top: 4px; }
-  .ios-evalue-n { font-size: 44px; line-height: 1; }
-  .ios-evalue-b { font-size: 15px; color: var(--ios-label-2); }
+  .ios-evalue-n { font-size: 2.5882rem; line-height: 1; }
+  .ios-evalue-b { font-size: 0.8824rem; color: var(--ios-label-2); }
   .ios-ehero .ios-ecap { margin-top: 4px; }
-  .ios-ehint { margin: 8px 0 0; font-size: 13px; color: var(--ios-label-2); }
+  .ios-ehint { margin: 8px 0 0; font-size: 0.7647rem; color: var(--ios-label-2); }
   .ios-estats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ios-tile-gap); margin-top: 0; }
   .ios-estat { flex-direction: column; justify-content: flex-start; align-items: stretch; gap: 6px; padding: var(--ios-tile-pad); border: 0; border-radius: var(--ios-r-group); background: var(--ios-cell); }
   .ios-estat b { font-size: var(--ios-tile-big); font-weight: 700; line-height: 1; margin-top: auto; }
-  .ios-ebar { position: relative; display: block; height: 8px; margin: 4px 0; border-radius: 4px; background: var(--ios-bg); }
+  .ios-ebar { position: relative; display: block; height: 8px; margin: 4px 0; border-radius: 4px; background: var(--ios-track); }
   .ios-ebar i { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 4px; background: var(--ios-green); }
   .ios-ebar.is-warn i { background: var(--ios-orange); } .ios-ebar.is-crit i { background: var(--ios-red); }
   .ios-ebar::after { content: ""; position: absolute; left: 60%; top: -4px; bottom: -4px; border-left: 1.5px dashed var(--ios-label-2); }
@@ -986,10 +1088,10 @@ body.ios-find-open { overflow: hidden; }
   .ios-enotes { padding: 0 16px 0 var(--ios-pad); border-radius: var(--ios-r-group); background: var(--ios-cell); }
   .ios-enotes .notes > li:first-child { border-top: 0; }
   .ios-enotes .notes > li.ios-erow { grid-template-areas: "what v" "meta eff" "acts acts"; }
-  .ios-enotes .notes > li.ios-erow > .meta { font-size: 13px; font-weight: 400; text-transform: none; letter-spacing: 0; }
+  .ios-enotes .notes > li.ios-erow > .meta { font-size: 0.7647rem; font-weight: 400; text-transform: none; letter-spacing: 0; }
   .ios-enotes .notes > li.ios-erow > .what { font-weight: 400; }
   .ios-enotes .notes > li.ios-erow > .v { font-size: var(--ios-title-inline); font-weight: 600; }
-  .ios-enotes .ios-eff { font-size: 12px; font-weight: 600; }
+  .ios-enotes .ios-eff { font-size: 0.7059rem; font-weight: 600; }
 }
 
 /* ---------- v58 : recherche au style C (rond Fermer, titre de section) ---------- */
@@ -1009,11 +1111,11 @@ body.ios-find-open { overflow: hidden; }
 .gd-ring-fg { fill: none; stroke: var(--ios-green); stroke-width: 9; stroke-linecap: round; }
 .gd-ring text { font-size: 18px; font-weight: 700; fill: var(--ios-label); }
 .gd-ptile-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.gd-k { font-size: 13px; font-weight: 600; color: var(--ios-label-2); }
-.gd-ptile-t b { font-size: 20px; font-weight: 700; }
-.gd-ptile-t > span:last-child { font-size: 13px; color: var(--ios-label-2); }
+.gd-k { font-size: 0.7647rem; font-weight: 600; color: var(--ios-label-2); }
+.gd-ptile-t b { font-size: 1.1765rem; font-weight: 700; }
+.gd-ptile-t > span:last-child { font-size: 0.7647rem; color: var(--ios-label-2); }
 .gd-sech { align-self: stretch; text-align: left; margin: 28px 4px 8px; font-size: var(--ios-sec-title); font-weight: 700; color: var(--ios-label); }
-.gd-chs .gd-num { width: var(--ios-icon); height: var(--ios-icon); border-radius: var(--ios-r-icon); background: var(--ios-gray); color: var(--ios-white); font-size: 15px; }
+.gd-chs .gd-num { width: var(--ios-icon); height: var(--ios-icon); border-radius: var(--ios-r-icon); background: var(--ios-gray); color: var(--ios-white); font-size: 0.8824rem; }
 .gd-chr.is-ok .gd-num { background: var(--ios-green); color: var(--ios-white); }
 .gd-chs .gd-num svg { width: 18px; height: 18px; }
 .gd-chs { border: 0; border-radius: var(--ios-r-group); background: var(--ios-cell); }
@@ -1040,3 +1142,111 @@ body.ios-find-open { overflow: hidden; }
 /* Années précédentes : titre d'année en section, note de bulletin comme dans les listes (noire, centrée) */
 .yp-year h2 { margin: 0 4px 8px; font-size: var(--ios-sec-title); font-weight: 700; }
 .yp-b { min-width: var(--ios-grade-w); text-align: center; font-family: inherit; font-size: var(--ios-title-inline); font-weight: 600; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+
+/* ---------- v60 : lot 1 (contraste), lot 2 (finitions), lot 4 (cibles tactiles) ----------
+   Lot 1 : les textes de moins de 18 pt passent à 4,5:1 au moins. Les aplats et les icônes gardent les couleurs système.
+   Les chiffres restent en noir (règle v56) : seuls les libellés et les liens changent de couleur. */
+.link, .card .more, .btn-ghost, .gd-btn.ghost, .gd-tab.on, .gd-chips span.on, .gd-kick, .ob-tip b, .gd-n em, .gd-card em,
+.gd-sf.gd-hl span, .ios-act, .ios-day.is-today, .ios-ph-badge, .ios-find-add { color: var(--ios-blue-text); }
+.ob-why, .ob-warn, .caveat, .need, .gd-r small, .gd-alert, .t-warn { color: var(--ios-orange-text); }
+.link.danger, .msg, .gd-n em.red, .t-crit { color: var(--ios-red-text); }
+.ios-act.is-danger { color: var(--ios-red-text); }
+
+/* Textes blancs sur aplat : 4,5:1 au moins (blanc sur #34C759 : 2,2:1 ; sur #0088FF : 3,5:1). */
+.btn, .gd-btn, .gd-tpbar span.tp, .ios-day.is-sel, .ios-avatar { background: var(--ios-blue-btn); }
+.ios-prof .ios-avatar, #form .chips button.is-on, .gd-chr.is-ok .gd-num { background: var(--ios-green-btn); }
+
+/* Lot 2 : la carte « Installe l'app » n'appartient qu'à l'Accueil (elle restait sous la barre des autres pages). */
+.wrap.is-sub .install-tip, body.ios-detail-open .install-tip { display: none; }
+/* Lot 2 : sous la barre du bas, le fond remplace le contenu qui défile. Le dégradé suit la barre quand elle se cache. */
+@media (max-width: 700px) {
+  .ios-dock::before { content: ""; position: absolute; z-index: -1; left: 0; right: 0; pointer-events: none;
+    top: calc(-1 * var(--ios-dock-fade)); bottom: calc(-1 * (var(--ios-pill-bottom) + env(safe-area-inset-bottom, 0px)));
+    background: linear-gradient(to bottom, var(--ios-clear), var(--ios-bg) var(--ios-dock-fade)); }
+}
+
+/* Lot 4 : zone de touche d'au moins 44 pt sans changer le dessin. :where() = spécificité nulle : un bouton déjà positionné (absolute, fixed) garde sa position. Le pseudo-élément déborde du bouton seulement
+   quand celui-ci mesure moins de 44 pt (min(0, …) évite de rétrécir un bouton plus grand). */
+:where(#tip-x, #form .chips button, .ios-bar-back, .ob-round, .gd-x, .ios-find-x, .link, .ios-fadd, .ios-erange button, .ios-tseg button, .ios-cal-head button, .ios-day, .ios-find-add, .ios-act, .seg button) { position: relative; }
+#tip-x::after, #form .chips button::after, .ios-bar-back::after, .ob-round::after, .gd-x::after, .ios-find-x::after, .link::after, .ios-fadd::after,
+.ios-erange button::after, .ios-tseg button::after, .ios-cal-head button::after, .ios-day::after, .ios-find-add::after,
+.ios-act::after, .seg button::after, .ios-ph-x::after {
+  content: ""; position: absolute; inset: min(0px, calc((100% - var(--ios-hit)) / 2)); }
+
+/* Indicateur du sélecteur de période (Accueil) : même gris que les autres segments actifs */
+.seg .ind { background: var(--ios-seg-active); }
+
+/* ---------- v63 : lot 8, réglage Apparence (Réglages) ---------- */
+.ios-approw { display: flex; flex-direction: column; gap: 8px; padding: 12px var(--ios-pad) 4px; border-bottom: var(--ios-hair) solid var(--ios-sep); }
+.ios-approw .ios-row-l { flex: none; font-size: var(--ios-title-inline); }
+.ios-appseg { display: flex; margin: 0 0 8px; padding: 3px; border-radius: 10px; background: var(--ios-fill); }
+.ios-appseg button { flex: 1; min-height: 34px; padding: 0 6px; border: 0; border-radius: 8px; background: var(--ios-clear); color: var(--ios-label); font: inherit; font-size: 0.8824rem; white-space: nowrap; }
+.ios-appseg button[aria-pressed="true"] { background: var(--ios-seg-active); font-weight: 600; box-shadow: 0 1px 3px var(--ios-sep); }
+.ios-appseg button:active { transform: none; opacity: 0.6; }
+.ios-appseg button { position: relative; }
+.ios-appseg button::after { content: ""; position: absolute; inset: min(0px, calc((100% - var(--ios-hit)) / 2)); }
+
+/* ---------- v61 : lot 3, Dynamic Type (classes dt-l et dt-xl posées par fx.js) ----------
+   Les tailles de texte sont en rem (voir TOKENS). Aux tailles d'accessibilité les tuiles passent sur une colonne et les
+   sélecteurs de période prennent leurs libellés courts (comme dans le détail d'une matière). */
+.seg button { white-space: nowrap; }
+@media (max-width: 700px) {
+  html.dt-xl .ios-dtiles, html.dt-xl .ios-stiles, html.dt-xl .ios-estats { grid-template-columns: minmax(0, 1fr); }
+  html.dt-xl .ios-page-profil .ios-row-l { white-space: normal; }
+  html.dt-xl .ios-large, html.dt-xl header.top h1, html.dt-xl .ob-title, html.dt-xl .ob-hero h1 { font-size: min(var(--ios-title-large), 64px); overflow-wrap: anywhere; }   /* grand titre : plafonné aux tailles d'accessibilité */
+  html.dt-l .row2 { grid-template-columns: minmax(0, 1fr); }   /* champs du formulaire Ajouter : une colonne dès xxxL */
+  html.dt-xl .seg button[data-period="s1"], html.dt-xl .seg button[data-period="s2"] { font-size: 0; }
+  html.dt-xl .seg button[data-period="s1"]::before { content: "S1" / ""; font-size: 0.8235rem; }
+  html.dt-xl .seg button[data-period="s2"]::before { content: "S2" / ""; font-size: 0.8235rem; }
+}
+
+/* ---------- v64 : lot 6, feuilles de saisie et de confirmation (ios-dialog.js) ----------
+   Remplacent window.prompt / confirm / alert. Feuille en bas sur téléphone, carte centrée au-delà de 700 px. */
+.ios-dlg { position: fixed; inset: 0; z-index: var(--ios-dlg-z); display: flex; align-items: flex-end; justify-content: center; }
+.ios-dlg-scrim { position: absolute; inset: 0; background: var(--ios-scrim); animation: iosDlgFade var(--ios-dur-fade) ease-out; }
+.ios-dlg-sheet { position: relative; width: 100%; max-width: var(--ios-dlg-w); box-sizing: border-box; display: flex; flex-direction: column; gap: 12px;
+  padding: 8px var(--ios-pad) calc(var(--ios-pad) + env(safe-area-inset-bottom, 0px)); background: var(--ios-cell); color: var(--ios-label);
+  border-radius: var(--ios-r-sheet) var(--ios-r-sheet) 0 0; margin-bottom: var(--ios-dlg-kb, 0px); touch-action: pan-y;
+  max-height: 92vh; max-height: 92dvh; overflow-y: auto; overscroll-behavior: contain;   /* aux grandes tailles de texte la feuille défile au lieu de sortir de l'écran */
+  animation: iosDlgUp var(--ios-dur-nav) var(--ios-ease-out); transition: transform var(--ios-dur-fade) var(--ios-ease-out); }
+.ios-dlg.is-out .ios-dlg-sheet { transform: translate3d(0, 100%, 0); }
+.ios-dlg.is-out .ios-dlg-scrim { opacity: 0; transition: opacity var(--ios-dur-fade) ease-out; }
+.ios-dlg-grab { align-self: center; width: 36px; height: 5px; border-radius: 3px; background: var(--ios-chev); }
+.ios-dlg-t { margin: 4px 0 0; font-size: var(--ios-title-inline); font-weight: 700; line-height: 1.25; text-align: center; overflow-wrap: anywhere; }
+.ios-dlg-m { margin: 0; font-size: 0.8824rem; line-height: 1.4; color: var(--ios-label-2); text-align: center; overflow-wrap: anywhere; }
+.ios-dlg-in { width: 100%; box-sizing: border-box; min-height: var(--ios-dlg-btn); padding: 0 16px; border: 0; border-radius: 14px; background: var(--ios-fill); color: var(--ios-label); font: inherit; font-size: var(--ios-title-inline); }
+.ios-dlg-in:focus-visible { outline: 2px solid var(--ios-blue); outline-offset: 0; }
+.ios-dlg-err { margin: -4px 0 0; font-size: 0.8235rem; color: var(--ios-red-text); text-align: center; }
+.ios-dlg-btns { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.ios-dlg-b { min-height: var(--ios-dlg-btn); padding: 0 16px; border: 0; border-radius: 26px; font: inherit; font-size: var(--ios-title-inline); font-weight: 600; cursor: pointer; }
+.ios-dlg-ok { background: var(--ios-blue-btn); color: var(--ios-white); }
+.ios-dlg-ok.is-danger { background: var(--ios-red-text); }
+.ios-dlg-cancel { background: var(--ios-fill); color: var(--ios-label); font-weight: 400; }
+.ios-dlg-b:active { opacity: 0.6; }
+.ios-dlg-b:focus-visible { outline: 2px solid var(--ios-blue); outline-offset: 2px; }
+body.ios-dlg-open { overflow: hidden; }
+@keyframes iosDlgUp { from { transform: translate3d(0, 100%, 0); } to { transform: translate3d(0, 0, 0); } }
+@keyframes iosDlgFade { from { opacity: 0; } to { opacity: 1; } }
+@media (min-width: 701px) {
+  .ios-dlg { align-items: center; }
+  .ios-dlg-sheet { border-radius: 20px; padding-bottom: var(--ios-pad); margin-bottom: 0; }
+  .ios-dlg-grab { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ios-dlg-sheet { animation: iosDlgFade var(--ios-dur-fade) ease-out; }
+  .ios-dlg.is-out .ios-dlg-sheet { transform: none; opacity: 0; transition: opacity var(--ios-dur-fade) ease-out; }
+}
+
+/* ---------- v64 : lot 7, simplification ----------
+   « Moyennes par branche » disait la même chose que la liste « Branches » : le graphique en barres disparaît sur téléphone et chaque
+   ligne de la liste gagne une mini-barre (couleur = niveau, encoche à 4, jamais de chiffre en couleur). */
+@media (max-width: 700px) {
+  .ios-dsec-bars, .panel:has(> #bars) { display: none; }
+  .ios-srow-bar { position: relative; display: block; height: 4px; margin-top: 8px; border-radius: 2px; background: var(--ios-track); }
+  .ios-srow-bar i { display: block; height: 100%; border-radius: 2px; background: var(--ios-green); }
+  .ios-srow-bar.is-warn i { background: var(--ios-orange); }
+  .ios-srow-bar.is-crit i { background: var(--ios-red); }
+  .ios-srow-bar s { position: absolute; top: -2px; bottom: -2px; left: 66.67%; width: 1.5px; background: var(--ios-label-2); opacity: 0.6; }
+}
+/* Sombre : la pastille de l'effet d'une note (« début », « ▲ 0.50 ») a un fond plus clair qu'en clair ; son texte passe au blanc (4,2:1 → 9:1). */
+:root[data-theme="dark"] .ios-eff, :root[data-theme="dark"] .ios-eff.is-up, :root[data-theme="dark"] .ios-eff.is-down { color: var(--ios-label); }

@@ -24,7 +24,7 @@
   function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
   function half(v) { return Math.round(v * 2) / 2; }
   function toneOf(v) { if (v == null) return "none"; var b = half(v); return b < 4 ? "crit" : b < 4.5 ? "warn" : "ok"; }
-  function dateShort(iso) { try { return new Date(iso + "T12:00:00").toLocaleDateString("fr-CH", { day: "numeric", month: "short" }); } catch (e) { return iso; } }
+  function dateShort(iso) { try { var dt = new Date(iso + "T12:00:00"); return (dt.getDate() === 1 ? "1er" : dt.getDate()) + " " + dt.toLocaleDateString("fr-CH", { month: "short" }); } catch (e) { return iso; } }
 
   // Chaque panneau : le titre reste au-dessus, le contenu passe dans un groupe blanc (.ios-dgrp). Fait une seule fois :
   // le moteur ne remplace que l'intérieur de #alerts, #bars, #subjects, #notes.
@@ -65,7 +65,9 @@
       for (var i = 0; i < Math.max(max, n); i++) pips += '<i class="' + (i < n ? (n > max ? "is-crit" : "is-warn") : "") + '"></i>';
       return tile(label, '<span class="ios-dpips" aria-hidden="true">' + pips + '</span>', val, unit, sub, aria);
     }
-    var d = sub.match(/([+−]\d+(?:\.\d+)?) pt/), foot = d ? [min, d[1] + " pt"].filter(Boolean).join(" · ") + (/rythme actuel/.test(sub) ? " au rythme actuel" : "") : sub;
+    var d = sub.match(/([+−]\d+(?:\.\d+)?) pt/);
+    // v64 : « 56 min · +3.0 pt au rythme actuel » devient « minimum 56 · 3.0 pt d'avance au rythme actuel » (ou de retard).
+    var foot = d ? [min ? min.replace(/^(.+?)\s*min$/, "minimum $1") : "", d[1].slice(1) + " pt " + (d[1].charAt(0) === "+" ? "d'avance" : "de retard")].filter(Boolean).join(" · ") + (/rythme actuel/.test(sub) ? " au rythme actuel" : "") : sub;
     return tile(label, ring(ratio, at, tone), val, unit, foot, aria);
   }
   function avgTile() {

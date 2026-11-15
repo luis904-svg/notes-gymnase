@@ -140,18 +140,29 @@
     render();
   }
 
+  /* Feuille de confirmation seulement si la condition est vraie (ios-dialog.js) ; sinon la suite continue tout de suite. */
+  function ask(cond, o) { return cond ? window.IOSDialog.confirm(o) : Promise.resolve(true); }
   function finish() {
     var cur0 = window.NotesApp.profile();
-    if (cur0 && p.year !== cur0.year && window.NotesApp.grades().length &&
-      !window.confirm("Tu changes d'année sans classer tes notes : elles seront comptées dans les moyennes de la nouvelle année. Pour les classer dans « Années précédentes », annule puis utilise « Passer à l'année suivante » dans Réglages. Continuer quand même ?")) return;
-    var gs = window.NotesApp.grades(), next = G.build(p).map(function (x) { return x.id; });
-    var lost = gs.filter(function (g) { return next.indexOf(g.subject) < 0; }).length;
-    if (lost && !window.confirm(lost + " note" + (lost > 1 ? "s appartiennent" : " appartient") + " à des branches absentes de ce profil. Elles seront masquées, pas supprimées. Continuer ?")) return;
-    window.NotesApp.setProfile(Object.assign({ v: 1 }, p));
-    hap("success");
-    // Première configuration : « Hello World » s'écrit à la main, puis le tableau de bord apparaît.
-    if (!editing && window.Hello) window.Hello.play({ onCovered: closeNow, onReveal: function () { if (window.FX) window.FX.view("dash"); } });
-    else close();
+    ask(cur0 && p.year !== cur0.year && window.NotesApp.grades().length, {
+      title: "Changer d'année ?", ok: "Continuer quand même",
+      message: "Tu changes d'année sans classer tes notes : elles seront comptées dans les moyennes de la nouvelle année. Pour les classer dans « Années précédentes », annule puis utilise « Passer à l'année suivante » dans Réglages."
+    }).then(function (go) {
+      if (!go) return;
+      var gs = window.NotesApp.grades(), next = G.build(p).map(function (x) { return x.id; });
+      var lost = gs.filter(function (g) { return next.indexOf(g.subject) < 0; }).length;
+      return ask(lost, {
+        title: "Branches absentes du profil", ok: "Continuer",
+        message: lost + " note" + (lost > 1 ? "s appartiennent" : " appartient") + " à des branches absentes de ce profil. Elles seront masquées, pas supprimées."
+      }).then(function (go2) {
+        if (!go2) return;
+        window.NotesApp.setProfile(Object.assign({ v: 1 }, p));
+        hap("success");
+        // Première configuration : « Hello World » s'écrit à la main, puis le tableau de bord apparaît.
+        if (!editing && window.Hello) window.Hello.play({ onCovered: closeNow, onReveal: function () { if (window.FX) window.FX.view("dash"); } });
+        else close();
+      });
+    });
   }
   function closeNow() { if (!root) return; root.remove(); root = null; document.body.classList.remove("ob-open"); window.scrollTo(0, 0); }
 
@@ -178,12 +189,21 @@
     document.body.classList.add("ob-open");
     root.addEventListener("click", function (e) {
       if (e.target.id === "ob-sync") {
-        var code = window.prompt("Code de synchronisation (sur ton autre appareil : Réglages → Synchronisation)");
-        if (code == null) return;
-        e.target.textContent = "Récupération…";
-        window.Sync.join(code).then(function (ok) {
-          if (ok) { hap("success"); close(); }
-          else { e.target.textContent = "J'ai déjà mes notes sur un autre appareil"; window.alert("Aucune note trouvée pour ce code. Vérifie-le (16 lettres ou chiffres), ou continue la configuration."); }
+        var btn = e.target;
+        window.IOSDialog.prompt({
+          title: "Code de synchronisation", message: "Sur ton autre appareil : Réglages → Synchronisation. 16 lettres ou chiffres.",
+          placeholder: "ABCD-EFGH-JKMN-PQRS", autocapitalize: "characters", maxlength: 24, ok: "Récupérer mes notes",
+          validate: function (v) { return v.replace(/[^A-Za-z0-9]/g, "").length === 16 ? "" : "Il faut 16 lettres ou chiffres."; }
+        }).then(function (code) {
+          if (code == null) return;
+          btn.textContent = "Récupération…";
+          window.Sync.join(code).then(function (ok) {
+            if (ok) { hap("success"); close(); }
+            else {
+              btn.textContent = "J'ai déjà mes notes sur un autre appareil";
+              window.IOSDialog.alert({ title: "Aucune note trouvée", message: "Rien n'est enregistré pour ce code. Vérifie-le (16 lettres ou chiffres), ou continue la configuration.", ok: "Compris" });
+            }
+          });
         });
         return;
       }
@@ -307,9 +327,14 @@
       deferredPrompt.userChoice.then(function () { deferredPrompt = null; });
     });
     el.querySelector("#inst-skip").addEventListener("click", function () {
-      if (!window.confirm("Si tu configures ici puis installes l'app plus tard, il faudra refaire la configuration dans l'app. Continuer dans le navigateur ?")) return;
-      el.remove(); document.body.classList.remove("ob-open");
-      open(false);
+      window.IOSDialog.confirm({
+        title: "Continuer dans le navigateur ?", ok: "Continuer", cancel: "Retour",
+        message: "Si tu configures ici puis installes l'app plus tard, il faudra refaire la configuration dans l'app."
+      }).then(function (go) {
+        if (!go) return;
+        el.remove(); document.body.classList.remove("ob-open");
+        open(false);
+      });
     });
     // Installée depuis Android pendant que la page est ouverte.
     window.addEventListener("appinstalled", function () { var s = el.querySelector(".ob-hero p"); if (s) s.textContent = "C'est installé ! Ouvre Notes depuis ton écran d'accueil."; });

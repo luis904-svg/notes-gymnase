@@ -9,6 +9,16 @@
   document.documentElement.classList.add("fx");
   // ?noanim=1 : plus aucune animation ni transition CSS (voir ios.css, html.noanim).
   if (/[?&]noanim=1/.test(location.search)) document.documentElement.classList.add("noanim");
+
+  // Dynamic Type (lot 3, v61) : ios.css exprime tout en rem ; ces classes servent aux mises en page qui changent aux grandes tailles.
+  // dt-l : texte agrandi d'au moins 30 % (xxxL et plus) ; dt-xl : d'au moins 60 % (tailles d'accessibilité).
+  function dtype() {
+    var px = parseFloat(window.getComputedStyle(document.documentElement).fontSize) || 17, r = px / 17, cl = document.documentElement.classList;
+    cl.toggle("dt-l", r >= 1.3); cl.toggle("dt-xl", r >= 1.6);
+  }
+  dtype();
+  window.addEventListener("resize", dtype); window.addEventListener("pageshow", dtype);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) dtype(); });
   var reduceMq = window.matchMedia("(prefers-reduced-motion: reduce)");
   function canAnim() { return !document.documentElement.classList.contains("noanim") && !reduceMq.matches; }
   // Rejoue une animation CSS : retire la classe, force le calcul, la remet ; elle part seule à la fin.
@@ -278,9 +288,14 @@
       var st = obj && obj.state ? obj.state : (obj && obj.data ? obj.data : obj);
       if (!st || !Array.isArray(st.grades)) { haptic("error"); say("Aucune note trouvée dans ce fichier.", true); return; }
       haptic("warn");
-      if (!window.confirm("Remplacer les notes de cet appareil par les " + st.grades.length + " notes du fichier ?")) return;
-      window.NotesApp.replace(st);
-      haptic("success"); say(st.grades.length + " notes importées.");
+      window.IOSDialog.confirm({
+        title: "Remplacer les notes ?", ok: "Remplacer", danger: true,
+        message: "Les notes de cet appareil seront remplacées par les " + st.grades.length + " notes du fichier. Exporte d'abord une sauvegarde si tu veux les garder."
+      }).then(function (go) {
+        if (!go) return;
+        window.NotesApp.replace(st);
+        haptic("success"); say(st.grades.length + " notes importées.");
+      });
     };
     r.readAsText(f);
   }
