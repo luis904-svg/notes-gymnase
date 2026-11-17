@@ -19,7 +19,7 @@
   --ios-blue: #0088FF;
   --ios-blue-soft: rgba(0, 136, 255, 0.12);
   --ios-green: #34C759;
-  --ios-green-text: #248A3D;
+  --ios-green-text: var(--ios-green);   /* v61 : un seul vert dans toute l'appli (plus de vert foncé pour le texte) */
   --ios-green-soft: rgba(52, 199, 89, 0.14);
   --ios-orange: #FF8D28;
   --ios-orange-soft: rgba(255, 141, 40, 0.14);
@@ -129,14 +129,7 @@
   --ios-ring-w: 9px;
   --ios-pip: 22px;
   --ios-verdict-ic: 48px;
-  --ios-hb-h: 38px;            /* ligne de la barre horizontale « Moyennes par branche » */
-  --ios-hb-bar: 20px;     /* v60 : barres plus épaisses (14 → 20) */
-  --ios-bch-thr: 2px;          /* ligne du seuil 4 du graphique en bâtons */
-  --ios-bch-goal: 3px;         /* trait d'objectif d'un bâton */
-  --ios-bch-goal-halo: 6px;
-  --ios-hb-tick: 3px;          /* trait d'objectif */
-  --ios-hb-tick-over: 5px;
-  --ios-hb-name: 72px;
+  --ios-bch-thr: 1.5px;        /* ligne du seuil 4 du graphique en bâtons */
   --ios-spark-fill: 0.28;      /* opacité du haut du dégradé sous la courbe */
 
   /* Variables historiques de l'app, réaffectées à iOS */
@@ -838,7 +831,7 @@ body.ios-find-open { overflow: hidden; }
   #view-dash .cols, #view-dash .main, #view-dash .side { display: contents; }
   #view-dash .panel.ios-dsec { background: var(--ios-clear); padding: 0; border-radius: 0; }
   #view-dash .panel.ios-dsec > h2 { font-size: var(--ios-sec-title); font-weight: 700; margin: 0 4px 8px; }
-  #view-dash .ios-dsec-promo, #view-dash .ios-dsec-chart { display: none; }
+  #view-dash .ios-dsec-promo, #view-dash .ios-dsec-chart, #view-dash .ios-dsec-bars { display: none; }
   #ios-dtop { display: flex; flex-direction: column; gap: var(--ios-tile-gap); order: 1; }
   #view-dash .ios-dsec-bch { order: 2; } #view-dash .ios-dsec-alerts { order: 3; } #view-dash .ios-dsec-bars { order: 4; } #view-dash .ios-dsec-subjects { order: 5; } #view-dash .ios-dsec-notes { order: 6; }
   .ios-dgrp { background: var(--ios-cell); border-radius: var(--ios-r-group); overflow: hidden; }
@@ -886,30 +879,17 @@ body.ios-find-open { overflow: hidden; }
   .ios-arow-chev { display: flex; color: var(--ios-chev); }
   .ios-arow-chev svg { width: 16px; height: 16px; stroke-width: 2.5; }
 
-  /* Moyennes par branche : barres horizontales de 1 à 6, seuil 4 en pointillé (60 % de la piste) */
-  .ios-hbs { display: flex; flex-direction: column; padding: 14px 16px 14px var(--ios-pad); }
-  .ios-hb { display: grid; grid-template-columns: var(--ios-hb-name) minmax(0, 1fr) 30px; align-items: center; gap: 8px; height: var(--ios-hb-h); font-size: 15px; cursor: pointer; }
-  .ios-hb-n { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-  .ios-hb b { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
-  .ios-hb.is-warn b { color: var(--ios-orange-text); } .ios-hb.is-crit b { color: var(--ios-red-text); } .ios-hb.is-none b { color: var(--ios-label-2); font-weight: 400; }
-  .ios-hb-t { position: relative; height: var(--ios-hb-bar); border-radius: calc(var(--ios-hb-bar) / 2); background: var(--ios-bg); }
-  .ios-hb-t i { position: absolute; top: 0; bottom: 0; left: 0; border-radius: inherit; background: var(--ios-green); }
-  .ios-hb.is-warn .ios-hb-t i { background: var(--ios-orange); } .ios-hb.is-crit .ios-hb-t i { background: var(--ios-red); }
-  .ios-hb-t::after { content: ""; position: absolute; left: 60%; top: calc((var(--ios-hb-bar) - var(--ios-hb-h)) / 2); bottom: calc((var(--ios-hb-bar) - var(--ios-hb-h)) / 2); border-left: 2px dashed var(--ios-label-2); }
-  .ios-hb-t u { position: absolute; top: calc(var(--ios-hb-tick-over) * -1); bottom: calc(var(--ios-hb-tick-over) * -1); width: var(--ios-hb-tick); margin-left: calc(var(--ios-hb-tick) / -2); border-radius: var(--ios-hb-tick); background: var(--ios-label); box-shadow: 0 0 0 var(--ios-hair) var(--ios-cell); }
-  .ios-hb:active { opacity: 0.6; }
-
-  /* Graphique en bâtons « Toutes les moyennes » (v60) : axe 1–6, seuil 4 en trait plein, trait d'objectif sur chaque bâton */
+  /* Graphique « Toutes les moyennes » (v60, façon graphiques Apple) : bâtons arrondis en haut, repères discrets, seuil 4 en trait fin mais plein
+     (v69 : l'objectif n'est qu'une ombre claire derrière le bâton, sans trait ni chiffre ; hauteur et chiffre = note de bulletin). Couleur = niveau seulement ; les chiffres restent noirs. */
   #ios-bch .ios-dgrp { padding: var(--ios-pad) 12px 14px; }
   .ios-bch-svg { display: block; width: 100%; height: auto; overflow: visible; }
-  .ios-bch-grid { stroke: var(--ios-fill); stroke-width: var(--ios-hair); }
-  .ios-bch-thr { stroke: var(--ios-label); stroke-width: var(--ios-bch-thr); }
+  .ios-bch-grid { stroke: var(--ios-sep); stroke-width: var(--ios-hair); }
+  .ios-bch-base { stroke: var(--ios-chev); stroke-width: var(--ios-hair); }
+  .ios-bch-thr { stroke: var(--ios-label-2); stroke-width: var(--ios-bch-thr); }
   .ios-bch-y { font-size: 11px; fill: var(--ios-label-2); } .ios-bch-y.is-thr { fill: var(--ios-label); font-weight: 700; }
+  .ios-bch-ghost { fill: var(--ios-fill); }
   .ios-bch-bar { fill: var(--ios-green); } .ios-bch-bar.is-warn { fill: var(--ios-orange); } .ios-bch-bar.is-crit { fill: var(--ios-red); } .ios-bch-bar.is-none { fill: var(--ios-fill); }
-  .ios-bch-goal-halo { stroke: var(--ios-cell); stroke-width: var(--ios-bch-goal-halo); stroke-linecap: round; }
-  .ios-bch-goal { stroke: var(--ios-label); stroke-width: var(--ios-bch-goal); stroke-linecap: round; }
-  .ios-bch-v { font-size: 11px; font-weight: 700; fill: var(--ios-label); font-variant-numeric: tabular-nums; paint-order: stroke; stroke: var(--ios-cell); stroke-width: 3px; stroke-linejoin: round; }
-  .ios-bch-v.is-in { stroke: none; }
+  .ios-bch-v { font-size: 11px; font-weight: 600; fill: var(--ios-label); font-variant-numeric: tabular-nums; paint-order: stroke; stroke: var(--ios-cell); stroke-width: 3px; stroke-linejoin: round; }
   .ios-bch-n { font-size: 11px; fill: var(--ios-label-2); }
   .ios-bch-hit { fill: var(--ios-clear); }
   .ios-bch-g { cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; }
@@ -917,8 +897,7 @@ body.ios-find-open { overflow: hidden; }
   .ios-bch-g:focus-visible .ios-bch-hit { stroke: var(--ios-blue); stroke-width: 2px; }
   .ios-bch-leg { display: flex; gap: 16px; margin: 6px 0 0; padding-left: 4px; font-size: 13px; color: var(--ios-label-2); }
   .ios-bch-leg span { display: inline-flex; align-items: center; gap: 6px; }
-  .ios-bch-k-thr { display: inline-block; width: 16px; height: var(--ios-bch-thr); background: var(--ios-label); }
-  .ios-bch-k-goal { display: inline-block; width: 16px; height: var(--ios-bch-goal); border-radius: var(--ios-bch-goal); background: var(--ios-label); }
+  .ios-bch-k-thr { display: inline-block; width: 16px; height: var(--ios-bch-thr); background: var(--ios-label-2); }
 
   /* Dernières notes : intitulé et date à gauche, note à droite ; toucher la ligne montre Modifier / Supprimer */
   #notes > li.ios-dnote { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "what v" "meta v" "acts acts"; gap: 2px 12px; align-items: center; padding: 10px 16px 10px var(--ios-pad); border-top: 0; cursor: pointer;
@@ -945,7 +924,6 @@ body.ios-find-open { overflow: hidden; }
 .ios-evalue-d.is-up, .ios-evalue-d.is-down { color: var(--ios-label-2); }
 .ios-eff, .ios-eff.is-up, .ios-eff.is-down { background: var(--ios-fill); color: var(--ios-label-2); }
 .ios-srow-l > span.ios-srow-need { color: var(--ios-label); }
-.ios-hb.is-warn b, .ios-hb.is-crit b { color: var(--ios-label); }
 #notes > li.ios-dnote > .v.crit, .ios-enotes .notes > li.ios-erow > .v.crit { color: var(--ios-label); }
 
 

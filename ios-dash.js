@@ -5,8 +5,8 @@
      du verdict (.metric du moteur ou de cert.js : anneau avec encoche au minimum, ou pastilles pour « / 4 max ») et une
      tuile « Moyenne générale » (courbe remplie, NotesApp.general). Le panneau d'origine (#promo) est masqué ;
    - « À surveiller » : chaque alerte devient une ligne à carré d'icône coloré ; toucher = détail de la branche ;
-   - « Moyennes par branche » : barres horizontales de 1 à 6, seuil 4 en pointillé, encoche à l'objectif ; toucher =
-     détail (écouteur du moteur sur #bars) ;
+   - « Toutes les moyennes » (#ios-bch, v60) : graphique en bâtons sous les tuiles ; la liste de barres horizontales
+     « Moyennes par branche » est retirée (panneau masqué, #bars vidé) ;
    - « Dernières notes » : lignes avec la note à droite ; toucher une ligne montre Modifier / Supprimer ;
    - le graphique « Évolution de la moyenne » est masqué (la tuile Moyenne générale le remplace, la page d'une branche a
      sa propre courbe).
@@ -115,6 +115,12 @@
      Un bâton par branche (moyenne exacte de la période choisie), axe fixe de 1 à 6 (l'échelle des notes a un sens :
      charts.md › Axes), ligne du seuil 4 bien visible, trait d'objectif sur chaque bâton qui en a un. Couleur = niveau :
      rouge sous 4, orange de 4 à 4,5, vert au-dessus (même règle que les tuiles). Valeur au-dessus du bâton, en noir. */
+  function fmtB(b) { return b % 1 === 0 ? String(b) : b.toFixed(1); }   // 4 reste « 4 », 4.5 reste « 4.5 », comme sur le bulletin
+  function topRound(x, y, w, h, r) {   // bâton arrondi en haut seulement, à plat sur l'axe
+    r = Math.max(0, Math.min(r, w / 2, h));
+    return "M" + x.toFixed(1) + "," + (y + h).toFixed(1) + " V" + (y + r).toFixed(1) + " A" + r.toFixed(1) + "," + r.toFixed(1) + " 0 0 1 " + (x + r).toFixed(1) + "," + y.toFixed(1) +
+      " H" + (x + w - r).toFixed(1) + " A" + r.toFixed(1) + "," + r.toFixed(1) + " 0 0 1 " + (x + w).toFixed(1) + "," + (y + r).toFixed(1) + " V" + (y + h).toFixed(1) + " Z";
+  }
   function chart(items) {
     var top = document.getElementById("ios-dtop"), panel = document.getElementById("ios-bch");
     if (!top) return;
@@ -124,38 +130,36 @@
     }
     var period = A.period ? A.period() : "year", data = items.map(function (it) {
       var pts = A.series ? A.series(it.id, period) : [], v = pts.length ? pts[pts.length - 1].avg : null;
-      return { id: it.id, name: it.name, short: it.short, goal: it.goal, v: v, tone: toneOf(v) };
+      var b = v == null ? null : half(v);   // le bâton montre la note de bulletin (demi-point), v garde la moyenne exacte pour la description
+      return { id: it.id, name: it.name, short: it.short, goal: it.goal, v: v, b: b, tone: toneOf(v) };
     });
     var n = data.length;
     if (!n) { panel.innerHTML = ""; return; }
-    var W = 358, rot = n > 8, H = rot ? 252 : 226, L = 16, R = 4, T = 22, B = rot ? 58 : 32, slot = (W - L - R) / n, bw = Math.min(28, slot * 0.62);
+    // Axe fixe de 1 à 6 (l'échelle des notes a un sens). Peu de repères : 2, 4 et 6 ; le 4 est la ligne qui compte.
+    var W = 358, rot = n > 8, H = rot ? 248 : 222, L = 18, R = 2, T = 20, B = rot ? 54 : 30, slot = (W - L - R) / n, bw = Math.min(24, slot * 0.6);
     function Y(v) { return T + (1 - (v - 1) / 5) * (H - T - B); }
-    var g = "", i, hasGoal = false;
-    for (i = 1; i <= 6; i++) {
-      if (i === 4) continue;
-      g += '<line class="ios-bch-grid" x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(i).toFixed(1) + '" y2="' + Y(i).toFixed(1) + '"/>';
-    }
-    for (i = 1; i <= 6; i++) g += '<text class="ios-bch-y' + (i === 4 ? " is-thr" : "") + '" x="' + (L - 4) + '" y="' + (Y(i) + 4).toFixed(1) + '" text-anchor="end">' + i + '</text>';
-    var bars = data.map(function (d, k) {
-      var cx = L + slot * (k + 0.5), x = cx - bw / 2, base = Y(1), y = d.v == null ? base - 3 : Y(d.v), h = base - y;
-      if (d.goal) hasGoal = true;
-      // Valeur : au-dessus du bâton ; si l'objectif est plus haut que la moyenne, elle passe dans le bâton (noir sur la couleur)
-      // pour ne jamais se confondre avec le trait d'objectif.
-      var inside = d.v != null && d.goal && d.goal > d.v + 0.05 && h >= 22, vy = inside ? y + 15 : y - 6;
-      var label = d.name + " : " + (d.v == null ? "pas encore de note" : "moyenne " + d.v.toFixed(2)) + (d.goal ? ", objectif " + d.goal : "");
-      return '<g class="ios-bch-g" data-subj="' + esc(d.id) + '" role="button" tabindex="0" aria-label="' + esc(label) + '">' +
+    var base = Y(1), g = "", i;
+    [2, 3, 5, 6].forEach(function (v) { g += '<line class="ios-bch-grid" x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '"/>'; });
+    for (i = 1; i <= 6; i++) g += '<text class="ios-bch-y' + (i === 4 ? " is-thr" : "") + '" x="' + (L - 5) + '" y="' + (Y(i) + 3.5).toFixed(1) + '" text-anchor="end">' + i + '</text>';
+    g += '<line class="ios-bch-base" x1="' + L + '" x2="' + (W - R) + '" y1="' + base.toFixed(1) + '" y2="' + base.toFixed(1) + '"/>';
+    var bars = "", ghosts = "";
+    data.forEach(function (d, k) {
+      var cx = L + slot * (k + 0.5), x = cx - bw / 2, y = d.b == null ? base - 3 : Y(d.b), h = Math.max(0, base - y), gy = d.goal ? Y(d.goal) : null;
+      var label = d.name + " : " + (d.v == null ? "pas encore de note" : "note de bulletin " + fmtB(d.b) + ", moyenne exacte " + d.v.toFixed(2)) + (d.goal ? ", objectif " + d.goal : "");
+      // Ombre : colonne gris clair derrière le bâton, de l'axe jusqu'à l'objectif (sans trait ni chiffre). Cachée par le bâton
+      // quand l'objectif est atteint ; absente quand la branche n'a pas d'objectif.
+      if (gy != null) ghosts += '<path class="ios-bch-ghost" d="' + topRound(x, gy, bw, base - gy, 7) + '"/>';
+      bars += '<g class="ios-bch-g" data-subj="' + esc(d.id) + '" role="button" tabindex="0" aria-label="' + esc(label) + '">' +
         '<rect class="ios-bch-hit" x="' + (cx - slot / 2).toFixed(1) + '" y="0" width="' + slot.toFixed(1) + '" height="' + H + '"/>' +
-        '<rect class="ios-bch-bar is-' + d.tone + '" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(h, 0).toFixed(1) + '" rx="5"/>' +
-        (d.goal ? '<line class="ios-bch-goal-halo" x1="' + (x - 4).toFixed(1) + '" x2="' + (x + bw + 4).toFixed(1) + '" y1="' + Y(d.goal).toFixed(1) + '" y2="' + Y(d.goal).toFixed(1) + '"/>' +
-          '<line class="ios-bch-goal" x1="' + (x - 4).toFixed(1) + '" x2="' + (x + bw + 4).toFixed(1) + '" y1="' + Y(d.goal).toFixed(1) + '" y2="' + Y(d.goal).toFixed(1) + '"/>' : "") +
-        (d.v == null ? "" : '<text class="ios-bch-v' + (inside ? " is-in" : "") + '" x="' + cx.toFixed(1) + '" y="' + vy.toFixed(1) + '" text-anchor="middle">' + d.v.toFixed(1) + '</text>') +
-        (rot ? '<text class="ios-bch-n" transform="translate(' + (cx + 4).toFixed(1) + ' ' + (base + 12) + ') rotate(-45)" text-anchor="end">' + esc(d.short) + '</text>'
+        '<path class="ios-bch-bar is-' + d.tone + '" d="' + topRound(x, y, bw, h, 7) + '"/>' +
+        (d.b == null ? "" : '<text class="ios-bch-v" x="' + cx.toFixed(1) + '" y="' + (y - 6).toFixed(1) + '" text-anchor="middle">' + fmtB(d.b) + '</text>') +
+        (rot ? '<text class="ios-bch-n" transform="translate(' + (cx + 3).toFixed(1) + ' ' + (base + 13) + ') rotate(-45)" text-anchor="end">' + esc(d.short) + '</text>'
              : '<text class="ios-bch-n" x="' + cx.toFixed(1) + '" y="' + (base + 18) + '" text-anchor="middle">' + esc(d.short) + '</text>') + '</g>';
-    }).join("");
+    });
     var thr = '<line class="ios-bch-thr" x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(4).toFixed(1) + '" y2="' + Y(4).toFixed(1) + '"/>';
-    var lab = data.filter(function (d) { return d.v != null; }).map(function (d) { return d.name + " " + d.v.toFixed(1); }).join(", ");
-    panel.innerHTML = '<h2>Toutes les moyennes</h2><div class="ios-dgrp"><svg class="ios-bch-svg" viewBox="0 0 ' + W + " " + H + '" role="group" aria-label="Moyenne de chaque branche, de 1 à 6, seuil 4. ' + esc(lab) + '">' + g + thr + bars + '</svg>' +
-      '<p class="ios-bch-leg"><span><i class="ios-bch-k-thr"></i>Seuil 4</span>' + (hasGoal ? '<span><i class="ios-bch-k-goal"></i>Objectif</span>' : "") + '</p></div>';
+    var lab = data.filter(function (d) { return d.b != null; }).map(function (d) { return d.name + " " + fmtB(d.b); }).join(", ");
+    panel.innerHTML = '<h2>Toutes les moyennes</h2><div class="ios-dgrp"><svg class="ios-bch-svg" viewBox="0 0 ' + W + " " + H + '" role="group" aria-label="Moyenne de chaque branche, de 1 à 6, seuil 4. ' + esc(lab) + '">' + g + ghosts + thr + bars + '</svg>' +
+      '<p class="ios-bch-leg"><span><i class="ios-bch-k-thr"></i>Seuil 4</span>' + '</p></div>';
   }
   document.addEventListener("click", function (e) {
     var g = e.target.closest && e.target.closest("#ios-bch [data-subj]");
@@ -166,23 +170,17 @@
     if (g && (e.key === "Enter" || e.key === " ") && A.showSubject) { e.preventDefault(); A.showSubject(g.dataset.subj); }
   });
 
-  /* ---------- Moyennes par branche : barres horizontales ---------- */
+  /* ---------- Données du graphique : le moteur redessine #bars à chaque rendu (v60 : la liste de barres horizontales est retirée) ---------- */
   function bars() {
-    var box = document.getElementById("bars"); if (!box || box.querySelector(".ios-hb")) return;
+    var box = document.getElementById("bars"); if (!box || !box.querySelector("g.bar[data-subj]")) return;
     var subs = {}; (A.subjectsAll ? A.subjectsAll() : []).forEach(function (s) { subs[s.id] = s; });
-    var items = [];
-    var rows = [].map.call(box.querySelectorAll("g.bar[data-subj]"), function (g) {
-      var id = g.dataset.subj, s = subs[id] || {}, texts = g.querySelectorAll("text"), vt = g.querySelector("text.val");
-      var short = texts.length ? texts[texts.length - 1].textContent : id, name = s.name && s.name.length <= 10 ? s.name : short;
-      var v = vt ? parseFloat(vt.textContent) : null, tone = g.classList.contains("crit") ? "crit" : g.classList.contains("warn") ? "warn" : v == null ? "none" : "ok";
-      var w = v == null ? 0 : Math.max(0, (v - 1) / 5 * 100), goal = s.goal ? '<u style="left:' + ((s.goal - 1) / 5 * 100).toFixed(1) + '%"></u>' : "";
-      var t = g.querySelector("title");
-      items.push({ id: id, name: s.name || short, short: short, goal: s.goal ? +s.goal : null });
-      return '<div class="ios-hb is-' + tone + '" data-subj="' + esc(id) + '" role="button" tabindex="0" aria-label="' + esc(t ? t.textContent : name) + '">' +
-        '<span class="ios-hb-n">' + esc(name) + '</span><span class="ios-hb-t"><i style="width:' + w.toFixed(1) + '%"></i>' + goal + '</span><b>' + (vt ? esc(vt.textContent) : "–") + '</b></div>';
-    }).join("");
+    var items = [].map.call(box.querySelectorAll("g.bar[data-subj]"), function (g) {
+      var id = g.dataset.subj, s = subs[id] || {}, texts = g.querySelectorAll("text");
+      var short = texts.length ? texts[texts.length - 1].textContent : id;
+      return { id: id, name: s.name || short, short: short, goal: s.goal ? +s.goal : null };
+    });
     chart(items);
-    box.innerHTML = '<div class="ios-hbs" role="list" aria-label="Note de bulletin de chaque branche, de 1 à 6, seuil 4">' + rows + '</div>';
+    box.innerHTML = "";
   }
 
   /* ---------- Dernières notes : toucher une ligne montre ses actions ---------- */
