@@ -198,12 +198,12 @@
         "Chaque barre montre la <b>note de bulletin</b>, arrondie : <b>vert</b> dès 4.5, <b>orange</b> pour 4, <b>rouge</b> sous 4. Sur téléphone, les barres sont couchées, de 1 à 6, avec le seuil 4 en pointillé.",
         "Sur téléphone, la liste <b>Branches</b> montre pour chaque branche sa <b>note de bulletin</b>, à droite. Tout suit la période choisie en haut. Touche une ligne pour ouvrir le détail."] },
       { t: "Le détail d'une branche", v: "detail", p: [
-        "En haut : ta <b>moyenne exacte</b> et sa variation depuis la première note. Les boutons <b>Année</b>, <b>S1</b> et <b>S2</b> changent la période ; <b>glisse le doigt le long de la courbe</b>, comme dans l'app Bourse : une barre au-dessus de la courbe montre la date et ta moyenne à ce moment-là ; lève le doigt pour la faire disparaître. Dessous, les chiffres clés (bulletin, plus haute et plus basse note, semestres, objectif). Le <b>+</b> en haut à droite ajoute une note dans cette branche.",
-        "Plus bas : les notes de la plus récente à la plus ancienne, chacune avec son effet sur ta moyenne (+0.17, −0.30…). <b>Touche une note</b> pour voir Modifier, Supprimer et ses photos. Un TA se déplie pour montrer ses ETA."] },
+        "En haut : ta <b>moyenne exacte</b> et sa variation depuis la première note. Les boutons <b>Année</b>, <b>S1</b> et <b>S2</b> changent la période ; <b>glisse le doigt le long de la courbe</b>, comme dans l'app Bourse : la courbe est lissée et suit les vraies dates : une barre au-dessus montre la date sous ton doigt et ta moyenne à ce moment-là, au dixième ; lève le doigt pour la faire disparaître. Dessous, une carte de chiffres clés : moyenne exacte, plus haute et plus basse note, ton objectif avec l'écart, et la note à obtenir au prochain test pour passer à 4. Le <b>+</b> en haut à droite ajoute une note dans cette branche.",
+        "Plus bas : les notes de la plus récente à la plus ancienne, chacune avec son effet sur ta moyenne (+0.17, −0.30…). <b>Touche une note</b> pour voir Modifier, Supprimer et ses photos. Les photos s'ouvrent en plein écran : <b>balaie</b> d'une page à l'autre, <b>pince</b> ou touche deux fois pour zoomer, touche une fois pour cacher les boutons, glisse vers le bas pour fermer. Un TA se déplie pour montrer ses ETA."] },
       { t: "Alertes et périodes", v: "watch", p: [
         "<b>À surveiller</b> liste les branches en difficulté (touche une ligne pour ouvrir la branche). Les boutons <b>Année</b>, <b>Semestre 1</b> et <b>Semestre 2</b> filtrent tout le tableau de bord."] },
       { t: "La barre du bas", v: "scrub", p: [
-        "Trois onglets, chacun avec son nom sous l'icône : <b>Accueil</b>, <b>Ajouter</b> et <b>Réglages</b>. Un appui court change d'onglet. Un <b>appui long</b> fait grossir la pastille : glisse-la sans lever le doigt et relâche sur l'onglet voulu.",
+        "Un appui court change d'onglet. Un <b>appui long</b> fait grossir la pastille : glisse-la sans lever le doigt et relâche sur l'onglet voulu.",
         "Si tu relâches le doigt bien au-dessus de la barre, rien ne change. Un <b>balayage rapide</b> sur la barre passe à l'onglet voisin, et toucher l'onglet déjà ouvert revient au début (Réglages revient à sa page principale).",
         "La barre reste toujours en bas, sauf dans le détail d'une branche, où elle s'efface (le chevron ou un glissement depuis le bord gauche te ramène). La <b>loupe</b> à droite cherche une branche : touche-la pour ouvrir son détail, ou <b>+</b> pour y ajouter une note. Un chiffre rouge sur Accueil compte les branches sous 4 et un point rouge sur Réglages signale une synchronisation en erreur."] }
     ] },
@@ -226,7 +226,7 @@
         "Tes notes de l'année sont <b>classées dans « Années précédentes »</b> (rien n'est supprimé), les moyennes repartent de zéro et les dates de semestre avancent d'un an. En passant en 3e, tu choisis ton option complémentaire, et les notes de 2e de chimie, physique et arts sont reprises pour le certificat.",
         "<b>Annuler le dernier passage</b> remet tout comme avant."] },
       { t: "Objectif", v: "settings:goal", p: [
-        "Dans <b>Réglages → Branches</b>, touche une branche, puis règle son <b>Objectif</b> : la moyenne que tu vises.",
+        "Dans <b>Réglages → Branches</b>, touche une branche, puis règle son <b>Objectif</b> : fais glisser le curseur de 1 à 6, ou touche le nombre pour le taper au clavier. <b>Retirer l'objectif</b> l'efface. Sur l'Accueil, un trait noir marque l'objectif sur la barre de chaque branche et sur le graphique <b>Toutes les moyennes</b>.",
         "Le tableau de bord et le détail de la branche affichent alors ton écart, et une alerte apparaît si tu es nettement en dessous."] },
       { t: "Part des TP et périodes", v: "settings:tp", p: [
         "<b>Part des TP (%)</b> : 25 par défaut ; mets la valeur de ton prof, ou 0 pour que les TP comptent comme des notes ordinaires.",
@@ -243,7 +243,7 @@
         "<b>Activer la synchronisation</b> donne un code de 16 caractères. Sur ton autre appareil, touche <b>J'ai déjà un code</b> et tape-le.",
         "Les notes sont chiffrées avec ce code : garde-le précieusement, il ne peut pas être récupéré. Toute personne qui a le code voit et peut modifier les notes."] },
       { t: "Vibrations et dépannage", v: "tips", p: [
-        "La section <b>Préférences</b> de Réglages réunit <b>Apparence</b> (clair, sombre, ou <b>Auto</b> qui suit ton iPhone ; le choix reste sur cet appareil) et <b>Retours haptiques</b> (active ou coupe les vibrations). Si l'app ne semble pas à jour, ferme-la complètement et rouvre-la deux fois.",
+        "<b>Retours haptiques</b> (Réglages, section Données) active ou coupe les vibrations. Si l'app ne semble pas à jour, ferme-la complètement et rouvre-la deux fois.",
         "« Hors connexion » : tes notes restent sur le téléphone et se synchroniseront plus tard. Téléphone couché : l'app demande de le remettre à la verticale."] }
     ] },
     { t: "Avec tes parents", d: "2 min", s: [

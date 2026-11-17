@@ -203,24 +203,12 @@
     ui.addEventListener("click", function (e) {
       var t = e.target;
       if (t.id === "sy-new") { start(newCode(), false); }
-      if (t.id === "sy-join") {
-        window.IOSDialog.prompt({
-          title: "Code de synchronisation", message: "Celui affiché sur ton autre appareil : Réglages → Synchronisation. 16 lettres ou chiffres.",
-          placeholder: "ABCD-EFGH-JKMN-PQRS", autocapitalize: "characters", maxlength: 24, ok: "Relier cet appareil",
-          validate: function (v) { return v.replace(/[^A-Za-z0-9]/g, "").length === 16 ? "" : "Il faut 16 lettres ou chiffres."; }
-        }).then(function (c) { if (c != null) join(c); });
-      }
+      if (t.id === "sy-join") { var c = window.prompt("Code de synchronisation (16 caractères)"); if (c != null) join(c); }
       if (t.id === "sy-copy") { if (navigator.clipboard) navigator.clipboard.writeText(meta.code).then(function () { t.textContent = "Copié"; }); }
       if (t.id === "sy-now") cycle();
-      if (t.id === "sy-off") {
-        window.IOSDialog.confirm({
-          title: "Arrêter la synchronisation ?", ok: "Arrêter", danger: true,
-          message: "Tes notes restent ici et en ligne ; tu pourras reprendre avec le même code."
-        }).then(function (go) {
-          if (!go) return;
-          var bye = window.Notify ? Notify.stop() : Promise.resolve();
-          bye.then(function () { meta = {}; store(); cryptoKey = null; vaultId = null; paint(); });
-        });
+      if (t.id === "sy-off" && window.confirm("Arrêter la synchronisation sur cet appareil ? Tes notes restent ici et en ligne ; tu pourras reprendre avec le même code.")) {
+        var bye = window.Notify ? Notify.stop() : Promise.resolve();
+        bye.then(function () { meta = {}; store(); cryptoKey = null; vaultId = null; paint(); });
       }
     });
     paint();

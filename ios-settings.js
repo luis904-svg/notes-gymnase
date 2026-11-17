@@ -40,14 +40,6 @@
   function grp(rows, head, foot) {
     return (head ? '<p class="ios-grp-head">' + esc(head) + '</p>' : "") + '<div class="ios-grp">' + rows.join("") + '</div>' + (foot ? '<p class="ios-grp-foot">' + esc(foot) + '</p>' : "");
   }
-  /* Apparence (v63, lot 8) : Auto suit le réglage de l'iPhone ; Clair et Sombre le forcent sur cet appareil (NotesTheme, script de l'en-tête). */
-  function preferencesGrp(hapRow) {
-    var cur = window.NotesTheme ? NotesTheme.get() : "auto";
-    var seg = '<div class="ios-approw"><span class="ios-row-l">Apparence</span><div class="ios-appseg" role="group" aria-label="Apparence">' + [["auto", "Auto"], ["light", "Clair"], ["dark", "Sombre"]].map(function (o) {
-      return '<button type="button" data-theme-set="' + o[0] + '" aria-pressed="' + (cur === o[0]) + '">' + o[1] + '</button>';
-    }).join("") + '</div></div>';
-    return grp([seg, hapRow], "Préférences", "Apparence : Auto suit le réglage de ton iPhone (Réglages > Affichage et luminosité). Ce choix reste sur cet appareil. Synchronisation et Sauvegarde sont dans les deux tuiles du haut.");
-  }
   function cfg() { return app().get().cfg; }
   function subjects() { return app().subjectsAll().filter(function (s) { return !s.carried; }); }
   function subOf(id) { return subjects().filter(function (s) { return s.id === id; })[0]; }
@@ -162,7 +154,7 @@
         return '<h1 class="ios-large">Réglages</h1>' + prof + tiles +
           grp([row({ ic: "green", svg: "list", label: "Branches et objectifs", val: String(subjects().length), act: "go:branches" }),
                row({ ic: "orange", svg: "calendar", label: "Fin du semestre 1", val: dateShort(c.s1End), act: "go:semestre" })], "Branches") +
-          preferencesGrp(hapRow) +
+          grp([row({ ic: "blue", svg: "sync", label: "Synchronisation", act: "go:sync" }), row({ ic: "gray", svg: "save", label: "Sauvegarde", act: "go:backup" }), hapRow], "Données") +
           (an.length ? grp(an, "Année scolaire") : "") +
           grp([row({ ic: "orange", svg: "book", label: "Guide d'utilisation", act: "click:gd-open" }),
                row({ ic: "gray", svg: "calc", label: "Calcul des moyennes", act: "go:rules" }),
@@ -243,12 +235,16 @@
         }
         var rows = [
           num("Périodes", "periods", s.periods, 'inputmode="numeric" min="1" max="10" step="1"', "blue", "clock"),
-          num("Objectif", "goal", s.goal || "", 'inputmode="decimal" min="1" max="6" step="0.5"', "orange", "target"),
           num("Part des TP (%)", "tp", Math.round((s.tpShare || 0) * 100), 'inputmode="numeric" min="0" max="100" step="5"', "green", "flask")
         ];
         var promo = s.part ? '<div class="ios-grp"><div class="ios-row has-ic">' + icon("gray", "check") + '<span class="ios-row-l">Compte pour la promotion</span><span class="ios-val">via l\'option spécifique</span></div></div>'
           : '<div class="ios-grp"><label class="ios-row has-ic">' + icon("gray", "check") + '<span class="ios-row-l">Compte pour la promotion</span><input type="checkbox" switch data-k="counts" data-id="' + esc(s.id) + '"' + (s.counts ? " checked" : "") + ' aria-label="Compte pour la promotion"></label></div>';
-        return grp(rows, null, s.verify ? "À vérifier avec ton horaire : modifie une valeur pour confirmer." : "") + promo;
+        var g = s.goal ? +s.goal : null;
+        var goal = '<div class="ios-grp ios-goal" data-goal-id="' + esc(s.id) + '"><div class="ios-row has-ic">' + icon("orange", "target") + '<span class="ios-row-l">Objectif</span>' +
+          '<button type="button" class="ios-goal-val" data-goal-edit aria-label="Objectif, modifier au clavier">' + (g ? fmtNum(g) : "–") + '</button></div>' +
+          '<div class="ios-goal-sl"><span aria-hidden="true">1</span><input type="range" class="ios-range" min="1" max="6" step="0.1" value="' + (g || 4) + '" style="--ios-fillp:' + (((g || 4) - 1) / 5 * 100).toFixed(1) + '%" data-goal-range aria-label="Objectif de ' + esc(s.name) + '"><span aria-hidden="true">6</span></div>' +
+          (g ? '<button type="button" class="ios-row ios-goal-clear" data-act="goalclear:' + esc(s.id) + '"><span class="ios-row-l">Retirer l\'objectif</span></button>' : "") + '</div>';
+        return grp(rows.slice(0, 1), null, "") + goal + grp(rows.slice(1), null, s.verify ? "À vérifier avec ton horaire : modifie une valeur pour confirmer." : "") + promo;
       }
     },
     semestre: {
@@ -350,12 +346,6 @@
 
   /* ---------- Interactions ---------- */
   container.addEventListener("click", function (ev) {
-    var th = ev.target.closest("[data-theme-set]");
-    if (th && window.NotesTheme) {
-      NotesTheme.set(th.dataset.themeSet);
-      Array.prototype.forEach.call(container.querySelectorAll("[data-theme-set]"), function (x) { x.setAttribute("aria-pressed", String(x.dataset.themeSet === NotesTheme.get())); });
-      return;
-    }
     var b = ev.target.closest("[data-act]"); if (!b) return;
     var a = b.dataset.act.split(":"), kind = a[0];
     if (kind === "go") push(a[1], a[2]);
@@ -364,6 +354,7 @@
       // Un bouton d'origine peut changer l'état tout de suite (ex. « Annuler le dernier passage ») : la page est refaite si aucune fenêtre n'est ouverte.
       if (!document.body.classList.contains("ob-open") && !document.body.classList.contains("gd-open")) show(window.scrollY);
     }
+    else if (kind === "goalclear") { app().setSubj(a[1], "goal", null); hap("tap"); show(window.scrollY); }
     else if (kind === "pick") pick(a[1], a[2]);
     else if (kind === "retire") {
       var q = pending; pending = null;
@@ -376,6 +367,45 @@
     else if (kind === "step") { if (window.Onboard) Onboard.open(true, a[1]); }
     else if (kind === "cal") { cal.m += a[1] === "next" ? 1 : -1; if (cal.m > 11) { cal.m = 0; cal.y++; } if (cal.m < 0) { cal.m = 11; cal.y--; } show(window.scrollY); }
     else if (kind === "day") { app().setS1End(a[1]); show(window.scrollY); }
+  });
+  /* Objectif : slider de 1 à 6 (pas 0,1) ; toucher la valeur ouvre le clavier numérique, ancienne valeur sélectionnée
+     (la première touche l'efface). Le réglage est enregistré au relâchement ou à la validation, jamais pendant le glissement. */
+  function clampGoal(v) { return Math.min(6, Math.max(1, Math.round(v * 100) / 100)); }
+  function goalBox(el) { return el.closest(".ios-goal"); }
+  function goalShow(box, g) {
+    var v = box.querySelector(".ios-goal-val"); if (v) v.textContent = g == null ? "–" : fmtNum(g);
+    var r = box.querySelector(".ios-range"); if (r && g != null) { r.value = g; r.style.setProperty("--ios-fillp", ((g - 1) / 5 * 100).toFixed(1) + "%"); }
+  }
+  function goalSave(box, g) { app().setSubj(box.dataset.goalId, "goal", g); goalShow(box, g); }
+  function goalEdit(box) {
+    var b = box.querySelector(".ios-goal-val"); if (!b || b.tagName === "INPUT") return;
+    var cur = subOf(box.dataset.goalId), inp = document.createElement("input");
+    inp.type = "text"; inp.className = "ios-goal-val ios-goal-in"; inp.inputMode = "decimal"; inp.setAttribute("enterkeyhint", "done");
+    inp.autocomplete = "off"; inp.setAttribute("aria-label", "Objectif"); inp.value = cur && cur.goal ? String(cur.goal) : "";
+    b.replaceWith(inp); inp.focus(); inp.select();
+    var done = false;
+    function finish(ok) {
+      if (done) return; done = true;
+      var raw = inp.value.trim().replace(",", "."), n = parseFloat(raw), back = document.createElement("button");
+      back.type = "button"; back.className = "ios-goal-val"; back.setAttribute("data-goal-edit", ""); back.setAttribute("aria-label", "Objectif, modifier au clavier");
+      if (inp.parentNode) inp.replaceWith(back);
+      if (ok && raw === "") { goalSave(box, null); hap("tap"); show(window.scrollY); }
+      else if (ok && isFinite(n)) { goalSave(box, clampGoal(n)); hap("tap"); show(window.scrollY); }
+      else { var c = subOf(box.dataset.goalId); goalShow(box, c && c.goal ? +c.goal : null); }
+    }
+    inp.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); inp.blur(); } else if (e.key === "Escape") { done = false; finish(false); } });
+    inp.addEventListener("blur", function () { finish(true); });
+  }
+  container.addEventListener("click", function (ev) { var b = ev.target.closest && ev.target.closest("[data-goal-edit]"); if (b) goalEdit(goalBox(b)); });
+  container.addEventListener("input", function (ev) {
+    var t = ev.target; if (!t.matches || !t.matches("[data-goal-range]")) return;
+    var box = goalBox(t), g = clampGoal(parseFloat(t.value)), last = box._tick;
+    goalShow(box, g);
+    if (last !== g.toFixed(1)) { box._tick = g.toFixed(1); hap("tap"); }
+  });
+  container.addEventListener("change", function (ev) {
+    var t = ev.target; if (!t.matches || !t.matches("[data-goal-range]")) return;
+    var box = goalBox(t); goalSave(box, clampGoal(parseFloat(t.value))); show(window.scrollY);
   });
   container.addEventListener("change", function (ev) {
     var t = ev.target;
@@ -418,8 +448,13 @@
   // État de la synchronisation changé : la tuile de la page principale suit.
   document.addEventListener("sync:status", function () { if (active && settingsVisible() && top().id === "main") show(window.scrollY); });
   // Après l'assistant de profil, le passage d'année, etc. : les valeurs affichées sont rafraîchies.
+  // Seule la fermeture d'une fenêtre (assistant, guide) refait la page : un autre changement de classe, comme body.ios-kb à
+  // l'ouverture du clavier, la refaisait aussi et faisait perdre le champ en cours de saisie (objectifs impossibles à modifier).
+  var wasModal = document.body.classList.contains("ob-open") || document.body.classList.contains("gd-open");
   new MutationObserver(function () {
-    if (active && settingsVisible() && !document.body.classList.contains("ob-open") && !document.body.classList.contains("gd-open")) show(window.scrollY);
+    var cl = document.body.classList, modal = cl.contains("ob-open") || cl.contains("gd-open");
+    var closed = wasModal && !modal; wasModal = modal;
+    if (closed && active && settingsVisible()) show(window.scrollY);
   }).observe(document.body, { attributes: true, attributeFilter: ["class"] });
 
   // Les autres modules montent leurs blocs dans #set-block pendant le chargement : on démarre une fois la page chargée.

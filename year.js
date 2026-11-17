@@ -94,22 +94,17 @@
       }).join("") +
       '<button type="button" class="link danger" id="yp-undo-h" style="padding-left:0;margin-top:18px">Annuler le dernier passage…</button>' +
       '<p class="ob-fine">Remet les notes de ' + esc(arch[0].label) + ' dans le tableau de bord et revient en ' + ORD[arch[0].year] + ' année.</p></div>',
-      function (e) { if (e.target.closest("#yp-undo-h")) undo().then(function (ok) { if (ok) close(); }); });
+      function (e) { if (e.target.closest("#yp-undo-h") && undo()) close(); });
   }
 
   /* ---------- Annuler le dernier passage ---------- */
   function undo() {
-    var arch = app().archive(); if (!arch.length) return Promise.resolve(false);
+    var arch = app().archive(); if (!arch.length) return;
     var e = arch[arch.length - 1], n = app().grades().length;
-    return window.IOSDialog.confirm({
-      title: "Revenir à la " + ORD[e.year] + " année ?", ok: "Revenir", danger: !!n,
-      message: "Tes notes de " + e.label + " reviennent dans le tableau de bord." +
-        (n ? (n > 1 ? " Les " + n + " notes saisies depuis le passage seront supprimées." : " La note saisie depuis le passage sera supprimée.") : "")
-    }).then(function (go) {
-      if (!go) return false;
-      app().undoPass(); hap("heavy");
-      return true;
-    });
+    if (!window.confirm("Revenir à la " + ORD[e.year] + " année (" + e.label + ") ? Tes notes de " + e.label + " reviennent dans le tableau de bord." +
+      (n ? (n > 1 ? " Les " + n + " notes saisies depuis le passage seront supprimées." : " La note saisie depuis le passage sera supprimée.") : ""))) return;
+    app().undoPass(); hap("heavy");
+    return true;
   }
 
   /* ---------- Bloc dans Réglages ---------- */

@@ -141,13 +141,20 @@
 
   /* ---------- Visionneuse plein écran ---------- */
   var view = null, vNote = null, vUrls = [];
+  var themeMeta = document.querySelector('meta[name="theme-color"]'), themeWas = null;
+  function theme(on) { if (!themeMeta) return; if (on) { themeWas = themeMeta.content; themeMeta.content = "#000000"; } else if (themeWas != null) { themeMeta.content = themeWas; themeWas = null; } }
   function closeView() {
     if (!view) return;
+    theme(false); document.removeEventListener("keydown", onKey);
     view.remove(); view = null; vNote = null; vUrls.forEach(function (u) { URL.revokeObjectURL(u); }); vUrls = [];
     document.removeEventListener("keydown", onKey);
     if (window.NotesApp) NotesApp.redraw();
   }
-  function onKey(e) { if (e.key === "Escape") closeView(); }
+  function onKey(e) {
+    if (e.key === "Escape") closeView();
+    var t = view && $(".ios-ph-track", view);
+    if (t && (e.key === "ArrowLeft" || e.key === "ArrowRight")) t.scrollBy({ left: (e.key === "ArrowRight" ? 1 : -1) * t.clientWidth, behavior: "smooth" });
+  }
   function curIndex() { var t = $(".ios-ph-track", view); return t && t.clientWidth ? Math.round(t.scrollLeft / t.clientWidth) : 0; }
   function setCount() { var n = view.querySelectorAll(".ios-ph-page").length; $(".ios-ph-count", view).textContent = n ? (curIndex() + 1) + " / " + n : ""; }
   function drawView(goTo) {
@@ -156,20 +163,111 @@
       if (!l.length) { closeView(); return; }
       vUrls.forEach(function (u) { URL.revokeObjectURL(u); }); vUrls = [];
       var t = $(".ios-ph-track", view);
-      t.innerHTML = l.map(function (p, k) { var u = URL.createObjectURL(p.blob); vUrls.push(u); return '<div class="ios-ph-page" data-id="' + p.id + '"><img src="' + u + '" alt="Page ' + (k + 1) + ' sur ' + l.length + '"></div>'; }).join("");
+      t.innerHTML = l.map(function (p, k) { var u = URL.createObjectURL(p.blob); vUrls.push(u); return '<div class="ios-ph-page" data-id="' + p.id + '"><img src="' + u + '" draggable="false" alt="Page ' + (k + 1) + ' sur ' + l.length + '"></div>'; }).join("");
       var i = Math.min(l.length - 1, Math.max(0, goTo == null ? 0 : goTo));
       t.scrollLeft = i * t.clientWidth; setCount();
     });
   }
+  /* Gestes de la visionneuse (v60) : balayage horizontal entre les pages (défilement natif accroché), pincement et double
+     toucher pour zoomer, glissement d'un doigt pour déplacer une page zoomée, glissement vers le bas pour fermer (le fond
+     s'éclaircit pendant le geste), un toucher montre ou cache les commandes. Page zoomée : touch-action none (pas de
+     défilement entre pages tant qu'elle est zoomée ; double toucher pour revenir). */
+  var ZMAX = 5, ZTAP = 2.5, DISMISS = 110;
+  function gestures(v) {
+    var track = $(".ios-ph-track", v), P = {}, g = null, tapT = 0, tapX = 0, tapY = 0, chromeTimer = 0;
+    function zOf(pg) { return pg._z || (pg._z = { s: 1, x: 0, y: 0 }); }
+    function clampZ(pg) {
+      var z = zOf(pg), img = pg.firstChild, mx = Math.max(0, (img.clientWidth * z.s - pg.clientWidth) / 2), my = Math.max(0, (img.clientHeight * z.s - pg.clientHeight) / 2);
+      z.x = Math.max(-mx, Math.min(mx, z.x)); z.y = Math.max(-my, Math.min(my, z.y));
+    }
+    function paintZ(pg, anim) {
+      var z = zOf(pg), img = pg.firstChild;
+      img.classList.toggle("is-anim", !!anim);
+      img.style.transform = z.s === 1 && !z.x && !z.y ? "" : "translate3d(" + z.x.toFixed(1) + "px," + z.y.toFixed(1) + "px,0) scale(" + z.s.toFixed(3) + ")";
+      pg.classList.toggle("is-zoomed", z.s > 1.01);
+    }
+    function zoomAt(pg, s, px, py, base) {   // garde le point (px, py) de l'écran sous le doigt
+      var r = pg.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, z = zOf(pg);
+      var ux = (px - cx - base.x) / base.s, uy = (py - cy - base.y) / base.s;
+      z.s = Math.max(1, Math.min(ZMAX, s)); z.x = px - cx - ux * z.s; z.y = py - cy - uy * z.s; clampZ(pg);
+    }
+    function pageOf(e) { return e.target.closest && e.target.closest(".ios-ph-page"); }
+    function drag(dy) {   // fermeture par glissement : la page suit le doigt, le fond s'éclaircit
+      var a = Math.max(0, 1 - Math.abs(dy) / (window.innerHeight * 0.6));
+      track.style.transform = "translate3d(0," + dy.toFixed(1) + "px,0) scale(" + (1 - Math.min(0.15, Math.abs(dy) / 1500)).toFixed(3) + ")";
+      v.style.setProperty("--ios-ph-a", a.toFixed(3)); v.classList.add("is-dragging");
+    }
+    function settle(close) {
+      v.classList.remove("is-dragging"); v.classList.add("is-settling");
+      if (close) { track.style.transform = "translate3d(0,100%,0)"; v.style.setProperty("--ios-ph-a", 0); setTimeout(closeView, 180); return; }
+      track.style.transform = ""; v.style.removeProperty("--ios-ph-a"); setTimeout(function () { v.classList.remove("is-settling"); }, 220);
+    }
+    track.addEventListener("pointerdown", function (e) {
+      var pg = pageOf(e); if (!pg || (e.pointerType === "mouse" && e.button !== 0)) return;
+      P[e.pointerId] = { x: e.clientX, y: e.clientY };
+      var ids = Object.keys(P), z = zOf(pg);
+      if (ids.length === 2) {
+        var a = P[ids[0]], b = P[ids[1]];
+        g = { mode: "pinch", pg: pg, d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, mx: (a.x + b.x) / 2, my: (a.y + b.y) / 2, base: { s: z.s, x: z.x, y: z.y } };
+      } else if (ids.length === 1) {
+        g = { mode: "one", pg: pg, x0: e.clientX, y0: e.clientY, t0: e.timeStamp, base: { s: z.s, x: z.x, y: z.y }, moved: false };
+      }
+      try { track.setPointerCapture(e.pointerId); } catch (x) {}
+    });
+    track.addEventListener("pointermove", function (e) {
+      if (!P[e.pointerId] || !g) return;
+      P[e.pointerId] = { x: e.clientX, y: e.clientY };
+      if (g.mode === "pinch") {
+        var ids = Object.keys(P); if (ids.length < 2) return;
+        var a = P[ids[0]], b = P[ids[1]], d = Math.hypot(a.x - b.x, a.y - b.y), mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+        zoomAt(g.pg, g.base.s * d / g.d0, g.mx, g.my, g.base);
+        var z = zOf(g.pg); z.x += mx - g.mx; z.y += my - g.my; clampZ(g.pg); paintZ(g.pg, false);
+        return;
+      }
+      var dx = e.clientX - g.x0, dy = e.clientY - g.y0, z1 = zOf(g.pg);
+      if (Math.abs(dx) + Math.abs(dy) > 10) g.moved = true;
+      if (z1.s > 1.01) { z1.x = g.base.x + dx; z1.y = g.base.y + dy; clampZ(g.pg); paintZ(g.pg, false); return; }
+      if (g.drag || (Math.abs(dy) > 10 && Math.abs(dy) > Math.abs(dx) * 1.2)) { g.drag = true; drag(dy); e.preventDefault(); }
+    });
+    function up(e) {
+      if (!P[e.pointerId]) return;
+      delete P[e.pointerId];
+      var pg = g && g.pg, was = g; if (!was) return;
+      if (was.mode === "pinch") {
+        var z = zOf(pg); if (z.s < 1.05) { z.s = 1; z.x = 0; z.y = 0; paintZ(pg, true); }
+        g = null; P = {}; return;
+      }
+      g = null;
+      if (was.drag) { var dy = e.clientY - was.y0, vy = dy / Math.max(1, e.timeStamp - was.t0); settle(e.type === "pointerup" && (Math.abs(dy) > DISMISS || (Math.abs(vy) > 0.6 && Math.abs(dy) > 40))); return; }
+      if (e.type !== "pointerup" || was.moved || e.timeStamp - was.t0 > 350) return;
+      // Toucher : double = zoom (ou retour), simple = commandes cachées / montrées
+      if (tapT && e.timeStamp - tapT < 300 && Math.hypot(e.clientX - tapX, e.clientY - tapY) < 40) {
+        tapT = 0; clearTimeout(chromeTimer);
+        var z2 = zOf(pg);
+        if (z2.s > 1.01) { z2.s = 1; z2.x = 0; z2.y = 0; } else zoomAt(pg, ZTAP, e.clientX, e.clientY, { s: 1, x: 0, y: 0 });
+        paintZ(pg, true); hap("tap");
+      } else {
+        tapT = e.timeStamp; tapX = e.clientX; tapY = e.clientY;
+        chromeTimer = setTimeout(function () { if (view === v) v.classList.toggle("is-bare"); tapT = 0; }, 300);
+      }
+    }
+    track.addEventListener("pointerup", up);
+    track.addEventListener("pointercancel", up);
+  }
+
   function openView(note) {
     if (view || !counts[note]) return;
     vNote = note;
     view = document.createElement("div"); view.className = "ios-ph-view"; view.setAttribute("role", "dialog"); view.setAttribute("aria-label", "Photos du test");
-    view.innerHTML = '<div class="ios-ph-bar"><button type="button" class="link" data-ph="close">Fermer</button><span class="ios-ph-count" aria-live="polite"></span>' +
-      '<span class="ios-ph-acts"><button type="button" class="link" data-ph="add">Ajouter</button><button type="button" class="link danger" data-ph="del">Supprimer</button></span></div>' +
-      '<div class="ios-ph-track"></div><p class="ios-ph-msg" role="alert"></p>';
+    var I = window.Icons ? Icons.svg : function () { return ""; };
+    view.innerHTML = '<div class="ios-ph-track"></div>' +
+      '<div class="ios-ph-bar"><button type="button" class="ios-ph-rb" data-ph="close" aria-label="Fermer">' + I("times") + '</button><span class="ios-ph-count" aria-live="polite"></span>' +
+      '<span class="ios-ph-acts"><button type="button" class="ios-ph-rb" data-ph="add" aria-label="Ajouter une page">' + I("add") + '</button><button type="button" class="ios-ph-rb is-danger" data-ph="del" aria-label="Supprimer cette page">' + I("trash") + '</button></span></div>' +
+      '<p class="ios-ph-msg" role="alert"></p>';
+    theme(true);
     document.body.appendChild(view);
     $(".ios-ph-track", view).addEventListener("scroll", setCount, { passive: true });
+    gestures(view);
     view.addEventListener("click", function (e) {
       var b = e.target.closest("[data-ph]"); if (!b) return;
       var m = $(".ios-ph-msg", view); m.textContent = "";
@@ -183,10 +281,8 @@
       if (b.dataset.ph === "del") {
         var i = curIndex(), p = view.querySelectorAll(".ios-ph-page")[i]; if (!p) return;
         hap("warn");
-        window.IOSDialog.confirm({ title: "Supprimer cette page ?", message: "Elle ne pourra pas être récupérée.", ok: "Supprimer", danger: true }).then(function (go) {
-          if (!go) return;
-          delPage(+p.dataset.id, vNote).then(function () { hap("heavy"); return drawView(i); });
-        });
+        if (!window.confirm("Supprimer cette page ? Elle ne pourra pas être récupérée.")) return;
+        delPage(+p.dataset.id, vNote).then(function () { hap("heavy"); return drawView(i); });
       }
     });
     document.addEventListener("keydown", onKey);
@@ -211,7 +307,7 @@
       var n = counts[PENDING]; delete counts[PENDING]; counts[note] = (counts[note] || 0) + n;
       tx("readwrite", function (s) {
         s.index("note").openCursor(IDBKeyRange.only(PENDING)).onsuccess = function (e) { var c = e.target.result; if (c) { var v = c.value; v.note = note; c.update(v); c.continue(); } };
-      }).then(null, function () { counts[note] = Math.max(0, counts[note] - n); window.IOSDialog.alert({ title: "Espace insuffisant", message: FULL, ok: "Compris" }); }).then(function () { if (window.NotesApp) NotesApp.redraw(); });
+      }).then(null, function () { counts[note] = Math.max(0, counts[note] - n); window.alert(FULL); }).then(function () { if (window.NotesApp) NotesApp.redraw(); });
     },
     drop: drop,
     open: openView

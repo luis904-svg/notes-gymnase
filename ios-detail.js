@@ -73,30 +73,70 @@
      quand elle change). Le grand chiffre en haut ne bouge pas. Doigt levé : la barre disparaît, les boutons reviennent.
      touch-action: pan-y (ios.css) laisse défiler la page à la verticale ; le navigateur annule alors le geste
      (pointercancel). Clavier : flèches gauche / droite de note en note, Échap pour revenir. */
-  var CW = 358, CH = 220, CL = 4, CR = 40, CT = 10, CB = 30;
+  var CW = 358, CH = 176, CL = 4, CR = 40, CT = 10, CB = 30;   // CH 176 ≈ 153 px à l'écran (piste A du canvas, v60)
   var FULLM = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
   function fmtLong(iso) { return parseInt(iso.slice(8, 10), 10) + " " + FULLM[parseInt(iso.slice(5, 7), 10) - 1] + " " + iso.slice(0, 4); }
-  function chartX(i, n) { return n === 1 ? (CL + CW - CR) / 2 : CL + 12 + i * (CW - CL - CR - 24) / (n - 1); }
+  /* v60 : la courbe est la vraie moyenne dans le temps. Axe horizontal proportionnel aux dates ; entre deux notes, la valeur
+     glisse en continu par une interpolation cubique monotone (Fritsch-Carlson : jamais de dépassement ni de creux inventé
+     entre deux moyennes). La courbe dessinée et le point qu'on déplace utilisent la même formule, donc le point reste
+     toujours sur la ligne. Plusieurs notes le même jour : on garde la moyenne après la dernière. */
+  function dayNum(iso) { var q = iso.split("-"); return Date.UTC(+q[0], +q[1] - 1, +q[2]) / 864e5; }
+  function dayIso(d) { return new Date(Math.round(d) * 864e5).toISOString().slice(0, 10); }
+  function prep(pts) {
+    var cp = [];
+    pts.forEach(function (p) {
+      var d = dayNum(p.date), o = { d: d, avg: p.avg, date: p.date, m: 0 };
+      if (cp.length && cp[cp.length - 1].d === d) cp[cp.length - 1] = o; else cp.push(o);
+    });
+    var n = cp.length, dk = [], i;
+    if (n < 2) return cp;
+    for (i = 0; i < n - 1; i++) dk[i] = (cp[i + 1].avg - cp[i].avg) / (cp[i + 1].d - cp[i].d);
+    cp[0].m = dk[0]; cp[n - 1].m = dk[n - 2];
+    for (i = 1; i < n - 1; i++) cp[i].m = dk[i - 1] * dk[i] <= 0 ? 0 : (dk[i - 1] + dk[i]) / 2;
+    for (i = 0; i < n - 1; i++) {
+      if (dk[i] === 0) { cp[i].m = 0; cp[i + 1].m = 0; continue; }
+      var al = cp[i].m / dk[i], be = cp[i + 1].m / dk[i], r = al * al + be * be;
+      if (r > 9) { var t = 3 / Math.sqrt(r); cp[i].m = t * al * dk[i]; cp[i + 1].m = t * be * dk[i]; }
+    }
+    return cp;
+  }
+  function valAt(cp, d) {
+    var n = cp.length; if (n === 1 || d <= cp[0].d) return cp[0].avg; if (d >= cp[n - 1].d) return cp[n - 1].avg;
+    var i = 0; while (i < n - 2 && d > cp[i + 1].d) i++;
+    var h = cp[i + 1].d - cp[i].d, t = (d - cp[i].d) / h, t2 = t * t, t3 = t2 * t;
+    return (2 * t3 - 3 * t2 + 1) * cp[i].avg + (t3 - 2 * t2 + t) * h * cp[i].m + (3 * t2 - 2 * t3) * cp[i + 1].avg + (t3 - t2) * h * cp[i + 1].m;
+  }
+  var PX0 = CL + 12, PX1 = CW - CR - 12;
+  function chartX(d) { var cp = cur.cp, n = cp.length; return n < 2 ? (CL + CW - CR) / 2 : PX0 + (d - cp[0].d) / (cp[n - 1].d - cp[0].d) * (PX1 - PX0); }
+  function dayAt(x) { var cp = cur.cp, n = cp.length; return n < 2 ? cp[0].d : cp[0].d + (x - PX0) / (PX1 - PX0) * (cp[n - 1].d - cp[0].d); }
+  function curvePath(Y) {   // courbes de Bézier exactes de l'interpolation cubique (points de contrôle à un tiers)
+    var cp = cur.cp, d = "M" + chartX(cp[0].d).toFixed(1) + "," + Y(cp[0].avg).toFixed(1);
+    for (var i = 0; i < cp.length - 1; i++) {
+      var a = cp[i], b = cp[i + 1], h = (b.d - a.d) / 3;
+      d += " C" + chartX(a.d + h).toFixed(1) + "," + Y(a.avg + a.m * h).toFixed(1) + " " + chartX(b.d - h).toFixed(1) + "," + Y(b.avg - b.m * h).toFixed(1) + " " + chartX(b.d).toFixed(1) + "," + Y(b.avg).toFixed(1);
+    }
+    return d;
+  }
   function chartHtml(pts, up) {
-    var n = pts.length, last = n - 1;
+    var cp = cur.cp = prep(pts), n = cp.length, last = n - 1;
     var lo = Math.max(1, Math.min(3, Math.floor(Math.min.apply(null, pts.map(function (p) { return p.avg; }))))), hi = 6;
     function Y(v) { return CT + (hi - v) / (hi - lo) * (CH - CT - CB); }
     cur.Y = Y;
     var g = "", v;
     for (v = lo; v <= hi; v++) g += '<line class="' + (v === 4 ? "ios-echart-thr" : "ios-echart-grid") + '" x1="0" x2="' + (CW - CR + 4) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '"/>' +
       '<text class="ios-echart-y" x="' + CW + '" y="' + (Y(v) + 4).toFixed(1) + '" text-anchor="end">' + v + (v === 4 ? " · seuil" : "") + '</text>';
-    var line = pts.map(function (p, i) { return chartX(i, n).toFixed(1) + "," + Y(p.avg).toFixed(1); }).join(" ");
-    var area = n > 1 ? '<polygon class="ios-echart-area' + (up ? "" : " is-down") + '" points="' + line + " " + chartX(last, n).toFixed(1) + "," + (CH - CB) + " " + chartX(0, n).toFixed(1) + "," + (CH - CB) + '"/>' : "";
+    var path = n > 1 ? curvePath(Y) : "";
+    var area = n > 1 ? '<path class="ios-echart-area' + (up ? "" : " is-down") + '" d="' + path + " L" + chartX(cp[last].d).toFixed(1) + "," + (CH - CB) + " L" + chartX(cp[0].d).toFixed(1) + "," + (CH - CB) + ' Z"/>' : "";
     var svg = '<svg class="ios-echart-svg" viewBox="0 0 ' + CW + " " + CH + '" aria-hidden="true">' + g + area +
-      (n > 1 ? '<polyline class="ios-echart-line' + (up ? "" : " is-down") + '" points="' + line + '"/>' : "") +
+      (n > 1 ? '<path class="ios-echart-line' + (up ? "" : " is-down") + '" d="' + path + '"/>' : "") +
       '<line class="ios-echart-cross" x1="0" x2="0" y1="0" y2="' + (CH - CB) + '"/>' +
-      '<text class="ios-echart-x" x="' + chartX(0, n).toFixed(1) + '" y="' + (CH - 8) + '" text-anchor="' + (n > 1 ? "start" : "middle") + '">' + fmtDay(pts[0].date) + '</text>' +
-      (n > 1 ? '<text class="ios-echart-x" x="' + chartX(last, n).toFixed(1) + '" y="' + (CH - 8) + '" text-anchor="end">' + fmtDay(pts[last].date) + '</text>' : "") + '</svg>';
-    var dots = pts.map(function (p, i) {
-      return '<i class="ios-echart-dot" style="left:' + (chartX(i, n) / CW * 100).toFixed(2) + '%;top:' + (Y(p.avg) / CH * 100).toFixed(2) + '%"></i>';
+      '<circle class="ios-echart-knob' + (up ? "" : " is-down") + '" r="7" cx="0" cy="0"/>' +
+      '<text class="ios-echart-x" x="' + chartX(cp[0].d).toFixed(1) + '" y="' + (CH - 8) + '" text-anchor="' + (n > 1 ? "start" : "middle") + '">' + fmtDay(cp[0].date) + '</text>' +
+      (n > 1 ? '<text class="ios-echart-x" x="' + chartX(cp[last].d).toFixed(1) + '" y="' + (CH - 8) + '" text-anchor="end">' + fmtDay(cp[last].date) + '</text>' : "") + '</svg>';
+    var dots = cp.map(function (p) {
+      return '<i class="ios-echart-dot" style="left:' + (chartX(p.d) / CW * 100).toFixed(2) + '%;top:' + (Y(p.avg) / CH * 100).toFixed(2) + '%"></i>';
     }).join("");
-    return '<div class="ios-echart" tabindex="0" role="slider" aria-label="Courbe de la moyenne : glisse le doigt le long de la ligne" aria-valuemin="1" aria-valuemax="6">' + svg + dots +
-      '<i class="ios-echart-knob' + (up ? "" : " is-down") + '"></i></div>';
+    return '<div class="ios-echart" tabindex="0" role="slider" aria-label="Courbe de la moyenne : glisse le doigt le long de la ligne" aria-valuemin="1" aria-valuemax="6">' + svg + dots + '</div>';
   }
 
   // Panneau : dessiné une fois par période ; le geste ne change que la barre, la ligne verticale et le point.
@@ -119,100 +159,94 @@
     var vals = notes.map(function (g) { return g.value; });
     var hiV = vals.length ? Math.max.apply(null, vals) : null, loV = vals.length ? Math.min.apply(null, vals) : null;
     var goal = c.s && c.s.goal ? +c.s.goal : null, yearAvg = A.annualAvg(c.id);
-    var stats = [
-      ["Bulletin", String(roundHalf(last)), toneV(roundHalf(last))],
-      ["Notes", String(notes.length), ""],
-      ["Plus haute", hiV == null ? "–" : fmtN(hiV), ""],
-      ["Plus basse", loV == null ? "–" : fmtN(loV), loV != null && loV < 4 ? "crit" : ""]
-    ];
-    c.sem.forEach(function (t) { stats.push([t.k, t.v, ""]); });
-    if (goal) { stats.push(["Objectif", fmtN(goal), ""]); stats.push(["Écart", yearAvg == null ? "–" : signed(yearAvg - goal), yearAvg == null ? "" : yearAvg >= goal ? "good" : "crit"]); }
-    c.extra.forEach(function (x) { stats.push([x.k, x.v, ""]); });
-    // v58 (style C) : sélecteur en haut, grande tuile (moyenne, variation, courbe), puis une tuile par chiffre clé avec une
-    // petite barre de 1 à 6 (seuil 4) quand c'est une note. Chiffres en noir ; la couleur ne vit que dans la barre.
-    function bar(v) {
-      var x = parseFloat(String(v).replace("−", "-")); if (!(x >= 1 && x <= 6)) return "";
-      var t = roundHalf(x) < 4 ? "crit" : roundHalf(x) < 4.5 ? "warn" : "ok";
-      return '<span class="ios-ebar is-' + t + '"><i style="width:' + ((x - 1) / 5 * 100).toFixed(1) + '%"></i></span>';
+    // Piste A (canvas Claude Design, v60) : grand chiffre = note de bulletin ; une seule carte de chiffres clés :
+    // bande de trois (moyenne exacte, plus haute, plus basse), puis des lignes à carré d'icône (objectif et écart,
+    // note à obtenir pour passer à 4). Le minimum du certificat (3e) reste le bloc de cert.js sous la carte.
+    var I = window.Icons ? window.Icons.inner : {};
+    function krow(color, ic, label, val, strong) {
+      return '<div class="ios-ekey-r"><i class="ios-ic ios-ic-' + color + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + (I[ic] || "") + '</svg></i>' +
+        '<span class="ios-ekey-l">' + label + '</span><span class="ios-ekey-v' + (strong ? " is-strong" : "") + '">' + val + '</span></div>';
     }
+    function kcell(k, v) { return '<div class="ios-ekey-c"><span>' + k + '</span><b>' + v + '</b></div>'; }
+    var key = '<div class="ios-ekey"><div class="ios-ekey-top">' + kcell("Moyenne exacte", fmt2(last)) + kcell("Plus haute", hiV == null ? "–" : fmtN(hiV)) + kcell("Plus basse", loV == null ? "–" : fmtN(loV)) + '</div>' +
+      (goal ? krow("orange", "target", "Objectif " + fmtN(goal), yearAvg == null ? "–" : signed(yearAvg - goal)) : "") +
+      (c.need ? krow("green", "up", "Pour passer à 4", c.need.v, true) : "") + '</div>';
     panel.innerHTML =
       '<div class="ios-etop">' + btns + '<div class="ios-escrub" aria-live="polite"><span class="ios-escrub-d"></span><b class="ios-escrub-v"></b></div></div>' +
       '<section class="ios-ehero"><span class="ios-dk">Moyenne · ' + LAB[range] + '</span>' +
-      '<div class="ios-evalue"><span class="ios-evalue-n">' + fmt2(last) + '</span><span class="ios-evalue-b">bulletin ' + roundHalf(last) + '</span></div>' +
+      '<div class="ios-evalue"><span class="ios-evalue-n">' + roundHalf(last) + '</span></div>' +
       (n > 1 ? '<p class="ios-ecap">' + (Math.abs(d) < 0.005 ? "stable" : (up ? "▲ " : "▼ ") + Math.abs(d).toFixed(2)) + " depuis le " + fmtLong(pts[0].date) + '</p>' : '<p class="ios-ecap">1re note</p>') +
-      (n > 1 ? chartHtml(pts, up) + '<p class="ios-ehint">Glisse le doigt sur la courbe pour voir chaque note.</p>'
-             : '<p class="ios-ehint">Ajoute une 2e note pour voir l\'évolution de la moyenne.</p>') + '</section>' +
-      '<div class="ios-estats">' + stats.map(function (st) {
-        var grade = /^(Bulletin|Plus haute|Plus basse|Objectif|Semestre|Année)/.test(st[0]);
-        return '<div class="ios-estat"><span class="ios-dk">' + st[0] + '</span>' + (grade ? bar(st[1]) : "") + '<b>' + st[1] + '</b></div>';
-      }).join("") + '</div>';
+      chartHtml(pts, up) + '</section>' + key;
     rest(panel);
   }
 
   // Repos : boutons visibles, point sur la dernière note, pas de ligne verticale.
   function rest(panel) {
-    var c = cur; if (!panel || !c || !c.pts || !c.pts.length) return;
+    var c = cur; if (!panel || !c || !c.pts || !c.pts.length || !c.cp) return;
     c.live = false; c.near = null;
-    var n = c.pts.length; placeKnob(panel, chartX(n - 1, n), c.pts[n - 1].avg);
+    var L = c.cp[c.cp.length - 1]; placeKnob(panel, chartX(L.d), L.avg);
     var top = panel.querySelector(".ios-etop"), ch = panel.querySelector(".ios-echart");
     if (top) top.classList.remove("is-live");
-    if (ch) { ch.classList.remove("is-live"); ch.setAttribute("aria-valuenow", c.pts[n - 1].avg.toFixed(2)); ch.setAttribute("aria-valuetext", "Aujourd'hui : moyenne " + fmt2(c.pts[n - 1].avg)); }
+    if (ch) { ch.classList.remove("is-live"); ch.setAttribute("aria-valuenow", L.avg.toFixed(2)); ch.setAttribute("aria-valuetext", "Aujourd'hui : moyenne " + fmt2(L.avg)); }
   }
-  function placeKnob(panel, x, avg) {
+  // Le point est un cercle du dessin SVG : il suit l'échelle de la courbe sans mesurer l'écran ni refaire la mise en page.
+  function placeKnob(panel, x, avg, live) {
     var k = panel.querySelector(".ios-echart-knob"); if (!k) return;
-    k.style.left = (x / CW * 100).toFixed(2) + "%"; k.style.top = (cur.Y(avg) / CH * 100).toFixed(2) + "%";
+    k.setAttribute("cx", x.toFixed(2)); k.setAttribute("cy", cur.Y(avg).toFixed(2)); k.setAttribute("r", live ? 8 : 7);
   }
-  // Doigt à l'abscisse x (repère du dessin) : point interpolé sur la ligne, barre = note la plus proche.
+  // Doigt à l'abscisse x (repère du dessin) : point sur la courbe lisse, ligne verticale, date et moyenne au dixième à cet
+  // instant. La note la plus proche donne le retour haptique et le repère de la barre.
   function scrubTo(panel, x, fromKey) {
-    var c = cur, pts = c.pts, n = pts.length; if (!n) return;
-    var x0 = chartX(0, n), x1 = chartX(n - 1, n);
-    x = Math.max(x0, Math.min(x1, x));
-    var i = 0, t = 0;
-    if (n > 1) { var step = (x1 - x0) / (n - 1); i = Math.min(n - 2, Math.floor((x - x0) / step)); t = (x - chartX(i, n)) / step; }
-    var avg = n > 1 ? pts[i].avg + (pts[i + 1].avg - pts[i].avg) * t : pts[0].avg, near = n > 1 ? (t < 0.5 ? i : i + 1) : 0;
-    placeKnob(panel, x, avg);
+    var c = cur, cp = c.cp, n = cp.length; if (!n) return;
+    x = Math.max(chartX(cp[0].d), Math.min(chartX(cp[n - 1].d), x));
+    var d = dayAt(x), avg = valAt(cp, d), near = 0, k;
+    for (k = 1; k < n; k++) if (Math.abs(cp[k].d - d) < Math.abs(cp[near].d - d)) near = k;
+    placeKnob(panel, x, avg, true);
     var cross = panel.querySelector(".ios-echart-cross"); if (cross) { cross.setAttribute("x1", x.toFixed(1)); cross.setAttribute("x2", x.toFixed(1)); }
     if (!c.live) { c.live = true; panel.querySelector(".ios-etop").classList.add("is-live"); panel.querySelector(".ios-echart").classList.add("is-live"); }
+    var ch = panel.querySelector(".ios-echart"), iso = dayIso(d);
+    panel.querySelector(".ios-escrub-d").textContent = fmtLong(iso);
+    panel.querySelector(".ios-escrub-v").textContent = "moy. " + avg.toFixed(1);
+    ch.setAttribute("aria-valuenow", avg.toFixed(2)); ch.setAttribute("aria-valuetext", fmtLong(iso) + " : moyenne " + avg.toFixed(1));
     if (near !== c.near) {
       c.near = near;
       if (!fromKey && window.FX) FX.haptic("select");
-      var p = pts[near];
-      panel.querySelector(".ios-escrub-d").textContent = fmtLong(p.date);
-      panel.querySelector(".ios-escrub-v").textContent = "moy. " + fmt2(p.avg);
-      var ch = panel.querySelector(".ios-echart"); ch.setAttribute("aria-valuenow", p.avg.toFixed(2)); ch.setAttribute("aria-valuetext", fmtLong(p.date) + " : moyenne " + fmt2(p.avg));
-      [].forEach.call(panel.querySelectorAll(".ios-echart-dot"), function (dot, k) { dot.classList.toggle("is-near", k === near); });
+      [].forEach.call(panel.querySelectorAll(".ios-echart-dot"), function (dot, j) { dot.classList.toggle("is-near", j === near); });
     }
   }
 
   function viewX(chartEl, clientX) { var r = chartEl.getBoundingClientRect(); return (clientX - r.left) / r.width * CW; }
-  var scrub = null;
+  var scrub = null, raf = 0;
+  // Un seul dessin par image (requestAnimationFrame) : le glissement reste fluide même avec des évènements très rapprochés.
+  function flush() { raf = 0; if (scrub && scrub.x != null) scrubTo(scrub.panel, scrub.x); }
   container.addEventListener("pointerdown", function (e) {
     var ch = e.target.closest(".ios-echart"); if (!ch || !cur || !cur.pts || !cur.pts.length) return;
     if (e.pointerType === "mouse" && e.button !== 0) return;
-    scrub = { id: e.pointerId, ch: ch, panel: ch.closest(".ios-epanel") };
+    scrub = { id: e.pointerId, ch: ch, panel: ch.closest(".ios-epanel"), x: null };
     try { ch.setPointerCapture(e.pointerId); } catch (x) {}
     scrubTo(scrub.panel, viewX(ch, e.clientX));
   });
   container.addEventListener("pointermove", function (e) {
     if (!scrub || e.pointerId !== scrub.id) return;
-    scrubTo(scrub.panel, viewX(scrub.ch, e.clientX));
+    scrub.x = viewX(scrub.ch, e.clientX);
+    if (!raf) raf = requestAnimationFrame(flush);
   });
   function endScrub(e) {
     if (!scrub || e.pointerId !== scrub.id) return;
-    var s = scrub; scrub = null; rest(s.panel);
+    var s = scrub; scrub = null; if (raf) { cancelAnimationFrame(raf); raf = 0; } rest(s.panel);
   }
   container.addEventListener("pointerup", endScrub);
   container.addEventListener("pointercancel", endScrub);
   container.addEventListener("keydown", function (e) {
     var ch = e.target.closest && e.target.closest(".ios-echart"); if (!ch || !cur || !cur.pts || !cur.pts.length) return;
-    var panel = ch.closest(".ios-epanel"), n = cur.pts.length;
+    var panel = ch.closest(".ios-epanel"), n = cur.cp.length;
     // Échap : d'abord retour au repos ; au repos, il ferme la page comme ailleurs (index.html).
     if (e.key === "Escape") { if (cur.live) { e.preventDefault(); e.stopPropagation(); rest(panel); } return; }
     if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
     e.preventDefault();
     var k = cur.live && cur.near != null ? cur.near : n - 1;
     k = Math.max(0, Math.min(n - 1, k + (e.key === "ArrowRight" ? 1 : -1)));
-    scrubTo(panel, chartX(k, n), true);
+    scrubTo(panel, chartX(cur.cp[k].d), true);
   });
   container.addEventListener("focusout", function (e) {
     if (e.target.classList && e.target.classList.contains("ios-echart") && cur && cur.live && !scrub) rest(e.target.closest(".ios-epanel"));
@@ -235,9 +269,11 @@
     var chart = box.querySelector("#sheet-chart"); if (chart) chart.remove();
 
     // 2. Panneau « Bourse ».
+    var needV = null;   // « Prochain test : au moins 4.35 pour atteindre 4. » -> « ≥ 4.35 » ; sinon le texte du moteur raccourci
+    if (need) { var nm = need.textContent.match(/au moins\s+([0-9.,]+)/); needV = nm ? "≥ " + nm[1].replace(/[.,]$/, "") : "plus atteignable"; }
     if (tiles.length) {
       cur = {
-        id: id, s: s,
+        id: id, s: s, need: needV ? { v: needV } : null,
         sem: tiles.slice(1).map(function (t) { var nn = t.querySelector(".num"), lb = t.querySelector(".lbl"); return { k: lb ? lb.textContent : "", v: nn ? nn.textContent : "–", tone: toneOf(nn) }; }),
         extra: rowsOf.map(function (r) {
           var sps = r.querySelectorAll(":scope > span"), a = sps[0];
@@ -249,7 +285,6 @@
     } else cur = null;
 
     // 3. Prochain test, certificat (3e).
-    if (need) { need.className = "ios-grp ios-need"; page.appendChild(need); }
     if (cert) { var cg = el("div", "ios-grp ios-cert"); cg.appendChild(cert); page.appendChild(cg); }
 
     // 4. Notes.

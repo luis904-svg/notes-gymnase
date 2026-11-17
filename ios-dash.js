@@ -24,7 +24,7 @@
   function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
   function half(v) { return Math.round(v * 2) / 2; }
   function toneOf(v) { if (v == null) return "none"; var b = half(v); return b < 4 ? "crit" : b < 4.5 ? "warn" : "ok"; }
-  function dateShort(iso) { try { var dt = new Date(iso + "T12:00:00"); return (dt.getDate() === 1 ? "1er" : dt.getDate()) + " " + dt.toLocaleDateString("fr-CH", { month: "short" }); } catch (e) { return iso; } }
+  function dateShort(iso) { try { return new Date(iso + "T12:00:00").toLocaleDateString("fr-CH", { day: "numeric", month: "short" }); } catch (e) { return iso; } }
 
   // Chaque panneau : le titre reste au-dessus, le contenu passe dans un groupe blanc (.ios-dgrp). Fait une seule fois :
   // le moteur ne remplace que l'intérieur de #alerts, #bars, #subjects, #notes.
@@ -65,9 +65,7 @@
       for (var i = 0; i < Math.max(max, n); i++) pips += '<i class="' + (i < n ? (n > max ? "is-crit" : "is-warn") : "") + '"></i>';
       return tile(label, '<span class="ios-dpips" aria-hidden="true">' + pips + '</span>', val, unit, sub, aria);
     }
-    var d = sub.match(/([+−]\d+(?:\.\d+)?) pt/);
-    // v64 : « 56 min · +3.0 pt au rythme actuel » devient « minimum 56 · 3.0 pt d'avance au rythme actuel » (ou de retard).
-    var foot = d ? [min ? min.replace(/^(.+?)\s*min$/, "minimum $1") : "", d[1].slice(1) + " pt " + (d[1].charAt(0) === "+" ? "d'avance" : "de retard")].filter(Boolean).join(" · ") + (/rythme actuel/.test(sub) ? " au rythme actuel" : "") : sub;
+    var d = sub.match(/([+−]\d+(?:\.\d+)?) pt/), foot = d ? [min, d[1] + " pt"].filter(Boolean).join(" · ") + (/rythme actuel/.test(sub) ? " au rythme actuel" : "") : sub;
     return tile(label, ring(ratio, at, tone), val, unit, foot, aria);
   }
   function avgTile() {
@@ -113,19 +111,77 @@
     if (li && (e.key === "Enter" || e.key === " ") && li === e.target && A.showSubject) { e.preventDefault(); A.showSubject(li.dataset.subj); }
   });
 
+  /* ---------- Graphique en bâtons (v60) : toutes les moyennes d'un coup d'œil, sous les tuiles ----------
+     Un bâton par branche (moyenne exacte de la période choisie), axe fixe de 1 à 6 (l'échelle des notes a un sens :
+     charts.md › Axes), ligne du seuil 4 bien visible, trait d'objectif sur chaque bâton qui en a un. Couleur = niveau :
+     rouge sous 4, orange de 4 à 4,5, vert au-dessus (même règle que les tuiles). Valeur au-dessus du bâton, en noir. */
+  function chart(items) {
+    var top = document.getElementById("ios-dtop"), panel = document.getElementById("ios-bch");
+    if (!top) return;
+    if (!panel) {
+      panel = document.createElement("section"); panel.id = "ios-bch"; panel.className = "panel ios-dsec ios-dsec-bch";
+      top.parentNode.insertBefore(panel, top.nextSibling);
+    }
+    var period = A.period ? A.period() : "year", data = items.map(function (it) {
+      var pts = A.series ? A.series(it.id, period) : [], v = pts.length ? pts[pts.length - 1].avg : null;
+      return { id: it.id, name: it.name, short: it.short, goal: it.goal, v: v, tone: toneOf(v) };
+    });
+    var n = data.length;
+    if (!n) { panel.innerHTML = ""; return; }
+    var W = 358, rot = n > 8, H = rot ? 252 : 226, L = 16, R = 4, T = 22, B = rot ? 58 : 32, slot = (W - L - R) / n, bw = Math.min(28, slot * 0.62);
+    function Y(v) { return T + (1 - (v - 1) / 5) * (H - T - B); }
+    var g = "", i, hasGoal = false;
+    for (i = 1; i <= 6; i++) {
+      if (i === 4) continue;
+      g += '<line class="ios-bch-grid" x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(i).toFixed(1) + '" y2="' + Y(i).toFixed(1) + '"/>';
+    }
+    for (i = 1; i <= 6; i++) g += '<text class="ios-bch-y' + (i === 4 ? " is-thr" : "") + '" x="' + (L - 4) + '" y="' + (Y(i) + 4).toFixed(1) + '" text-anchor="end">' + i + '</text>';
+    var bars = data.map(function (d, k) {
+      var cx = L + slot * (k + 0.5), x = cx - bw / 2, base = Y(1), y = d.v == null ? base - 3 : Y(d.v), h = base - y;
+      if (d.goal) hasGoal = true;
+      // Valeur : au-dessus du bâton ; si l'objectif est plus haut que la moyenne, elle passe dans le bâton (noir sur la couleur)
+      // pour ne jamais se confondre avec le trait d'objectif.
+      var inside = d.v != null && d.goal && d.goal > d.v + 0.05 && h >= 22, vy = inside ? y + 15 : y - 6;
+      var label = d.name + " : " + (d.v == null ? "pas encore de note" : "moyenne " + d.v.toFixed(2)) + (d.goal ? ", objectif " + d.goal : "");
+      return '<g class="ios-bch-g" data-subj="' + esc(d.id) + '" role="button" tabindex="0" aria-label="' + esc(label) + '">' +
+        '<rect class="ios-bch-hit" x="' + (cx - slot / 2).toFixed(1) + '" y="0" width="' + slot.toFixed(1) + '" height="' + H + '"/>' +
+        '<rect class="ios-bch-bar is-' + d.tone + '" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(h, 0).toFixed(1) + '" rx="5"/>' +
+        (d.goal ? '<line class="ios-bch-goal-halo" x1="' + (x - 4).toFixed(1) + '" x2="' + (x + bw + 4).toFixed(1) + '" y1="' + Y(d.goal).toFixed(1) + '" y2="' + Y(d.goal).toFixed(1) + '"/>' +
+          '<line class="ios-bch-goal" x1="' + (x - 4).toFixed(1) + '" x2="' + (x + bw + 4).toFixed(1) + '" y1="' + Y(d.goal).toFixed(1) + '" y2="' + Y(d.goal).toFixed(1) + '"/>' : "") +
+        (d.v == null ? "" : '<text class="ios-bch-v' + (inside ? " is-in" : "") + '" x="' + cx.toFixed(1) + '" y="' + vy.toFixed(1) + '" text-anchor="middle">' + d.v.toFixed(1) + '</text>') +
+        (rot ? '<text class="ios-bch-n" transform="translate(' + (cx + 4).toFixed(1) + ' ' + (base + 12) + ') rotate(-45)" text-anchor="end">' + esc(d.short) + '</text>'
+             : '<text class="ios-bch-n" x="' + cx.toFixed(1) + '" y="' + (base + 18) + '" text-anchor="middle">' + esc(d.short) + '</text>') + '</g>';
+    }).join("");
+    var thr = '<line class="ios-bch-thr" x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(4).toFixed(1) + '" y2="' + Y(4).toFixed(1) + '"/>';
+    var lab = data.filter(function (d) { return d.v != null; }).map(function (d) { return d.name + " " + d.v.toFixed(1); }).join(", ");
+    panel.innerHTML = '<h2>Toutes les moyennes</h2><div class="ios-dgrp"><svg class="ios-bch-svg" viewBox="0 0 ' + W + " " + H + '" role="group" aria-label="Moyenne de chaque branche, de 1 à 6, seuil 4. ' + esc(lab) + '">' + g + thr + bars + '</svg>' +
+      '<p class="ios-bch-leg"><span><i class="ios-bch-k-thr"></i>Seuil 4</span>' + (hasGoal ? '<span><i class="ios-bch-k-goal"></i>Objectif</span>' : "") + '</p></div>';
+  }
+  document.addEventListener("click", function (e) {
+    var g = e.target.closest && e.target.closest("#ios-bch [data-subj]");
+    if (g && A.showSubject) { if (window.FX) FX.haptic("select"); A.showSubject(g.dataset.subj); }
+  });
+  document.addEventListener("keydown", function (e) {
+    var g = e.target.closest && e.target.closest("#ios-bch [data-subj]");
+    if (g && (e.key === "Enter" || e.key === " ") && A.showSubject) { e.preventDefault(); A.showSubject(g.dataset.subj); }
+  });
+
   /* ---------- Moyennes par branche : barres horizontales ---------- */
   function bars() {
     var box = document.getElementById("bars"); if (!box || box.querySelector(".ios-hb")) return;
     var subs = {}; (A.subjectsAll ? A.subjectsAll() : []).forEach(function (s) { subs[s.id] = s; });
+    var items = [];
     var rows = [].map.call(box.querySelectorAll("g.bar[data-subj]"), function (g) {
       var id = g.dataset.subj, s = subs[id] || {}, texts = g.querySelectorAll("text"), vt = g.querySelector("text.val");
       var short = texts.length ? texts[texts.length - 1].textContent : id, name = s.name && s.name.length <= 10 ? s.name : short;
       var v = vt ? parseFloat(vt.textContent) : null, tone = g.classList.contains("crit") ? "crit" : g.classList.contains("warn") ? "warn" : v == null ? "none" : "ok";
       var w = v == null ? 0 : Math.max(0, (v - 1) / 5 * 100), goal = s.goal ? '<u style="left:' + ((s.goal - 1) / 5 * 100).toFixed(1) + '%"></u>' : "";
       var t = g.querySelector("title");
+      items.push({ id: id, name: s.name || short, short: short, goal: s.goal ? +s.goal : null });
       return '<div class="ios-hb is-' + tone + '" data-subj="' + esc(id) + '" role="button" tabindex="0" aria-label="' + esc(t ? t.textContent : name) + '">' +
         '<span class="ios-hb-n">' + esc(name) + '</span><span class="ios-hb-t"><i style="width:' + w.toFixed(1) + '%"></i>' + goal + '</span><b>' + (vt ? esc(vt.textContent) : "–") + '</b></div>';
     }).join("");
+    chart(items);
     box.innerHTML = '<div class="ios-hbs" role="list" aria-label="Note de bulletin de chaque branche, de 1 à 6, seuil 4">' + rows + '</div>';
   }
 
