@@ -243,7 +243,7 @@
         "<b>Activer la synchronisation</b> donne un code de 16 caractères. Sur ton autre appareil, touche <b>J'ai déjà un code</b> et tape-le.",
         "Les notes sont chiffrées avec ce code : garde-le précieusement, il ne peut pas être récupéré. Toute personne qui a le code voit et peut modifier les notes."] },
       { t: "Vibrations et dépannage", v: "tips", p: [
-        "<b>Retours haptiques</b> (Réglages, section Données) active ou coupe les vibrations. Si l'app ne semble pas à jour, ferme-la complètement et rouvre-la deux fois.",
+        "<b>Retours haptiques</b> (Réglages, section Données) active ou coupe les vibrations. <b>Apparence</b> (juste en dessous) choisit le mode clair ou sombre : <b>Auto</b> suit ton iPhone, et ton choix reste sur cet appareil. Si l'app ne semble pas à jour, ferme-la complètement et rouvre-la deux fois.",
         "« Hors connexion » : tes notes restent sur le téléphone et se synchroniseront plus tard. Téléphone couché : l'app demande de le remettre à la verticale."] }
     ] },
     { t: "Avec tes parents", d: "2 min", s: [

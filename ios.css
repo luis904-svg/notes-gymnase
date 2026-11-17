@@ -18,6 +18,8 @@
   /* Couleurs système iOS 26/27 (HIG) */
   --ios-blue: #0088FF;
   --ios-blue-soft: rgba(0, 136, 255, 0.12);
+  --ios-seg-active: var(--ios-cell);   /* segment actif des sélecteurs (blanc en clair, gris en sombre) */
+  --ios-track: var(--ios-bg);          /* piste des barres et des anneaux, posée sur une carte */
   --ios-green: #34C759;
   --ios-green-text: var(--ios-green);   /* v61 : un seul vert dans toute l'appli (plus de vert foncé pour le texte) */
   --ios-green-soft: rgba(52, 199, 89, 0.14);
@@ -108,6 +110,7 @@
   --ios-ph-pad: 12px;          /* visionneuse v60 : commandes rondes qui flottent sur la photo (plus de barres) */
   --ios-ph-chip: 40px;
   --ios-ph-chip-bg: #2C2C2E;
+  --ios-ph-bg: #000000;        /* fond de la visionneuse : toujours noir, même en thème clair */
   /* Barre du bas v44 (ios-tabbar.js) : dock toujours en bas, accessoire du verdict, bouton Rechercher, pastilles */
   --ios-dock-gap: 8px;
   --ios-find-z: 60;
@@ -160,6 +163,67 @@
 /* Ressort amorti (dépassement d'environ 8 %), échantillonné ; remplace le repli quand linear() existe. */
 @supports (animation-timing-function: linear(0, 1)) {
   :root { --ios-spring: linear(0, 0.051, 0.173, 0.331, 0.498, 0.655, 0.79, 0.898, 0.978, 1.033, 1.066, 1.081, 1.083, 1.077, 1.065, 1.052, 1.038, 1.025, 1.015, 1.006, 1, 0.996, 0.994, 0.993, 0.993, 1); }
+}
+/* ---------- Mode sombre (v63, lot 8, remis en v70) ----------
+   html[data-theme] vaut « light » ou « dark » : posé par le script de l'en-tête (build.py), qui suit le réglage de l'iPhone
+   (Automatique) ou le choix fait dans Réglages > Apparence. Valeurs : système iOS sombre (HIG iOS 26), fond #000 et carte #1C1C1E. */
+:root[data-theme="dark"] {
+  --ios-bg: #000000;
+  --ios-cell: #1C1C1E;
+  --ios-label: #FFFFFF;
+  --ios-label-2: #A1A1A6;
+  --ios-sep: rgba(84, 84, 88, 0.6);
+  --ios-bar-hairline: #2C2C2E;
+  --ios-fill: rgba(120, 120, 128, 0.36);
+  --ios-scrim: rgba(0, 0, 0, 0.5);
+  --ios-blue: #0091FF;
+  --ios-blue-soft: rgba(0, 145, 255, 0.2);
+  --ios-green: #30D158;
+  --ios-green-text: #30D158;
+  --ios-green-soft: rgba(48, 209, 88, 0.2);
+  --ios-orange: #FF9230;
+  --ios-orange-soft: rgba(255, 146, 48, 0.2);
+  --ios-orange-text: #FF9F0A;
+  --ios-red: #FF4245;
+  --ios-red-soft: rgba(255, 66, 69, 0.2);
+  --ios-red-text: #FF6961;
+  --ios-purple: #BF5AF2;
+  --ios-pink: #FF375F;
+  --ios-teal: #64D2FF;
+  --ios-press-row: rgba(235, 235, 245, 0.18);
+  --ios-press-card: rgba(235, 235, 245, 0.1);
+  --ios-gray: #8E8E93;
+  --ios-chev: rgba(235, 235, 245, 0.3);
+  --ios-pill: #1C1C1E;
+  --ios-pill-active: #3A3A3C;
+  --ios-back-bg: #2C2C2E;
+  --ios-seg-active: #636366;
+  --ios-track: #2C2C2E;
+}
+/* Les variables historiques de l'app sont réaffectées aussi pour le thème (index.html les redéfinit pour le sombre). */
+:root[data-theme] {
+  --bg: var(--ios-bg);
+  --surface: var(--ios-cell);
+  --nav: var(--ios-bg);
+  --ink: var(--ios-label);
+  --muted: var(--ios-label-2);
+  --line: var(--ios-sep);
+  --fill: var(--ios-fill);
+  --accent: var(--ios-blue);
+  --accent-focus: var(--ios-blue);
+  --accent-soft: var(--ios-blue-soft);
+  --good: var(--ios-green-text);
+  --good-soft: var(--ios-green-soft);
+  --warn: var(--ios-orange);
+  --warn-soft: var(--ios-orange-soft);
+  --crit: var(--ios-red);
+  --crit-soft: var(--ios-red-soft);
+  --glass: var(--ios-cell);
+  --glass-strong: var(--ios-cell);
+  --glass-hi: var(--ios-clear);
+  --blob1: var(--ios-clear);
+  --blob2: var(--ios-clear);
+  --blob3: var(--ios-clear);
 }
 /* FIN TOKENS */
 
@@ -451,7 +515,7 @@ html.noanim .ios-ta > summary .ios-ta-chev { transition: none; }
 .ios-ph-badge { color: var(--ios-blue); }
 .notes li[data-photos] { cursor: pointer; }
 .ios-ph-view { position: fixed; left: 0; top: 0; width: 100%; height: 100%; height: 100dvh; z-index: var(--ios-ph-z); overflow: hidden; touch-action: none; overscroll-behavior: none;
-  background: color-mix(in srgb, var(--ios-label) calc(var(--ios-ph-a, 1) * 100%), var(--ios-clear)); color: var(--ios-white); }
+  background: color-mix(in srgb, var(--ios-ph-bg) calc(var(--ios-ph-a, 1) * 100%), var(--ios-clear)); color: var(--ios-white); }
 .ios-ph-view.is-settling .ios-ph-track { transition: transform var(--ios-dur-spring) var(--ios-ease-out); }
 .ios-ph-view.is-settling { transition: background-color var(--ios-dur-spring) var(--ios-ease-out); }
 .ios-ph-view.is-dragging .ios-ph-bar { opacity: 0; }
@@ -589,7 +653,7 @@ html.noanim .tabbar .ind { transition: none; }
 .ob-next, .gd-foot .btn, .gd-foot .btn-ghost { border-radius: 999px; }
 .ob-parent { margin-top: 4px; max-width: 320px; }
 .gd-vis { border: 0; border-radius: var(--ios-r-group); background: var(--ios-cell); }
-.gd-list, .gd-form, .gd-tile, .gd-tp, .gd-tabs { box-shadow: none; background: var(--ios-bg); }
+.gd-list, .gd-form, .gd-tile, .gd-tp, .gd-tabs { box-shadow: none; background: var(--ios-track); }
 .gd-done svg { color: var(--ios-green); stroke-width: 1.5; }
 .gd-done circle, .gd-done path { stroke-dasharray: none; stroke-dashoffset: 0; animation: none; }
 .gd-val { margin-left: auto; color: var(--ios-label-2); }
@@ -598,7 +662,7 @@ html.noanim .tabbar .ind { transition: none; }
 .gd-wide { width: 100%; max-width: 300px; }
 .gd-thumbs { display: flex; gap: 8px; justify-content: center; }
 .gd-thumbs i { width: 44px; height: 58px; border-radius: var(--ios-r-icon); background: var(--ios-fill); }
-.gd-banner { display: flex; align-items: center; gap: 10px; width: 100%; max-width: 310px; padding: 10px 12px; border-radius: 18px; background: var(--ios-bg); text-align: left; font-size: 13px; }
+.gd-banner { display: flex; align-items: center; gap: 10px; width: 100%; max-width: 310px; padding: 10px 12px; border-radius: 18px; background: var(--ios-track); text-align: left; font-size: 13px; }
 .gd-banner img { width: 34px; height: 34px; border-radius: 8px; flex: none; }
 .gd-banner small { display: block; color: var(--ios-label-2); font-size: 12px; }
 .hl { background: var(--ios-bg); flex-direction: column; gap: 22px; }
@@ -883,13 +947,14 @@ body.ios-find-open { overflow: hidden; }
      (v69 : l'objectif n'est qu'une ombre claire derrière le bâton, sans trait ni chiffre ; hauteur et chiffre = note de bulletin). Couleur = niveau seulement ; les chiffres restent noirs. */
   #ios-bch .ios-dgrp { padding: var(--ios-pad) 12px 14px; }
   .ios-bch-svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .ios-bch-grid, .ios-bch-thr { fill: none; }
   .ios-bch-grid { stroke: var(--ios-sep); stroke-width: var(--ios-hair); }
   .ios-bch-base { stroke: var(--ios-chev); stroke-width: var(--ios-hair); }
   .ios-bch-thr { stroke: var(--ios-label-2); stroke-width: var(--ios-bch-thr); }
   .ios-bch-y { font-size: 11px; fill: var(--ios-label-2); } .ios-bch-y.is-thr { fill: var(--ios-label); font-weight: 700; }
   .ios-bch-ghost { fill: var(--ios-fill); }
   .ios-bch-bar { fill: var(--ios-green); } .ios-bch-bar.is-warn { fill: var(--ios-orange); } .ios-bch-bar.is-crit { fill: var(--ios-red); } .ios-bch-bar.is-none { fill: var(--ios-fill); }
-  .ios-bch-v { font-size: 11px; font-weight: 600; fill: var(--ios-label); font-variant-numeric: tabular-nums; paint-order: stroke; stroke: var(--ios-cell); stroke-width: 3px; stroke-linejoin: round; }
+  .ios-bch-v { font-size: 11px; font-weight: 600; fill: var(--ios-label); font-variant-numeric: tabular-nums; }
   .ios-bch-n { font-size: 11px; fill: var(--ios-label-2); }
   .ios-bch-hit { fill: var(--ios-clear); }
   .ios-bch-g { cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; }
@@ -976,7 +1041,7 @@ body.ios-find-open { overflow: hidden; }
   #f-type { display: none; }
   .ios-tseg { display: flex; padding: 3px; border-radius: var(--ios-r-pill); background: var(--ios-fill); }
   .ios-tseg button { flex: 1; min-height: 34px; padding: 0; border: 0; border-radius: var(--ios-r-pill); background: var(--ios-clear); color: var(--ios-label); font: inherit; font-size: 15px; }
-  .ios-tseg button[aria-pressed="true"] { background: var(--ios-cell); font-weight: 600; box-shadow: 0 1px 3px var(--ios-sep); }
+  .ios-tseg button[aria-pressed="true"] { background: var(--ios-seg-active); font-weight: 600; box-shadow: 0 1px 3px var(--ios-sep); }
   .ios-tseg button:active { transform: none; opacity: 0.6; }
   #form .chips button.is-on { background: var(--ios-green); color: var(--ios-white); font-weight: 600; }
   /* Photo : deux lignes à carré d'icône dans un groupe, puis les vignettes et la note de bas */
@@ -1002,7 +1067,7 @@ body.ios-find-open { overflow: hidden; }
   .ios-etop { margin-top: 0; }
   .ios-erange { display: flex; gap: 0; padding: 3px; border-radius: var(--ios-r-pill); background: var(--ios-fill); }
   .ios-erange button { flex: 1; min-height: 36px; border-radius: var(--ios-r-pill); font-size: 15px; font-weight: 400; color: var(--ios-label); }
-  .ios-erange button[aria-pressed="true"] { background: var(--ios-cell); font-weight: 600; box-shadow: 0 1px 3px var(--ios-sep); }
+  .ios-erange button[aria-pressed="true"] { background: var(--ios-seg-active); font-weight: 600; box-shadow: 0 1px 3px var(--ios-sep); }
   .ios-escrub { border-radius: 22px; }
   .ios-ehero { display: flex; flex-direction: column; padding: var(--ios-tile-pad); border-radius: var(--ios-r-group); background: var(--ios-cell); }
   .ios-ehero .ios-evalue { margin-top: 4px; }
@@ -1013,7 +1078,7 @@ body.ios-find-open { overflow: hidden; }
   .ios-estats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ios-tile-gap); margin-top: 0; }
   .ios-estat { flex-direction: column; justify-content: flex-start; align-items: stretch; gap: 6px; padding: var(--ios-tile-pad); border: 0; border-radius: var(--ios-r-group); background: var(--ios-cell); }
   .ios-estat b { font-size: var(--ios-tile-big); font-weight: 700; line-height: 1; margin-top: auto; }
-  .ios-ebar { position: relative; display: block; height: 8px; margin: 4px 0; border-radius: 4px; background: var(--ios-bg); }
+  .ios-ebar { position: relative; display: block; height: 8px; margin: 4px 0; border-radius: 4px; background: var(--ios-track); }
   .ios-ebar i { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 4px; background: var(--ios-green); }
   .ios-ebar.is-warn i { background: var(--ios-orange); } .ios-ebar.is-crit i { background: var(--ios-red); }
   .ios-ebar::after { content: ""; position: absolute; left: 60%; top: -4px; bottom: -4px; border-left: 1.5px dashed var(--ios-label-2); }
@@ -1093,3 +1158,12 @@ body.ios-find-open { overflow: hidden; }
   .ios-ekey-v { font-size: var(--ios-title-inline); color: var(--ios-label-2); font-variant-numeric: tabular-nums; }
   .ios-ekey-v.is-strong { color: var(--ios-label); font-weight: 600; }
 }
+
+/* Indicateur du sélecteur de période (Accueil) : même gris que les autres segments actifs */
+.seg .ind { background: var(--ios-seg-active); }
+
+/* ---------- Réglage Apparence (Réglages) ---------- */
+.ios-appseg { display: flex; margin: 8px 16px; padding: 3px; border-radius: var(--ios-r-pill); background: var(--ios-fill); }
+.ios-appseg button { position: relative; flex: 1; min-height: 34px; padding: 0 6px; border: 0; border-radius: var(--ios-r-pill); background: var(--ios-clear); color: var(--ios-label); font: inherit; font-size: 15px; white-space: nowrap; }
+.ios-appseg button[aria-pressed="true"] { background: var(--ios-seg-active); font-weight: 600; box-shadow: 0 1px 3px var(--ios-sep); }
+.ios-appseg button:active { transform: none; opacity: 0.6; }

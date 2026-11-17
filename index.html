@@ -8,8 +8,18 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Notes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="color-scheme" content="light only">
+<meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#F2F2F7">
+<script>/* Thème (v63) : « auto » suit l'iPhone, sinon « light » ou « dark » (clé notes2m01.theme, propre à l'appareil). Posé avant la peinture : pas d'éclair blanc. */
+(function(){var K="notes2m01.theme",mq=window.matchMedia("(prefers-color-scheme: dark)"),pref="auto";
+try{var s=localStorage.getItem(K);if(s==="light"||s==="dark")pref=s}catch(e){}
+function isDark(){return pref==="dark"||(pref==="auto"&&mq.matches)}
+function apply(){var d=isDark(),r=document.documentElement,m=document.querySelector('meta[name="theme-color"]');
+r.setAttribute("data-theme",d?"dark":"light");r.style.colorScheme=d?"dark":"light";if(m)m.setAttribute("content",d?"#000000":"#F2F2F7");
+try{document.dispatchEvent(new CustomEvent("theme:change",{detail:{dark:d,pref:pref}}))}catch(e){}}
+function set(v){pref=(v==="light"||v==="dark")?v:"auto";try{if(pref==="auto")localStorage.removeItem(K);else localStorage.setItem(K,pref)}catch(e){}apply()}
+if(mq.addEventListener)mq.addEventListener("change",apply);else if(mq.addListener)mq.addListener(apply);
+window.NotesTheme={get:function(){return pref},dark:isDark,set:set};apply()})();</script>
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
 <style>
 /* Layout: barre translucide collante, tuiles blanches à 18 px sur fond parchemin, un seul bleu d'action. Tokens inspirés du design system Apple (VoltAgent/awesome-design-md) et des règles de mouvement d'Emil Kowalski. */

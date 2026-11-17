@@ -106,7 +106,6 @@ body.ob-open .tabbar { display: none; }
 
 /* L'écran d'installation reste toujours en clair, même si l'iPhone est en mode sombre */
 .ob-install {
-  color-scheme: light;
   --bg: #F5F5F7; --surface: #FFFFFF; --ink: #1D1D1F; --muted: #6E6E73; --line: rgba(0, 0, 0, 0.08);
   --fill: rgba(120, 120, 128, 0.12); --accent: #0066CC; --accent-focus: #0071E3; --accent-soft: rgba(0, 102, 204, 0.1);
   --warn: #FB8C00; --warn-soft: rgba(251, 140, 0, 0.14);
@@ -297,7 +296,7 @@ body.gd-open .tabbar { display: none; }
 
 /* Animation « Hello World » */
 body.hl-open { overflow: hidden; }
-.hl { position: fixed; inset: 0; z-index: 100; background: #fff; display: flex; align-items: center; justify-content: center; padding: 0 6vw; color-scheme: light; }
+.hl { position: fixed; inset: 0; z-index: 100; background: #fff; display: flex; align-items: center; justify-content: center; padding: 0 6vw; }
 .hl-ink { width: min(66vw, 400px); }
 .hl-ink svg { display: block; width: 100%; height: auto; overflow: visible; }
 

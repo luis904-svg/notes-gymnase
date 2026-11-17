@@ -139,7 +139,20 @@
     var W = 358, rot = n > 8, H = rot ? 248 : 222, L = 18, R = 2, T = 20, B = rot ? 54 : 30, slot = (W - L - R) / n, bw = Math.min(24, slot * 0.6);
     function Y(v) { return T + (1 - (v - 1) / 5) * (H - T - B); }
     var base = Y(1), g = "", i;
-    [2, 3, 5, 6].forEach(function (v) { g += '<line class="ios-bch-grid" x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '"/>'; });
+    // Les lignes de repère s'interrompent derrière un chiffre qu'elles traverseraient (pas de liseré autour du chiffre : il ferait une
+    // tache sur l'ombre et en mode sombre).
+    var boxes = data.map(function (d, k) {
+      if (d.b == null) return null;
+      var cx = L + slot * (k + 0.5), by = Y(d.b) - 6;
+      return { x0: cx - 11, x1: cx + 11, y0: by - 12, y1: by + 3 };
+    }).filter(Boolean);
+    function rule(cls, v) {
+      var yy = Y(v), gaps = boxes.filter(function (q) { return yy >= q.y0 && yy <= q.y1; }), x = L, dd = "";
+      gaps.forEach(function (q) { dd += "M" + x.toFixed(1) + "," + yy.toFixed(1) + " H" + q.x0.toFixed(1) + " "; x = q.x1; });
+      dd += "M" + x.toFixed(1) + "," + yy.toFixed(1) + " H" + (W - R);
+      return '<path class="' + cls + '" d="' + dd + '"/>';
+    }
+    [2, 3, 5, 6].forEach(function (v) { g += rule("ios-bch-grid", v); });
     for (i = 1; i <= 6; i++) g += '<text class="ios-bch-y' + (i === 4 ? " is-thr" : "") + '" x="' + (L - 5) + '" y="' + (Y(i) + 3.5).toFixed(1) + '" text-anchor="end">' + i + '</text>';
     g += '<line class="ios-bch-base" x1="' + L + '" x2="' + (W - R) + '" y1="' + base.toFixed(1) + '" y2="' + base.toFixed(1) + '"/>';
     var bars = "", ghosts = "";
@@ -156,7 +169,7 @@
         (rot ? '<text class="ios-bch-n" transform="translate(' + (cx + 3).toFixed(1) + ' ' + (base + 13) + ') rotate(-45)" text-anchor="end">' + esc(d.short) + '</text>'
              : '<text class="ios-bch-n" x="' + cx.toFixed(1) + '" y="' + (base + 18) + '" text-anchor="middle">' + esc(d.short) + '</text>') + '</g>';
     });
-    var thr = '<line class="ios-bch-thr" x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(4).toFixed(1) + '" y2="' + Y(4).toFixed(1) + '"/>';
+    var thr = rule("ios-bch-thr", 4);
     var lab = data.filter(function (d) { return d.b != null; }).map(function (d) { return d.name + " " + fmtB(d.b); }).join(", ");
     panel.innerHTML = '<h2>Toutes les moyennes</h2><div class="ios-dgrp"><svg class="ios-bch-svg" viewBox="0 0 ' + W + " " + H + '" role="group" aria-label="Moyenne de chaque branche, de 1 à 6, seuil 4. ' + esc(lab) + '">' + g + ghosts + thr + bars + '</svg>' +
       '<p class="ios-bch-leg"><span><i class="ios-bch-k-thr"></i>Seuil 4</span>' + '</p></div>';

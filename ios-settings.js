@@ -40,6 +40,14 @@
   function grp(rows, head, foot) {
     return (head ? '<p class="ios-grp-head">' + esc(head) + '</p>' : "") + '<div class="ios-grp">' + rows.join("") + '</div>' + (foot ? '<p class="ios-grp-foot">' + esc(foot) + '</p>' : "");
   }
+  /* Apparence (v63, lot 8) : Auto suit le réglage de l'iPhone ; Clair et Sombre le forcent sur cet appareil (NotesTheme, script de l'en-tête). */
+  function appearanceGrp() {
+    var cur = window.NotesTheme ? NotesTheme.get() : "auto";
+    var seg = '<div class="ios-appseg" role="group" aria-label="Apparence">' + [["auto", "Auto"], ["light", "Clair"], ["dark", "Sombre"]].map(function (o) {
+      return '<button type="button" data-theme-set="' + o[0] + '" aria-pressed="' + (cur === o[0]) + '">' + o[1] + '</button>';
+    }).join("") + '</div>';
+    return grp([seg], "Apparence", "Auto suit le réglage de ton iPhone (Réglages > Affichage et luminosité). Ce choix reste sur cet appareil.");
+  }
   function cfg() { return app().get().cfg; }
   function subjects() { return app().subjectsAll().filter(function (s) { return !s.carried; }); }
   function subOf(id) { return subjects().filter(function (s) { return s.id === id; })[0]; }
@@ -155,6 +163,7 @@
           grp([row({ ic: "green", svg: "list", label: "Branches et objectifs", val: String(subjects().length), act: "go:branches" }),
                row({ ic: "orange", svg: "calendar", label: "Fin du semestre 1", val: dateShort(c.s1End), act: "go:semestre" })], "Branches") +
           grp([row({ ic: "blue", svg: "sync", label: "Synchronisation", act: "go:sync" }), row({ ic: "gray", svg: "save", label: "Sauvegarde", act: "go:backup" }), hapRow], "Données") +
+          appearanceGrp() +
           (an.length ? grp(an, "Année scolaire") : "") +
           grp([row({ ic: "orange", svg: "book", label: "Guide d'utilisation", act: "click:gd-open" }),
                row({ ic: "gray", svg: "calc", label: "Calcul des moyennes", act: "go:rules" }),
@@ -346,6 +355,12 @@
 
   /* ---------- Interactions ---------- */
   container.addEventListener("click", function (ev) {
+    var th = ev.target.closest("[data-theme-set]");
+    if (th && window.NotesTheme) {
+      NotesTheme.set(th.dataset.themeSet);
+      Array.prototype.forEach.call(container.querySelectorAll("[data-theme-set]"), function (x) { x.setAttribute("aria-pressed", String(x.dataset.themeSet === NotesTheme.get())); });
+      return;
+    }
     var b = ev.target.closest("[data-act]"); if (!b) return;
     var a = b.dataset.act.split(":"), kind = a[0];
     if (kind === "go") push(a[1], a[2]);
