@@ -103,6 +103,16 @@
       document.head.appendChild(s);
     });
   }
+  // Autres modules chargés à la demande (import.js) : une seule requête, rejetée si la connexion manque.
+  var scripts = {};
+  function script(file) {
+    if (!scripts[file]) scripts[file] = new Promise(function (ok, ko) {
+      var s = document.createElement("script");
+      s.src = file; s.onload = function () { ok(); }; s.onerror = function () { s.remove(); delete scripts[file]; ko(new Error(file)); };
+      document.head.appendChild(s);
+    });
+    return scripts[file];
+  }
   (function () {
     var v = "mat";
     try { var st = JSON.parse(localStorage.getItem("notes2m01.v1") || "null"); v = voieOf(st && st.cfg && st.cfg.profile); } catch (e) {}
@@ -188,7 +198,7 @@
     afterRender: afterRender,
     GYMNASES: GYMNASES, L2: L2, L3: L3, MATH: MATH, ART: ART, OS: OS, OC: OC, VOIES: VOIES,
     osBlock: osBlock, mathBlock: mathBlock, ocBlock: ocBlock, build: build, find: find, gymnaseName: gymnaseName,
-    voieOf: voieOf, ext: extOf, register: register, load: load, list: list, rules: rules, head: head,
+    voieOf: voieOf, ext: extOf, register: register, load: load, script: script, list: list, rules: rules, head: head,
     isMat: function (p) { return voieOf(p) === "mat"; }
   };
 })();

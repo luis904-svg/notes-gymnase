@@ -165,7 +165,7 @@
         return '<h1 class="ios-large">Réglages</h1>' + prof + tiles +
           grp([row({ ic: "green", svg: "list", label: "Branches et objectifs", val: String(subjects().length), act: "go:branches" }),
                row({ ic: "orange", svg: "calendar", label: "Fin du semestre 1", val: dateShort(c.s1End), act: "go:semestre" })], "Branches") +
-          grp([row({ ic: "blue", svg: "sync", label: "Synchronisation", act: "go:sync" }), row({ ic: "gray", svg: "save", label: "Sauvegarde", act: "go:backup" }), hapRow], "Données") +
+          grp([row({ ic: "blue", svg: "sync", label: "Synchronisation", act: "go:sync" }), row({ ic: "gray", svg: "save", label: "Sauvegarde", act: "go:backup" }), row({ ic: "green", svg: "doc", label: "Importer depuis un tableur", act: "imp:open" }), hapRow], "Données") +
           appearanceGrp() +
           (an.length ? grp(an, "Année scolaire") : "") +
           grp([row({ ic: "orange", svg: "book", label: "Guide d'utilisation", act: "click:gd-open" }),
@@ -388,6 +388,7 @@
         run("pop", function () { stack.pop(); stack.pop(); show(scrolls[key(top())] || 0); });
       } else pop();
     }
+    else if (kind === "imp") { Grid.script("import.js").then(function () { Import.open(); }, function () { window.alert("L'import se charge à la première utilisation : connecte-toi à Internet, puis réessaie."); }); }
     else if (kind === "step") { if (window.Onboard) Onboard.open(true, a[1]); }
     else if (kind === "cal") { cal.m += a[1] === "next" ? 1 : -1; if (cal.m > 11) { cal.m = 0; cal.y++; } if (cal.m < 0) { cal.m = 11; cal.y--; } show(window.scrollY); }
     else if (kind === "day") { app().setS1End(a[1]); show(window.scrollY); }

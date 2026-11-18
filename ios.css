@@ -84,6 +84,10 @@
   --ios-pill-bottom: 8px;
   --ios-pill-icon: 26px;
   --ios-pad: 20px;
+  --ios-imp-ta-h: 160px;     /* import depuis un tableur : champ où l'on colle la réponse de l'IA */
+  --ios-imp-fs: 13px;
+  --ios-imp-gap: 10px;
+  --ios-imp-sel-w: 52%;
   /* Détail d'une matière : grand chiffre de la moyenne */
   --ios-hero-num: 56px;
   /* Animations (objectif 8) : ressort d'ouverture, fondus, entrée en scène décalée, écran de réussite */
@@ -1167,3 +1171,13 @@ body.ios-find-open { overflow: hidden; }
 .ios-appseg button { position: relative; flex: 1; min-height: 34px; padding: 0 6px; border: 0; border-radius: var(--ios-r-pill); background: var(--ios-clear); color: var(--ios-label); font: inherit; font-size: 15px; white-space: nowrap; }
 .ios-appseg button[aria-pressed="true"] { background: var(--ios-seg-active); font-weight: 600; box-shadow: 0 1px 3px var(--ios-sep); }
 .ios-appseg button:active { transform: none; opacity: 0.6; }
+
+/* v73 : import depuis un tableur (import.js, chargé à la demande) */
+.ios-imp-ta { display: block; width: 100%; min-height: var(--ios-imp-ta-h); box-sizing: border-box; border: 0; border-radius: var(--ios-r-group); background: var(--ios-cell); color: var(--ios-label); font: inherit; font-size: var(--ios-imp-fs); padding: var(--ios-pad); resize: vertical; outline: none; }
+.ios-imp-btns { display: flex; flex-direction: column; align-items: stretch; gap: var(--ios-imp-gap); margin-top: var(--ios-grp-gap); }
+.ios-imp-map { display: flex; align-items: center; justify-content: space-between; gap: var(--ios-imp-gap); }
+.ios-imp-sel { max-width: var(--ios-imp-sel-w); border: 0; border-radius: var(--ios-r-pill); background: var(--ios-fill); color: var(--ios-label); font: inherit; padding: 6px 12px; }
+.ob-sec { margin: var(--ios-grp-gap) 0 8px; font: inherit; font-weight: 600; color: var(--ios-label-2); }
+.ios-imp-iss { margin-top: var(--ios-grp-gap); color: var(--ios-label-2); font-size: var(--ios-imp-fs); }
+.ios-imp-iss summary { cursor: pointer; color: var(--ios-label-2); }
+.ios-imp-iss ul { margin: 8px 0 0; padding-left: var(--ios-pad); }

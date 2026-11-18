@@ -409,6 +409,7 @@
     },
     render: function (pr) { mountCarried(pr); if (pr.year === 3) renderCert(pr); },
     detail: detail,
+    examUnits: function (pr) { return units(pr); },
     carriedValue: function (id) { return carriedInfo(id).v; },
     domName: domName,
     warn: function (f, id, p) { return f === "domaine" && DOMAINES_WARN[p.gymnase] && DOMAINES_WARN[p.gymnase][id] || null; },

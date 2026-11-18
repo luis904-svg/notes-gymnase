@@ -243,6 +243,10 @@
         "<b>Exporter</b> crée un fichier de toutes tes notes, TA et réglages (Fichiers, AirDrop). <b>Importer un fichier</b> remplace ce qu'il y a sur l'appareil.",
         "<b>Supprimer l'icône efface les notes</b> : exporte régulièrement. Les photos des tests ne sont pas dans la sauvegarde.",
         "En haut de Réglages, la tuile <b>Sauvegarde</b> montre depuis quand tu n'as pas exporté (orange après un mois), et la tuile <b>Synchronisation</b> si tout est à jour."] },
+      { t: "Importer un tableur", v: "backup", p: [
+        "Tu as déjà tes notes dans Excel, Google Sheets, un PDF ou une photo ? <b>Réglages → Importer depuis un tableur</b> te donne un <b>prompt</b> à copier : il contient tes branches, pour que l'IA (ChatGPT, Claude, Gemini…) range chaque note au bon endroit. Donne-lui ton fichier, réponds à ses questions, puis colle sa réponse dans l'app.",
+        "L'app montre un <b>aperçu</b> : branches reconnues (tu peux corriger), lignes douteuses, doublons ignorés. Tu choisis <b>Ajouter</b> à tes notes ou <b>Remplacer</b> (les notes actuelles et leurs photos sont supprimées). Les TA, les objectifs et, en 3e, les examens sont repris aussi.",
+        "<span class='note'>Ton fichier va à l'IA que tu choisis, pas à l'app : retire les noms avant de l'envoyer, et vérifie quelques moyennes avec ton bulletin.</span>"] },
       { t: "Synchronisation", v: "sync", p: [
         "<b>Activer la synchronisation</b> donne un code de 16 caractères. Sur ton autre appareil, touche <b>J'ai déjà un code</b> et tape-le.",
         "Les notes sont chiffrées avec ce code : garde-le précieusement, il ne peut pas être récupéré. Toute personne qui a le code voit et peut modifier les notes."] },

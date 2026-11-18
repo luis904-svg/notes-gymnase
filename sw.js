@@ -1,6 +1,6 @@
 /* Hors-ligne : la page vient du réseau si possible, sinon du cache ; le reste du cache d'abord.
-   voie-ecg.js n'est volontairement pas dans ASSETS : il n'est chargé (et gardé en cache à la première utilisation) que si l'élève a choisi cette voie. */
-var V = "notes2m01-v72";
+   voie-ecg.js et import.js ne sont volontairement pas dans ASSETS : chargés (et gardés en cache à la première utilisation) seulement si l'élève choisit cette voie ou utilise l'import. */
+var V = "notes2m01-v73";
 var ASSETS = ["./", "index.html", "fx.css", "ios.css", "fx.js", "ios-nav.js", "ios-motion.js", "ios-tabbar.js", "ios-home.js", "ios-dash.js", "ios-add.js", "ios-title.js", "ios-settings.js", "ios-detail.js", "ios-anim.js", "icons.js", "NOTICE-Lucide.txt", "grid.js", "ta.js", "photos.js", "cert.js", "year.js", "notify.js", "sync.js", "onboard.js", "guide.js", "hello.js", "motion.js", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(V).then(function (c) { return c.addAll(ASSETS.map(function (u) { return new Request(u, { cache: "reload" }); })); }).then(function () { return self.skipWaiting(); }));

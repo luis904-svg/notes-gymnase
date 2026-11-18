@@ -84,7 +84,8 @@
         '<p class="ob-fine">Écoles vaudoises · règles 2026-2027</p>' +
         '<p class="ob-fine ob-disc">' + esc(window.Guide ? Guide.disclaimer : "Application non officielle. Résultats indicatifs : seul ton bulletin fait foi.") + '</p>' +
         (window.Sync && Sync.available() ? '<button type="button" class="link ob-sync" id="ob-sync">J\'ai déjà mes notes sur un autre appareil</button>' +
-          '<p class="ob-fine ob-parent">Parent d\'élève ? Touche cette ligne et entre le code de synchronisation de ton enfant.</p>' : '') + '</div>';
+          '<p class="ob-fine ob-parent">Parent d\'élève ? Touche cette ligne et entre le code de synchronisation de ton enfant.</p>' : '') +
+        '<button type="button" class="link ob-sync" id="ob-sheet">J\'ai mes notes dans un tableur (Excel…)</button>' + '</div>';
     }
     if (s.id === "guide") {
       return '<div class="ob-hero"><div class="ob-gi">' + window.Icons.svg("book") + '</div>' +
@@ -220,6 +221,10 @@
           if (ok) { hap("success"); close(); }
           else { e.target.textContent = "J'ai déjà mes notes sur un autre appareil"; window.alert("Aucune note trouvée pour ce code. Vérifie-le (16 lettres ou chiffres), ou continue la configuration."); }
         });
+        return;
+      }
+      if (e.target.id === "ob-sheet") {
+        window.Grid.script("import.js").then(function () { Import.open({ onDone: close }); }, function () { window.alert("L'import se charge à la première utilisation : connecte-toi à Internet, puis réessaie."); });
         return;
       }
       if (e.target.closest("#ob-guide")) {

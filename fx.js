@@ -293,18 +293,22 @@
     // Téléphone (v58, style C) : groupe de lignes iOS ; l'interrupteur haptique vit dans Réglages › Données (ios-settings.js).
     div.innerHTML = phone ?
       '<p class="ios-grp-head">Fichier de sauvegarde</p><div class="ios-grp"><button type="button" class="ios-row ios-act" id="bk-export">Exporter</button>' +
-        '<button type="button" class="ios-row ios-act" id="bk-import">Importer un fichier</button></div>' +
+        '<button type="button" class="ios-row ios-act" id="bk-import">Importer un fichier</button><button type="button" class="ios-row ios-act" id="bk-sheet">Importer depuis un tableur</button></div>' +
         '<p class="ios-grp-foot" id="bk-last"></p><p class="ios-grp-foot">' + txt + '</p>' +
         '<input type="file" id="bk-file" accept="application/json,.json"><p class="ok ios-grp-foot" id="bk-msg" role="status"></p>' + hapRow :
       '<h3>Sauvegarde</h3><p class="muted small">' + txt + '</p>' +
       '<div class="btns"><button type="button" class="btn" id="bk-export">Exporter</button>' +
-      '<button type="button" class="btn-ghost" id="bk-import">Importer un fichier</button></div>' +
+      '<button type="button" class="btn-ghost" id="bk-import">Importer un fichier</button><button type="button" class="btn-ghost" id="bk-sheet">Importer depuis un tableur</button></div>' +
       '<input type="file" id="bk-file" accept="application/json,.json">' +
       '<p class="ok" id="bk-msg" role="status"></p>' + hapRow;
     host.appendChild(div);
     $("#bk-export").addEventListener("click", exportData);
     lastLine();
     $("#bk-import").addEventListener("click", function () { $("#bk-file").click(); });
+    // Import depuis un tableur (Excel…) via une IA : import.js n'est téléchargé qu'à cet instant.
+    $("#bk-sheet").addEventListener("click", function () {
+      Grid.script("import.js").then(function () { Import.open(); }, function () { window.alert("L'import se charge à la première utilisation : connecte-toi à Internet, puis réessaie."); });
+    });
     $("#bk-file").addEventListener("change", function (e) { var f = e.target.files && e.target.files[0]; if (f) importFile(f); e.target.value = ""; });
     $("#bk-haptic").addEventListener("change", function (e) {
       hapticsOn = e.target.checked;
