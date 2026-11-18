@@ -10,18 +10,23 @@
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function $(s, r) { return (r || document).querySelector(s); }
 
-  var p = {}, step = 0, firstStep = 0, editing = false, root = null, dir = 1, guideTouched = false;
+  var p = {}, step = 0, firstStep = 0, editing = false, root = null, dir = 1, guideTouched = false, allowVoie = false, loading = false, loadErr = false;
+  function mat() { return G.isMat(p); }
+  function ecg() { return G.voieOf(p) === "ecg" && !!G.ext(p); }
   var STEPS = [
     { id: "welcome" },
+    // La voie se choisit d'abord (v72) ; en modification, seulement depuis « Changer de voie ».
+    { id: "voie", title: "Ta voie", sub: "Les règles de calcul changent d'une voie à l'autre.", when: function () { return !editing || allowVoie; } },
     { id: "guide", when: function () { return !editing; } },
     { id: "gymnase", title: "Ton gymnase", sub: "Il s'affichera en haut de ton tableau de bord." },
     { id: "year", title: "Ton année", sub: "Les branches et leurs périodes changent d'une année à l'autre." },
     { id: "l2", title: "Deuxième langue (L2)", sub: "La langue nationale que tu suis au gymnase." },
-    { id: "l3", title: "Troisième langue (L3)" },
-    { id: "os", title: "Option spécifique", sub: "Ton option principale, suivie pendant les trois ans." },
-    { id: "math", title: "Mathématiques", sub: "Le niveau choisi à l'inscription." },
-    { id: "art", title: "Discipline artistique", sub: "Suivie en 1re et en 2e année." },
-    { id: "oc", title: "Option complémentaire", sub: "Suivie en 3e année seulement.", when: function () { return p.year === 3; } },
+    { id: "domaine", title: "Domaine professionnel", sub: "Choisi à la fin de la 1re année.", when: function () { return ecg() && p.year >= 2; } },
+    { id: "l3", title: "Troisième langue (L3)", when: mat },
+    { id: "os", title: "Option spécifique", sub: "Ton option principale, suivie pendant les trois ans.", when: mat },
+    { id: "math", title: "Mathématiques", sub: "Le niveau choisi à l'inscription.", when: mat },
+    { id: "art", title: "Discipline artistique", sub: "Suivie en 1re et en 2e année.", when: function () { return mat() || (ecg() && G.ext(p).needArt(p)); } },
+    { id: "oc", title: "Option complémentaire", sub: "Suivie en 3e année seulement.", when: function () { return mat() && p.year === 3; } },
     { id: "recap", title: "Tes branches" }
   ];
   function visible() { return STEPS.filter(function (s) { return !s.when || s.when(); }); }
@@ -41,6 +46,8 @@
   function valid(s) {
     switch (s.id) {
       case "welcome": return true;
+      case "voie": return !!p.voie && !loading && !loadErr;
+      case "domaine": return !!p.domaine && !G.ext(p).blocked("domaine", p.domaine, p);
       case "gymnase": return !!p.gymnase;
       case "year": return !!p.year;
       case "l2": return !!p.l2;
@@ -54,17 +61,27 @@
   }
   // Un choix devenu impossible (retour en arrière) est effacé.
   function sanitize() {
+    if (!mat()) { var x = G.ext(p); if (x) x.sanitize(p); var l2 = G.list("l2", p).filter(function (i) { return i.id === p.l2; }); if (p.l2 && !l2.length) p.l2 = null; return; }
     if (p.os && G.osBlock(p.os, p)) p.os = null;
     if (p.os === "PAM") p.math = "renf";
     if (p.oc && G.ocBlock(p.oc, p)) p.oc = null;
     if (p.year !== 3) p.oc = p.oc || null;
   }
 
+  // Changer de voie repart d'un profil neuf (gymnase, classe et année gardés) ; le fichier de la voie est chargé à la demande.
+  function chooseVoie(v) {
+    if (G.voieOf(p) === v) { p.voie = v; return; }
+    p = { v: 1, voie: v, gymnase: p.gymnase || null, classe: "", year: p.year || null };
+    loadErr = false; loading = !G.ext(p) && !G.isMat(p);
+    if (loading) G.load(v).then(function () { loading = false; refreshNext(); }, function () { loading = false; loadErr = true; if (root) render(); });
+  }
+  function refreshNext() { var n = root && $(".ob-next", root), s = root && visible()[step]; if (n && s) n.disabled = !valid(s); }
+
   function body(s) {
     if (s.id === "welcome") {
       return '<div class="ob-hero"><img src="icon-180.png" alt="" class="ob-icon"><h1>Bienvenue</h1>' +
-        '<p>Tes notes, tes moyennes et ta promotion au gymnase, calculées pour toi. Réponds à quelques questions sur ton cursus : tout reste sur cet appareil.</p>' +
-        '<p class="ob-fine">École de maturité vaudoise · règles 2026-2027</p>' +
+        '<p>Tes notes, tes moyennes et ta promotion, calculées pour toi. Réponds à quelques questions sur ton cursus : tout reste sur cet appareil.</p>' +
+        '<p class="ob-fine">Écoles vaudoises · règles 2026-2027</p>' +
         '<p class="ob-fine ob-disc">' + esc(window.Guide ? Guide.disclaimer : "Application non officielle. Résultats indicatifs : seul ton bulletin fait foi.") + '</p>' +
         (window.Sync && Sync.available() ? '<button type="button" class="link ob-sync" id="ob-sync">J\'ai déjà mes notes sur un autre appareil</button>' +
           '<p class="ob-fine ob-parent">Parent d\'élève ? Touche cette ligne et entre le code de synchronisation de ton enfant.</p>' : '') + '</div>';
@@ -75,31 +92,44 @@
         '<p>Environ 15 minutes : ajouter tes notes, tes TA et les photos de tes tests, lire le tableau de bord, comprendre le calcul, régler l\'app et prévenir tes parents.</p>' +
         '<p class="ob-fine">Tu peux la suivre maintenant ou plus tard, dans Réglages → Guide d\'utilisation.</p></div>';
     }
-    var h = '<h1 class="ob-title">' + esc(s.title) + '</h1>' + (s.sub ? '<p class="ob-sub">' + esc(s.sub) + '</p>' : "");
+    var sb = s.id === "art" && ecg() ? "Au choix en travail social, en 2e et en 3e année." : s.sub;
+    var h = '<h1 class="ob-title">' + esc(s.title) + '</h1>' + (sb ? '<p class="ob-sub">' + esc(sb) + '</p>' : "");
+    if (s.id === "voie") {
+      h += '<div class="ob-list" role="radiogroup">' + G.VOIES.map(function (v) {
+        return row(v.name, v.sub, v.id, "voie", v.soon ? v.sub : null);
+      }).join("") + '</div>';
+      if (loadErr) h += '<p class="ob-warn">Cette voie se charge à la première utilisation : connecte-toi à Internet, puis réessaie.</p>';
+    }
+    if (s.id === "domaine") {
+      h += list(G.list("domaine", p), "domaine", function (id) { return G.ext(p).blocked("domaine", id, p); });
+      var dw = G.ext(p).warn("domaine", p.domaine, p);
+      if (dw) h += '<p class="ob-warn">' + esc(dw) + '</p>';
+    }
     if (s.id === "gymnase") {
       h += list(G.GYMNASES, "gymnase");
       var g = G.find(G.GYMNASES, p.gymnase);
       if (g && g.warn) h += '<p class="ob-warn">' + esc(g.warn) + '</p>';
     }
     if (s.id === "year") {
-      h += list([{ id: 1, name: "1re année" }, { id: 2, name: "2e année" }, { id: 3, name: "3e année", sub: "avec le certificat de maturité et les examens" }], "year");
+      h += list([{ id: 1, name: "1re année" }, { id: 2, name: "2e année" }, { id: 3, name: "3e année", sub: ecg() ? "avec le certificat ECG et les examens" : "avec le certificat de maturité et les examens" }], "year");
       h += '<label class="ob-field"><span>Nom de ta classe (facultatif)</span><input id="ob-classe" type="text" maxlength="12" autocomplete="off" placeholder="2M01" value="' + esc(p.classe || "") + '"></label>';
     }
-    if (s.id === "l2") h += list(G.L2, "l2");
+    if (s.id === "l2") h += list(G.list("l2", p), "l2", ecg() ? function (id) { return G.ext(p).blocked("l2", id, p); } : null);
     if (s.id === "l3") h += list(G.L3, "l3");
     if (s.id === "os") h += list(G.OS, "os", G.osBlock);
     if (s.id === "math") h += list(G.MATH, "math", G.mathBlock);
-    if (s.id === "art") h += list(G.ART, "art");
+    if (s.id === "art") h += list(G.list("art", p), "art");
     if (s.id === "oc") h += list(G.OC, "oc", G.ocBlock);
     if (s.id === "recap") {
       var subs = G.build(p), gname = G.gymnaseName(p.gymnase);
       h = '<h1 class="ob-title">' + esc(s.title) + '</h1><p class="ob-sub">' + esc((gname ? gname + " · " : "") + p.year + (p.year === 1 ? "re" : "e") + " année" + (p.classe ? " · " + p.classe : "")) + '</p>';
       h += '<div class="ob-list ob-recap">' + subs.filter(function (x) { return !x.part && !x.carried; }).map(function (x) {
-        var parts = x.parts ? subs.filter(function (c) { return x.parts.indexOf(c.id) >= 0; }).map(function (c) { return c.name + " " + fmtP(c.periods) + (c.tpShare ? " (TP 25 %)" : ""); }).join(" + ") : "";
+        var parts = x.parts ? subs.filter(function (c) { return x.parts.indexOf(c.id) >= 0; }).map(function (c) { return c.name + " " + fmtP(c.periods) + (c.tpShare ? " (TP " + Math.round(c.tpShare * 100) + " %)" : ""); }).join(" + ") : "";
         return '<div class="ob-row ob-static"><span class="ob-txt"><span class="ob-n">' + esc(x.name) + '</span><span class="ob-s">' +
-          fmtP(x.periods) + " par semaine" + (x.tpShare ? " · TP 25 %" : "") + (parts ? " · " + esc(parts) : "") + (x.counts ? "" : " · ne compte pas pour la promotion") + '</span></span></div>';
+          fmtP(x.periods) + " par semaine" + (x.tpShare ? " · TP " + Math.round(x.tpShare * 100) + " %" : "") + (parts ? " · " + esc(parts) : "") + (x.counts ? "" : " · ne compte pas pour la promotion") + '</span></span></div>';
       }).join("") + '</div>';
-      h += '<p class="ob-tip"><b>TP à 25 %.</b> Dans les branches avec des travaux pratiques, les TP comptent pour 25 % de la moyenne et les tests pour 75 %. Si ton prof compte autrement, tu peux changer ce pourcentage pour chaque branche dans Réglages.</p>';
+      h += ecg() ? '<p class="ob-tip"><b>Disciplines intégrées.</b> Plusieurs disciplines forment une seule note de bulletin (par exemple les sciences expérimentales) : leur moyenne est pondérée par les périodes. Les TP comptent selon la grille (tu peux changer ce pourcentage branche par branche dans Réglages).</p>'
+        : '<p class="ob-tip"><b>TP à 25 %.</b> Dans les branches avec des travaux pratiques, les TP comptent pour 25 % de la moyenne et les tests pour 75 %. Si ton prof compte autrement, tu peux changer ce pourcentage pour chaque branche dans Réglages.</p>';
       h += '<p class="ob-fine">Tes choix, tes objectifs et les périodes restent modifiables dans Réglages → Profil et Réglages → Branches. Vérifie les règles avec le vade-mecum de ton gymnase.</p>';
     }
     return h;
@@ -144,6 +174,11 @@
     var cur0 = window.NotesApp.profile();
     if (cur0 && p.year !== cur0.year && window.NotesApp.grades().length &&
       !window.confirm("Tu changes d'année sans classer tes notes : elles seront comptées dans les moyennes de la nouvelle année. Pour les classer dans « Années précédentes », annule puis utilise « Passer à l'année suivante » dans Réglages. Continuer quand même ?")) return;
+    if (cur0 && G.voieOf(cur0) !== G.voieOf(p) && window.NotesApp.grades().length) {
+      var nn = window.NotesApp.grades().length;
+      if (!window.confirm("Changer de voie supprime tes " + nn + " note" + (nn > 1 ? "s" : "") + " actuelle" + (nn > 1 ? "s" : "") + " (leurs photos aussi) : les branches ne sont pas les mêmes. Exporte une sauvegarde avant si tu veux les garder. Continuer ?")) return;
+      window.NotesApp.remove(window.NotesApp.grades().map(function (g) { return g.id; }));
+    }
     var gs = window.NotesApp.grades(), next = G.build(p).map(function (x) { return x.id; });
     var lost = gs.filter(function (g) { return next.indexOf(g.subject) < 0; }).length;
     if (lost && !window.confirm(lost + " note" + (lost > 1 ? "s appartiennent" : " appartient") + " à des branches absentes de ce profil. Elles seront masquées, pas supprimées. Continuer ?")) return;
@@ -166,7 +201,7 @@
 
   function open(edit, startId) {
     if (root) return;
-    editing = !!edit;
+    editing = !!edit; allowVoie = startId === "voie"; loading = false; loadErr = false;
     var cur = window.NotesApp.profile();
     p = cur ? JSON.parse(JSON.stringify(cur)) : {};
     step = editing ? 1 : 0; dir = 1;
@@ -188,18 +223,24 @@
         return;
       }
       if (e.target.closest("#ob-guide")) {
-        window.Guide.open({ start: true, onClose: function (res) { guideTouched = true; if (!root) return; if (res && res.completed) go(1); else render(); } });
+        window.Guide.open({ start: true, profile: p, onClose: function (res) { guideTouched = true; if (!root) return; if (res && res.completed) go(1); else render(); } });
         return;
       }
       if (e.target.closest("#ob-later")) { go(1); return; }
       var r = e.target.closest(".ob-row[data-f]");
       if (r && !r.disabled) {
         var f = r.dataset.f, v = r.dataset.v;
-        p[f] = f === "year" ? parseInt(v, 10) : v;
+        if (f === "voie") { chooseVoie(v); }
+        else p[f] = f === "year" ? parseInt(v, 10) : v;
         sanitize(); hap("select");
         A(r.querySelector(".ob-chk"), { scale: [0.3, 1] }, { type: "spring", stiffness: 500, damping: 15 });
         root.querySelectorAll('.ob-row[data-f="' + f + '"]').forEach(function (x) { var on = x === r; x.classList.toggle("on", on); x.setAttribute("aria-checked", String(on)); });
         var s = visible()[step];
+        if (s.id === "domaine") {
+          var dw = G.ext(p).warn("domaine", p.domaine, p), w2 = root.querySelector(".ob-warn");
+          if (w2) w2.remove();
+          if (dw) { w2 = document.createElement("p"); w2.className = "ob-warn"; w2.textContent = dw; root.querySelector(".ob-list").after(w2); }
+        }
         if (s.id === "gymnase") {
           var g = G.find(G.GYMNASES, p.gymnase), w = root.querySelector(".ob-warn");
           if (w) w.remove();
@@ -226,6 +267,7 @@
   }
   function refreshSummary() {
     var el = document.getElementById("ob-sum"), pr = window.NotesApp.profile(); if (!el || !pr) return;
+    if (!G.isMat(pr)) { var x = G.ext(pr); el.textContent = x ? x.summary(pr) : ""; return; }
     var os = G.find(G.OS, pr.os), l2 = G.find(G.L2, pr.l2), l3 = G.find(G.L3, pr.l3);
     el.textContent = pr.year + (pr.year === 1 ? "re" : "e") + " année · L2 " + (l2 ? l2.name : "?") + " · L3 " + (l3 ? l3.name : "?") + " · OS " + (os ? os.name : "?") + " · maths " + (pr.math === "renf" ? "renforcé" : "standard");
   }

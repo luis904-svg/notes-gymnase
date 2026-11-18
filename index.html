@@ -566,8 +566,8 @@ td input[type="date"] { width: auto; }
       s.cfg.subjects = s.cfg.subjects.map(function (d) {
         var o = raw.cfg.subjects.filter(function (x) { return x.id === d.id; })[0];
         if (!o) return d;
-        var keep = { goal: o.goal, tpShare: o.tpShare };
-        if (o.verify === false) { keep.periods = o.periods; keep.counts = o.counts; keep.verify = false; }
+        var keep = { goal: o.goal };
+        if (o.verify === false) { keep.periods = o.periods; keep.counts = o.counts; keep.tpShare = o.tpShare; keep.verify = false; }
         Object.keys(keep).forEach(function (k) { if (keep[k] === undefined) delete keep[k]; });
         return Object.assign({}, d, keep);
       });
@@ -663,6 +663,8 @@ td input[type="date"] { width: auto; }
     var fr = g("fr"), l2 = g("l2"), l3 = g("l3"), ma = g("maths"), os = g("os");
     var complete = [fr, l2, l3, ma, os].every(function (x) { return x != null; });
     var gp = complete ? fr + roundHalf((l2 + l3) / 2) + ma + os : null;
+    var R = window.Grid && Grid.rules ? Grid.rules(state.cfg.profile) : null;
+    if (R) { var rr = R.evaluate({ rows: rows, have: have, bm: bm, total: total, nb: nb, ins: ins }); rr.expected = rows.length; rr.complete = have.length === rows.length; return rr; }
     var fails = [];
     if (nb && total < 4 * nb - 1e-9) fails.push("total");
     if (gp != null && gp < 16 - 1e-9) fails.push("group");
@@ -677,7 +679,8 @@ td input[type="date"] { width: auto; }
     if (!r.nb) { r.status = "none"; return r; }
     if (!r.fails.length && r.nb < r.expected) { r.status = "partial"; return r; }
     if (!r.fails.length) {
-      var tight = (r.total - 4 * r.nb < 2) || (r.gp != null && r.gp - 16 < 1) || r.ins === 4;
+      var R = window.Grid && Grid.rules ? Grid.rules(state.cfg.profile) : null;
+      var tight = R ? R.tight(r) : (r.total - 4 * r.nb < 2) || (r.gp != null && r.gp - 16 < 1) || r.ins === 4;
       r.status = tight ? "tight" : "ok";
       return r;
     }
@@ -753,6 +756,7 @@ td input[type="date"] { width: auto; }
     danger: ["t-crit", "En danger", "Plusieurs conditions ne sont pas remplies. Il faut remonter des moyennes."]
   };
 
+  function stOf(k) { var R = window.Grid && Grid.rules ? Grid.rules(state.cfg.profile) : null, x = R && window.Grid.ext(state.cfg.profile); return (x && x.statusText && x.statusText(k, state.cfg.profile.year)) || STATUS[k] || STATUS.none; }
   function metric(label, val, unit, sub, ratio, cls, mark) {
     return '<div class="metric"><span class="lbl">' + label + '</span><span class="val">' + val + ' <small>' + unit + '</small></span>' +
       '<div class="bar ' + cls + '"><i style="width:' + Math.max(0, Math.min(100, ratio * 100)).toFixed(0) + '%"></i>' + (mark ? '<b style="left:' + (mark.at * 100).toFixed(1) + '%"></b>' : "") + '</div>' +
@@ -760,7 +764,7 @@ td input[type="date"] { width: auto; }
   }
 
   function renderPromo(notes) {
-    var r = promotion(notes), st = STATUS[r.status];
+    var r = promotion(notes), st = stOf(r.status);
     var el = $("#promo");
     var thr = 4 * r.nb, surplus = r.total - thr, minTotal = 4 * r.expected;
     var groupMark = { at: 16 / 24, label: "16 min" };
@@ -771,7 +775,7 @@ td input[type="date"] { width: auto; }
       : metric("Groupe FR + L2/L3 + maths + OS", "–", "/ 24", "incomplet : il manque une de ces branches", 0, "", groupMark);
     var mIns = metric("Notes inférieures à 4", String(r.ins), "/ 4 max", r.ins > 4 ? "trop de notes insuffisantes" : (4 - r.ins) + " en réserve", r.ins / 5, r.ins > 4 ? "crit" : r.ins === 4 ? "warn" : "");
     el.innerHTML = '<div class="verdict"><span class="pill ' + st[0] + '">' + st[1] + '</span><p>' + st[2] + '</p></div>' +
-      '<div class="metrics">' + mTotal + mGroup + mIns + '</div>';
+      '<div class="metrics">' + (window.Grid && Grid.rules(state.cfg.profile) ? Grid.rules(state.cfg.profile).metrics(r, metric, mTotal) : mTotal + mGroup + mIns) + '</div>';
   }
 
   function renderAlerts(notes) {
@@ -797,7 +801,7 @@ td input[type="date"] { width: auto; }
       var minN = s.parts ? null : Math.ceil(s.periods) + 1;
       var vals = subjSeries(s.id, notes).map(function (p) { return p.avg; }).filter(function (v) { return v != null; });
       var lines = '<span>moy. exacte <span class="mono">' + fmtAvg(a.avg) + '</span>' + (a.prov ? " · sans TP ou sans test" : "") + '</span>';
-      lines += s.carried ? '<span>note de 2e reprise</span>' : '<span>' + a.n + ' note' + (a.n > 1 ? "s" : "") + (minN ? ' sur ' + minN + ' min.' : "") + '</span>';
+      lines += s.carried ? '<span>note de ' + (Grid.isMat(state.cfg.profile) ? '2e' : '1re') + ' reprise</span>' : '<span>' + a.n + ' note' + (a.n > 1 ? "s" : "") + (minN ? ' sur ' + minN + ' min.' : "") + '</span>';
       if (s.goal && a.avg != null) { var dl = a.avg - s.goal; lines += '<span>objectif ' + s.goal + ' · <span class="mono">' + (dl >= 0 ? "+" : "−") + Math.abs(dl).toFixed(2) + '</span></span>'; }
       if (s.counts === false) lines += '<span>ne compte pas pour la promotion</span>';
       var parts = "";
@@ -934,7 +938,7 @@ td input[type="date"] { width: auto; }
     if (!s) { ui.detail = null; if (window.IOSDetail && IOSDetail.close()) return; if (window.IOSSheet && !el.hidden) IOSSheet.close(); else { el.hidden = true; document.body.style.overflow = ""; } return; }
     var all = currentGrades(), ids = s.parts || [s.id];
     if (s.carried) {
-      $("#sheet-box").innerHTML = '<div class="grab" aria-hidden="true"></div><div class="sheet-head"><div><h2 id="sheet-title">' + esc(s.name) + '</h2><p>Note de 2e reprise</p></div><button type="button" class="btn-ghost" data-close id="sheet-close">Fermer</button></div>' +
+      $("#sheet-box").innerHTML = '<div class="grab" aria-hidden="true"></div><div class="sheet-head"><div><h2 id="sheet-title">' + esc(s.name) + '</h2><p>Note de ' + (Grid.isMat(state.cfg.profile) ? '2e' : '1re') + ' reprise</p></div><button type="button" class="btn-ghost" data-close id="sheet-close">Fermer</button></div>' +
         (window.Cert && Cert.detail ? Cert.detail(s.id) : "");
       if (!dragging && !window.IOSSheet) { $("#sheet-box").style.transform = ""; $("#sheet-box").style.transition = ""; }
       if (window.IOSDetail && IOSDetail.open()) { /* page entière (téléphone) */ } else if (window.IOSSheet) IOSSheet.open(); else { el.hidden = false; document.body.style.overflow = "hidden"; }
@@ -1006,11 +1010,11 @@ td input[type="date"] { width: auto; }
   // Changement d'année : le chiffre de l'année en tête de la classe suit (2M01 → 3M01).
   function bumpClasse(c, from, to) { c = String(c || ""); return c && from !== to && c.charAt(0) === String(from) ? String(to) + c.slice(1) : c; }
   function renderHead() {
-    var pr = state.cfg.profile, gname = Grid.gymnaseName(pr.gymnase), t = "Notes " + (pr.classe || pr.year + "M");
+    var pr = state.cfg.profile, gname = Grid.gymnaseName(pr.gymnase), hd = Grid.isMat(pr) ? null : Grid.head(pr), t = "Notes " + (pr.classe || (hd ? hd.classe : pr.year + "M"));
     $("header.top h1").textContent = t; document.title = t;
     var sy = parseInt(state.cfg.s1End.slice(0, 4), 10);
-    $("header.top p").textContent = (gname ? gname + " · " : "") + "École de maturité vaudoise · " + (sy - 1) + "–" + sy;
-    $("#h-promo").textContent = pr.year === 3 ? "Certificat de maturité" : "Promotion en " + (pr.year + 1) + "e année";
+    $("header.top p").textContent = (gname ? gname + " · " : "") + (hd ? hd.school : "École de maturité vaudoise") + " · " + (sy - 1) + "–" + sy;
+    $("#h-promo").textContent = hd ? hd.promo : pr.year === 3 ? "Certificat de maturité" : "Promotion en " + (pr.year + 1) + "e année";
   }
   var NO_PROMO = '<div class="verdict"><span class="pill t-none">3e année</span><p>Pas de promotion en 3e : le certificat dépend aussi des examens. L\'app suit tes moyennes et tes objectifs.</p></div>';
   function render() {
@@ -1019,10 +1023,11 @@ td input[type="date"] { width: auto; }
     var base = currentGrades(), notes = periodNotes(base, ui.period);
     document.querySelectorAll("[data-period]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.period === ui.period)); });
     $("#demo").hidden = !ui.demo;
-    if (state.cfg.profile.year === 3) $("#promo").innerHTML = NO_PROMO; else renderPromo(notes); renderBars(notes); renderAlerts(notes); renderSubjects(notes); renderChart(notes); renderNotes(base); renderDetail();
+    if (state.cfg.profile.year === 3 && Grid.isMat(state.cfg.profile)) $("#promo").innerHTML = NO_PROMO; else renderPromo(notes); renderBars(notes); renderAlerts(notes); renderSubjects(notes); renderChart(notes); renderNotes(base); renderDetail();
     if (window.FX) FX.rendered();
     if (window.Onboard) Onboard.refresh();
     if (window.Cert) Cert.render();
+    if (window.Grid) Grid.afterRender();
     if (window.YearPass) YearPass.refresh();
     if (window.Notify) Notify.rendered();
   }
@@ -1185,7 +1190,7 @@ td input[type="date"] { width: auto; }
     redraw: function () { render(); },
     archive: function () { return (state.cfg.archive || []).slice(); },
     verdict: function () {
-      var r = promotion(live()), st = STATUS[r.status] || STATUS.none;
+      var r = promotion(live()), st = stOf(r.status);
       return { status: r.status, cls: st[0], label: st[1] };
     },
     // Classe l'année dans l'archive (notes + profil + réglages), repart de zéro avec le profil suivant, dates décalées d'un an.
@@ -1231,6 +1236,7 @@ td input[type="date"] { width: auto; }
       return wavg(mine);
     },
     setProfile: function (prof, forget) {
+      if (!Grid.isMat(prof) && !Grid.ext(prof)) { var me = this; Grid.load(Grid.voieOf(prof)).then(function () { me.setProfile(prof, forget); }, function () { window.alert("Cette voie demande une connexion la première fois. Réessaie en ligne."); }); return; }
       prof = Object.assign({}, prof, { classe: bumpClasse(prof.classe, state.cfg.profile ? state.cfg.profile.year : null, prof.year) });
       state = normalize({ cfg: { notifOff: state.cfg.notifOff, s1End: state.cfg.s1End, profile: prof, subjects: state.cfg.subjects.filter(function (s) { return !(forget && forget.indexOf(s.id) >= 0); }), archive: state.cfg.archive }, grades: state.grades });
       ui.chartSubj = "__all"; ui.detail = null; fillSelects(); renderSettings(); persist(); render();
@@ -1259,7 +1265,10 @@ td input[type="date"] { width: auto; }
     },
     setNotifOff: function (v) { if (v) state.cfg.notifOff = true; else delete state.cfg.notifOff; persist(); },
     setS1End: function (v) { if (v) { state.cfg.s1End = v; persist(); render(); renderSettings(); } },
-    replace: function (raw) { state = normalize(raw); fillSelects(); renderSettings(); persist(); render(); }
+    replace: function (raw) {
+      var rp = raw && raw.cfg && raw.cfg.profile;
+      if (rp && !Grid.isMat(rp) && !Grid.ext(rp)) { var me = this; Grid.load(Grid.voieOf(rp)).then(function () { me.replace(raw); }, function () { window.alert("Cette voie demande une connexion la première fois. Réessaie en ligne."); }); return; }
+      state = normalize(raw); fillSelects(); renderSettings(); persist(); render(); }
   };
 
   /* ---------- Démarrage ---------- */

@@ -81,8 +81,37 @@
   function mathBlock(m, p) { return p.os === "PAM" && m === "std" ? "L'OS physique et applications des maths impose le niveau renforcé" : null; }
   function ocBlock(oc, p) { var ex = OC_EXCLUDED[p.os]; return ex && ex.indexOf(oc) >= 0 ? "Exclue avec ton option spécifique" : null; }
 
+  /* ---------- Voies (v72) ----------
+     « mat » = école de maturité (ce fichier). Les autres voies ont leur propre fichier, chargé seulement si l'élève l'a choisie :
+     au démarrage, si le profil enregistré est d'une autre voie, son script est écrit dans la page avant le moteur (document.write
+     garde l'ordre d'exécution) ; au choix de la voie dans l'assistant, il est chargé à la demande. Un profil sans `voie` est « mat ». */
+  var VOIES = [
+    { id: "mat", name: "Maturité gymnasiale", sub: "École de maturité, au gymnase" },
+    { id: "ecg", name: "Culture générale", sub: "École de culture générale (ECG), certificat ECG" },
+    { id: "com", name: "Commerce", sub: "École de commerce : bientôt disponible", soon: true }
+  ];
+  var FILES = { ecg: "voie-ecg.js" };
+  var ext = {};
+  function voieOf(p) { return p && FILES[p.voie] ? p.voie : "mat"; }
+  function extOf(p) { var v = voieOf(p); return v !== "mat" ? ext[v] || null : null; }
+  function register(id, mod) { ext[id] = mod; }
+  function load(id) {
+    if (!FILES[id] || ext[id]) return Promise.resolve();
+    return new Promise(function (ok, ko) {
+      var s = document.createElement("script");
+      s.src = FILES[id]; s.onload = function () { ok(); }; s.onerror = function () { s.remove(); ko(new Error("voie")); };
+      document.head.appendChild(s);
+    });
+  }
+  (function () {
+    var v = "mat";
+    try { var st = JSON.parse(localStorage.getItem("notes2m01.v1") || "null"); v = voieOf(st && st.cfg && st.cfg.profile); } catch (e) {}
+    if (FILES[v]) document.write('<script src="' + FILES[v] + '"><\/script>');
+  })();
+
   function build(p) {
     if (!p) return [];
+    if (voieOf(p) !== "mat") return ext[voieOf(p)] ? ext[voieOf(p)].build(p) : [];
     var y = Math.min(3, Math.max(1, p.year | 0)) - 1, out = [], counts = COUNTS[y + 1];
     function add(o, periods) {
       if (!periods[y]) return null;
@@ -130,8 +159,36 @@
 
   function gymnaseName(id) { var g = find(GYMNASES, id); return g && g.id !== "autre" ? g.name : ""; }
 
+  /* Ce qui dépend de la voie : listes de choix, règles de verdict, textes (une voie sans module : valeurs de la maturité). */
+  function list(field, p) {
+    var x = extOf(p), l = x && x.lists && x.lists[field];
+    if (l) return l;
+    return { gymnase: GYMNASES, l2: L2, l3: L3, math: MATH, art: ART, os: OS, oc: OC }[field] || [];
+  }
+  function rules(p) { var x = extOf(p); return x ? x.rules : null; }
+  function head(p) {
+    var x = extOf(p);
+    return x ? x.head(p) : { school: "École de maturité vaudoise", promo: (p.year === 3 ? "Certificat de maturité" : "Promotion en " + (p.year + 1) + "e année"), classe: (p.year || 1) + "M" };
+  }
+
+  /* Après chaque rendu du moteur : le panneau « Comment les moyennes sont calculées » suit la voie, puis le module de la voie
+     peut dessiner ses propres blocs (render). Les textes de la maturité sont gardés pour pouvoir les remettre. */
+  function afterRender() {
+    var A = window.NotesApp, pr = A && A.profile(); if (!pr) return;
+    var box = document.querySelector("details.panel .rules"), cav = document.querySelector("details.panel .caveat"), x = extOf(pr);
+    if (box) {
+      if (box._orig == null) { box._orig = box.innerHTML; box._cav = cav ? cav.innerHTML : ""; }
+      var t = x && x.rulesHtml ? x.rulesHtml(pr) : null, k = t ? voieOf(pr) + pr.year + (pr.domaine || "") : "mat";
+      if (box._k !== k) { box._k = k; box.innerHTML = t ? t.html : box._orig; if (cav) cav.innerHTML = t ? t.caveat : box._cav; }
+    }
+    if (x && x.render) x.render(pr);
+  }
+
   window.Grid = {
-    GYMNASES: GYMNASES, L2: L2, L3: L3, MATH: MATH, ART: ART, OS: OS, OC: OC,
-    osBlock: osBlock, mathBlock: mathBlock, ocBlock: ocBlock, build: build, find: find, gymnaseName: gymnaseName
+    afterRender: afterRender,
+    GYMNASES: GYMNASES, L2: L2, L3: L3, MATH: MATH, ART: ART, OS: OS, OC: OC, VOIES: VOIES,
+    osBlock: osBlock, mathBlock: mathBlock, ocBlock: ocBlock, build: build, find: find, gymnaseName: gymnaseName,
+    voieOf: voieOf, ext: extOf, register: register, load: load, list: list, rules: rules, head: head,
+    isMat: function (p) { return voieOf(p) === "mat"; }
   };
 })();

@@ -125,7 +125,7 @@
     var a = app(), pr = a && a.profile();
     mountCarried(pr);
     var promo = document.getElementById("promo");
-    if (!pr || pr.year !== 3 || !promo) return;
+    if (!pr || pr.year !== 3 || !promo || !window.Grid.isMat(pr)) return;
     var real = compute(null), now = compute("now"), m = minimum(), st = status(real, m), s = real.complete ? real : now;
     var partial = !real.complete, g1, g2;
     if (s.rated) {
@@ -148,7 +148,8 @@
   function inp(attr, v) { return '<input type="number" inputmode="decimal" min="1" max="6" step="0.5" ' + attr + ' value="' + (v != null ? v : "") + '" placeholder="–">'; }
   function detail(id) {
     var pr = app() && app().profile();
-    if (!pr || pr.year !== 3) return "";
+    if (pr && pr.year === 3 && !window.Grid.isMat(pr)) { var vx = window.Grid.ext(pr); return vx && vx.detail ? vx.detail(id) : ""; }
+    if (!pr || pr.year !== 3 || !window.Grid.isMat(pr)) return "";
     if (isCarried(id)) {
       var info = carriedInfo(id), tail = "Cette branche n'est plus enseignée en 3e : pour corriger la note, va dans <b>Réglages → Notes reprises de 2e</b>.";
       var line = info.v == null ? "Aucune note de 2e trouvée pour cette branche. Entre-la dans Réglages → Notes reprises de 2e."
@@ -186,7 +187,7 @@
   function mountCarried(pr) {
     var host = document.getElementById("set-block"); if (!host) return;
     var d = document.getElementById("carriedset");
-    if (!pr || pr.year !== 3) { if (d) d.hidden = true; return; }
+    if (!pr || pr.year !== 3 || !window.Grid.isMat(pr)) { if (d) d.hidden = true; return; }
     if (!d) {
       d = document.createElement("div"); d.className = "backup"; d.id = "carriedset";
       var anchor = document.getElementById("yearpass") || (document.getElementById("ob-edit") && document.getElementById("ob-edit").closest(".backup"));
@@ -206,7 +207,8 @@
     if (d._html !== html) { d.innerHTML = html; d._html = html; }
   }
 
-  window.Cert = { render: render, reload: function () { data = load(); }, compute: compute, minimum: minimum, detail: detail, carriedValue: function (id) { return carriedInfo(id).v; } };
+  window.Cert = { render: render, reload: function () { data = load(); }, compute: compute, minimum: minimum, detail: detail, carriedValue: function (id) { var pr = app() && app().profile(), vx = pr && window.Grid.ext(pr); return vx && vx.carriedValue ? vx.carriedValue(id) : carriedInfo(id).v; },
+    data: function () { return data; }, save: save };
   // Le tableau de bord a déjà été dessiné une fois avant ce script : on le redessine pour y mettre les notes reprises.
-  try { var pr0 = app().profile(); if (pr0 && pr0.year === 3) app().redraw(); } catch (e) {}
+  try { var pr0 = app().profile(); if (pr0 && pr0.year === 3 && window.Grid.isMat(pr0)) app().redraw(); } catch (e) {}
 })();

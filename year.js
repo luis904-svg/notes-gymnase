@@ -44,13 +44,15 @@
     if (!pr || pr.year >= 3 || root) return;
     var next = pr.year + 1, v = app().verdict(), st = app().get(), yr = years(), n = st.grades.length;
     var art = pr.art === "mu" ? "la musique" : "les arts visuels";
+    var vx = window.Grid && Grid.ext(pr);
     var items = [
       "Tes " + n + " note" + (n > 1 ? "s" : "") + " de " + yr.cur + " sont classées dans « Années précédentes ». Rien n'est supprimé.",
       "Les moyennes repartent de zéro pour " + yr.next + ".",
-      "Tes choix (langues, option spécifique, maths) sont conservés.",
+      vx ? "Tes choix (gymnase, langue" + (pr.domaine ? ", domaine" : "") + ") sont conservés." : "Tes choix (langues, option spécifique, maths) sont conservés.",
       "Les dates de semestre passent à " + (yr.y + 1) + "."
     ];
-    if (next === 3) {
+    if (vx) { var ex = vx.passNotes ? vx.passNotes(pr, next) : []; ex.forEach(function (t) { items.splice(2, 0, t); }); }
+    else if (next === 3) {
       items.splice(2, 0, "Chimie, physique et " + art + " ne sont plus enseignées en 3e : leur note de 2e sera reprise pour le certificat.");
       items.push("Tu choisiras ton option complémentaire juste après.");
     }
@@ -66,7 +68,8 @@
       function (e) {
         if (!e.target.closest("#yp-go")) return;
         app().passYear(next); hap("success"); close();
-        if (next === 3 && window.Onboard) setTimeout(function () { Onboard.open(true, "oc"); }, 300);
+        var stp = vx ? vx.afterPass(next) : next === 3 ? "oc" : null;
+        if (stp && window.Onboard) setTimeout(function () { Onboard.open(true, stp); }, 300);
       });
   }
 
@@ -113,7 +116,7 @@
     var d = $("#yearpass"), pr = app() && app().profile();
     if (!d || !pr) return;
     var arch = app().archive(), html = '<h3>Année scolaire</h3><p class="muted small">' +
-      (pr.year < 3 ? "Quand ton année est terminée, passe à la suivante : tes notes sont classées dans l'historique et les moyennes repartent de zéro." : "Tu es en dernière année : le certificat de maturité s'affiche en haut du tableau de bord.") + '</p><div class="btns">' +
+      (pr.year < 3 ? "Quand ton année est terminée, passe à la suivante : tes notes sont classées dans l'historique et les moyennes repartent de zéro." : "Tu es en dernière année : le certificat " + (window.Grid && !Grid.isMat(pr) ? "ECG" : "de maturité") + " s'affiche en haut du tableau de bord.") + '</p><div class="btns">' +
       (pr.year < 3 ? '<button type="button" class="btn-ghost" id="yp-next">Passer en ' + ORD[pr.year + 1] + ' année</button>' : "") +
       (arch.length ? '<button type="button" class="btn-ghost" id="yp-hist">Années précédentes (' + arch.length + ')</button>' : "") + '</div>' +
       (arch.length ? '<button type="button" class="link danger" id="yp-undo" style="padding-left:0;align-self:flex-start">Annuler le dernier passage…</button>' : "");

@@ -60,7 +60,7 @@
     var tone = bar && bar.classList.contains("crit") ? "crit" : bar && bar.classList.contains("warn") ? "warn" : "ok";
     var sub = txt(m, ".sub"), min = txt(m, ".tick span"), aria = txt(m, ".lbl") + " : " + val + " " + unit + ". " + sub;
     var mx = unit.match(/(\d+)\s*max/);
-    if (mx) {
+    if (mx && /^\d+$/.test(val)) {      // valeur entière : pastilles ; avec décimale (écarts sous 4 de l'ECG) : anneau
       var max = +mx[1], n = parseInt(val, 10) || 0, pips = "";
       for (var i = 0; i < Math.max(max, n); i++) pips += '<i class="' + (i < n ? (n > max ? "is-crit" : "is-warn") : "") + '"></i>';
       return tile(label, '<span class="ios-dpips" aria-hidden="true">' + pips + '</span>', val, unit, sub, aria);

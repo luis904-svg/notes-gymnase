@@ -40,6 +40,8 @@
     },
     config: function () {
       var ok = function (t) { return "<div class='gd-r'><b>" + t + "</b>" + IC.check + "</div>"; };
+      if (ecgNow()) return "<div class='gd-list'>" + ok("Ton gymnase") + ok("2e année") + ok("Allemand") + ok("Domaine Santé") +
+        "<div class='gd-r off'><span><b>Pédagogie</b><small>L'allemand est obligatoire</small></span></div></div>";
       return "<div class='gd-list'>" + ok("Ton gymnase") + ok("2e année") + ok("Allemand · Anglais") + ok("OS Économie et droit") +
         "<div class='gd-r off'><span><b>OS Latin</b><small>Tu as déjà le latin en L3</small></span></div></div>";
     },
@@ -55,6 +57,8 @@
         "<p class='gd-cap'>Une seconde touche confirme la suppression</p>";
     },
     promo: function () {
+      if (ecgNow()) return "<div class='gd-pr'><span class='gd-pill'>Promotion assurée</span>" +
+        metric("Total des notes", "32.0", "/ 66", 48, 67) + metric("Écarts sous 4", "1.0", "/ 2 max", 25, 50) + metric("Notes inférieures à 4", "1", "/ 3 max", 25) + "</div>";
       return "<div class='gd-pr'><span class='gd-pill'>Promotion assurée</span>" +
         metric("Total des notes", "32.0", "/ 66", 48, 67) + metric("Groupe FR + L2/L3 + maths + OS", "19.0", "/ 24", 79, 67) + metric("Notes inférieures à 4", "1", "/ 4 max", 20) + "</div>";
     },
@@ -321,9 +325,23 @@
 
   function go(v, d) { view = v; dir = d || 1; paint(); }
 
+  /* v72 : textes propres à la voie. Le module de la voie (Grid.ext(profil).guide) donne { titre d'étape : [paragraphes] } ;
+     les textes d'origine (maturité) sont gardés pour les remettre. */
+  var gdProfile = null;     // profil en cours de configuration (l'assistant ouvre le guide avant de l'enregistrer)
+  function curProfile() { return gdProfile || (window.NotesApp && NotesApp.profile()); }
+  function ecgNow() { var pr = curProfile(); return !!(pr && window.Grid && !Grid.isMat(pr) && Grid.ext(pr)); }
+  function adaptVoie() {
+    var pr = curProfile(), x = pr && window.Grid && Grid.ext(pr), g = x && x.guide ? x.guide(pr) : null;
+    CH.forEach(function (ch) { ch.s.forEach(function (stp) {
+      if (stp._p0 == null) { stp._p0 = stp.p; stp._t0 = stp.t; }
+      var o = g && g[stp._t0];       // un tableau de paragraphes, ou { t: titre, p: paragraphes }
+      stp.p = o ? (o.p || o) : stp._p0; stp.t = o && o.t ? o.t : stp._t0;
+    }); });
+  }
   function open(opts) {
     if (root) return;
-    opts = opts || {};
+    opts = opts || {}; gdProfile = opts.profile || null;
+    adaptVoie();
     onClose = opts.onClose || null;
     root = document.createElement("div");
     root.className = "gd"; root.setAttribute("role", "dialog"); root.setAttribute("aria-modal", "true"); root.setAttribute("aria-label", "Guide d'utilisation");
