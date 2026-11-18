@@ -10,7 +10,7 @@
   function $(s, r) { return (r || document).querySelector(s); }
   function hap(k) { if (window.FX) FX.haptic(k); }
   var seq = 0;
-  function uid() { return Date.now().toString(36) + (seq++).toString(36) + Math.random().toString(36).slice(2, 5); }
+  function uid() { return Date.now().toString(36) + (seq++).toString(36).padStart(4, "0") + Math.random().toString(36).slice(2, 5); }
   function today() { var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
   function fmtDate(iso) { var p = String(iso).split("-"); return p.length === 3 ? p[2] + "." + p[1] + "." + p[0] : iso; }
   function plural(n, a, b) { return n + " " + (n > 1 ? b : a); }
@@ -20,10 +20,10 @@
     '{\n  "format": "notes-import",\n  "version": 1,\n' +
     '  "profil": { ... },                       // voir « PROFIL » ci-dessous (facultatif si l\'élève a déjà configuré l\'app)\n' +
     '  "fin_semestre_1": "2027-01-29",           // facultatif : dernier jour du semestre 1\n' +
-    '  "notes": [\n    { "branche": "ma", "note": 4.5, "date": "2026-09-20", "coef": 1, "type": "test", "titre": "Fonctions" }\n  ],\n' +
+    '  "notes": [\n    { "branche": "ma", "rang": 1, "note": 4.5, "date": "2026-09-20", "coef": 1, "type": "test", "titre": "Fonctions" }\n  ],\n' +
     '  "ta": [                                   // travaux assimilés : un TA regroupe des ETA et compte comme UNE note\n' +
     '    { "branche": "fr", "titre": "Vocabulaire ch. 3", "en_points": true, "pct4": 60,\n' +
-    '      "etas": [ { "date": "2026-10-02", "points": 17, "max": 20, "titre": "Quiz 1" } ] }\n  ],\n' +
+    '      "etas": [ { "rang": 1, "date": "2026-10-02", "points": 17, "max": 20, "titre": "Quiz 1" } ] }\n  ],\n' +
     '  "objectifs": [ { "branche": "ma", "objectif": 5 } ],          // facultatif\n' +
     '  "part_tp": [ { "branche": "ph", "pourcent": 25 } ],           // facultatif : part des TP dans la moyenne\n' +
     '  "examens": [ { "branche": "fr", "ecrit": 4, "oral": 4.5 } ],   // 3e année seulement\n' +
@@ -33,7 +33,9 @@
     'RÈGLES DE CONVERSION\n' +
     '- Échelle suisse : de 1 à 6 (4 = suffisant), demi-points ou décimales acceptés (4.75). Point ou virgule décimale : écris-la avec un POINT dans le JSON. Si le fichier donne autre chose (sur 20, en %, en points), demande-moi comment l\'enseignant convertit ; à défaut, convertis par la règle 1 + 5 × (points ÷ maximum) et dis-le moi.\n' +
     '- "coef" : poids de la note (1 par défaut ; 0.5, 0.25 ou 0.3333 pour 1/3). "type" : "test" (par défaut) ou "tp" (travaux pratiques). Ne mets pas "ta" comme type : les TA vont dans la liste "ta".\n' +
-    '- "date" : AAAA-MM-JJ. Une date incomplète (jour et mois seulement) appartient à l\'année scolaire en cours (de septembre à juin) ; si elle manque, demande-la moi ou laisse le champ "date" absent.\n' +
+    '- "date" : AAAA-MM-JJ. Une date incomplète (jour et mois seulement) appartient à l\'année scolaire en cours (de septembre à juin) ; si elle manque, laisse le champ "date" absent (ne la devine pas) : l\'app la déduira du rang.\n' +
+    '- ORDRE : garde l\'ordre chronologique du fichier. "rang" = la position de la note dans le tableau pour cette branche (1 = la plus ancienne, puis 2, 3…), colonnes lues de gauche à droite (ou lignes de haut en bas). Quand les colonnes sont communes à toutes les branches (colonne 1, colonne 2…), le même rang désigne le même moment pour toutes : une case vide saute le rang sans le décaler. Mets "rang" même quand tu as la date.\n' +
+    '- OPTION SPÉCIFIQUE (OS) sur UNE seule ligne qui regroupe plusieurs branches (physique et applications des maths, biologie et chimie, philosophie et psychologie…) : ne sépare pas les notes. Écris-les une seule fois, avec comme branche "os" (ou le nom de la ligne tel qu\'il est écrit). L\'app copie alors chaque note dans les deux parties de l\'option. Fais de même pour une ligne simplement nommée « OS ».\n' +
     '- Un TA regroupe plusieurs petites évaluations (ETA). Sans points : donne "note" dans chaque ETA. En points : donne "points" et "max" (le pourcentage qui vaut 4 est "pct4", 60 par défaut).\n' +
     '- N\'invente rien : une ligne dont tu n\'es pas sûr, pose-moi la question ou laisse-la de côté et signale-la. Garde les moyennes et totaux du fichier hors du JSON : l\'app les recalcule.\n' +
     '- Ne mets aucun nom ni prénom, aucun numéro de dossier.\n';
@@ -45,7 +47,7 @@
 
   function leafInfo(s, all) {
     var bits = [];
-    if (s.parts) bits.push("note COMPOSÉE : saisis les notes dans " + s.parts.join(", ") + ", jamais dans " + s.id);
+    if (s.parts) bits.push("note COMPOSÉE : si le fichier a une ligne par partie, saisis les notes dans " + s.parts.join(", ") + " ; s'il n'a qu'UNE ligne pour toute l'option, utilise \"" + s.id + "\" (l'app copie chaque note dans les parties)");
     if (s.part) bits.push("fait partie d'une note composée");
     if (s.carried) bits.push("note reprise : ne saisis pas de notes, utilise \"reprises\"");
     if (s.hasTP || s.tpShare) bits.push("TP possibles");
@@ -127,6 +129,12 @@
   }
   function score(v) { var n = toNum(v); return isFinite(n) && n >= 1 && n <= 6 ? Math.round(n * 100) / 100 : null; }
 
+  function rankOf(o) { var r = toNum(pick(o, ["rang", "rank", "ordre", "position", "colonne", "col", "n"])); return isFinite(r) && r >= 1 && r <= 500 ? Math.floor(r) : null; }
+  // Sans rang écrit, l'ordre du fichier (par branche) fait foi ; un rang écrit remet le compteur à sa valeur.
+  function fillRanks(list, keyOf) {
+    var cur = {};
+    list.forEach(function (x) { var k = keyOf(x); if (x.rank == null) { cur[k] = (cur[k] || 0) + 1; x.rank = cur[k]; } else cur[k] = x.rank; });
+  }
   function readModel(raw) {
     var o = raw, issues = [];
     function arr(keys) { var v = pick(o, keys); return Array.isArray(v) ? v : []; }
@@ -139,7 +147,7 @@
       var dt = isoDate(pick(n, ["date"])), c = toNum(pick(n, ["coef", "coefficient", "poids"])), t = String(pick(n, ["type"]) || "test").toLowerCase();
       if (dt === undefined) { issues.push(where + " : date illisible (" + pick(n, ["date"]) + "), traitée comme absente."); dt = null; }
       if (!isFinite(c) || c <= 0 || c > 10) c = 1;
-      M.notes.push({ raw: String(br), value: v, date: dt, coef: Math.round(c * 10000) / 10000, type: t === "tp" ? "tp" : "test", label: String(pick(n, ["titre", "label", "libelle", "libellé"]) || "").slice(0, 60) });
+      M.notes.push({ raw: String(br), rank: rankOf(n), value: v, date: dt, coef: Math.round(c * 10000) / 10000, type: t === "tp" ? "tp" : "test", label: String(pick(n, ["titre", "label", "libelle", "libellé"]) || "").slice(0, 60) });
     });
     arr(["ta", "tas"]).forEach(function (t, i) {
       var br = pick(t, ["branche", "subject", "matiere", "matière"]), label = String(pick(t, ["titre", "label", "nom"]) || "TA").slice(0, 50), pts = pick(t, ["en_points", "points"]) === true || String(pick(t, ["en_points"])).toLowerCase() === "true";
@@ -151,11 +159,11 @@
         if (pts) {
           var p = toNum(pick(e, ["points", "pts"])), m = toNum(pick(e, ["max", "maximum"]));
           if (!isFinite(p) || p < 0 || !isFinite(m) || m <= 0 || p > m) { issues.push(w + "points ou maximum invalides, ignoré."); return; }
-          etas.push({ date: dt, pts: p, max: m, label: lab });
+          etas.push({ date: dt, pts: p, max: m, label: lab, rank: rankOf(e) });
         } else {
           var v = score(pick(e, ["note", "value", "valeur"]));
           if (v == null) { issues.push(w + "note absente ou hors de l'échelle, ignorée."); return; }
-          etas.push({ date: dt, value: v, label: lab });
+          etas.push({ date: dt, value: v, label: lab, rank: rankOf(e) });
         }
       });
       if (br == null || br === "") { issues.push("TA « " + label + " » : branche manquante."); return; }
@@ -178,6 +186,8 @@
       var br = pick(g, ["branche", "subject"]), v = score(pick(g, ["note", "value"]));
       if (br && v != null) M.carried.push({ raw: String(br), value: v }); else issues.push("Note reprise ignorée (branche ou valeur invalide).");
     });
+    fillRanks(M.notes, function (n) { return norm(n.raw); });
+    M.tas.forEach(function (t) { fillRanks(t.etas, function () { return "eta"; }); });
     M.notes.forEach(function (n) { if (!n.date) M.undated++; });
     M.tas.forEach(function (t) { t.etas.forEach(function (e) { if (!e.date) M.undated++; }); });
     return M;
@@ -213,11 +223,11 @@
   function norm(s) { return String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9& ]+/g, " ").replace(/\s+/g, " ").trim(); }
   var ALIAS = { maths: "mathematiques", math: "mathematiques", mathe: "mathematiques", all: "allemand", deutsch: "allemand", ital: "italien", angl: "anglais", english: "anglais", fr: "francais", hist: "histoire", geo: "geographie",
     bio: "biologie", chim: "chimie", phys: "physique", info: "informatique", eco: "economie", philo: "philosophie", psy: "psychologie", socio: "sociologie", av: "arts visuels", mus: "musique",
-    l2: "deuxieme langue", l3: "troisieme langue", os: "option specifique", oc: "option complementaire", tpl: "travail personnel", "e&d": "economie droit", ed: "economie droit" };
+    l2: "deuxieme langue", l3: "troisieme langue", os: "option specifique", oc: "option complementaire", tpl: "travail personnel", "e&d": "economie droit", ed: "economie droit", pam: "physique applications mathematiques", bc: "biologie chimie", pp: "philosophie psychologie" };
   var STOP = { de: 1, du: 1, des: 1, la: 1, le: 1, les: 1, et: 1, en: 1, au: 1, aux: 1, d: 1, l: 1 };
   function tokens(s) {
     var out = {}, n = 0;
-    norm(s).split(" ").forEach(function (w) { (ALIAS[w] || w).split(" ").forEach(function (x) { if (x && !STOP[x]) { out[x] = 1; } }); });
+    norm(s).split(" ").forEach(function (w) { (ALIAS[w] || w).split(" ").forEach(function (x) { if (x && !STOP[x]) { out[x.length > 4 && /[^s]s$/.test(x) ? x.slice(0, -1) : x] = 1; } }); });
     return out;
   }
   function size(o) { return Object.keys(o).length; }
@@ -238,7 +248,7 @@
   }
 
   /* ================= Plan d'import ================= */
-  var S = null;       // état de l'écran : { model, fileProfile, mode, map, defDate, text, root }
+  var S = null;       // état de l'écran : { model, fileProfile, mode, map, start, end, align, text, root }
   function leaves(profile) { return G.build(profile).filter(function (s) { return !s.parts && !s.carried; }); }
   function targetProfile() {
     var cur = A.profile();
@@ -253,40 +263,74 @@
     S.model.goals.forEach(function (g) { add(g.raw); }); S.model.tp.forEach(function (g) { add(g.raw); });
     return out;
   }
-  function mapOf(raw, subs) { return Object.prototype.hasOwnProperty.call(S.map, raw) ? S.map[raw] : resolve(raw, subs); }
+  function mapOf(raw, subs) {
+    if (Object.prototype.hasOwnProperty.call(S.map, raw)) return S.map[raw];
+    var a = S.osAlias && S.osAlias[norm(raw)];
+    if (a && subs.some(function (s) { return s.id === a; })) return a;     // « OS », « Option », ou le code de l'option du profil (PAM, BC…)
+    return resolve(raw, subs);
+  }
+  /* --- Dates déduites de l'ordre : rang 1…K répartis à intervalle régulier entre le début de l'année et la dernière note --- */
+  function p2(n) { return String(n).padStart(2, "0"); }
+  function schoolStart() { var d = new Date(), y = d.getFullYear(); if (d < new Date(y, 7, 25)) y--; return y + "-08-25"; }
+  function dayNum(iso) { var p = String(iso).split("-"); return Date.UTC(+p[0], +p[1] - 1, +p[2]) / 864e5; }
+  function isoDay(n) { var d = new Date(n * 864e5); return d.getUTCFullYear() + "-" + p2(d.getUTCMonth() + 1) + "-" + p2(d.getUTCDate()); }
+  function spread(rank, k) { var a = dayNum(S.start), b = dayNum(S.end); if (!(b > a)) b = a; return isoDay(Math.round(a + (b - a) * rank / Math.max(k, 1))); }
+  function rankStats() {
+    var all = 0, per = {};
+    function see(raw, r) { var k = norm(raw); if (r > all) all = r; if (!per[k] || r > per[k]) per[k] = r; }
+    S.model.notes.forEach(function (n) { see(n.raw, n.rank); });
+    S.model.tas.forEach(function (t) { t.etas.forEach(function (e) { see(t.raw, e.rank); }); });
+    return { all: all, per: per };
+  }
   function key(g) { return [g.subject, g.date, g.value, g.coef, g.type, g.label || ""].join("|"); }
   function compile() {
     var prof = targetProfile(), subs = prof ? leaves(prof) : [], ids = {}; subs.forEach(function (s) { ids[s.id] = s; });
-    var recs = [], skipped = 0, dup = 0, per = {}, def = S.defDate;
+    var allS = prof ? G.build(prof) : [], comp = {}; allS.forEach(function (s) { if (s.parts && !s.carried) comp[s.id] = s; });
+    var targets = subs.concat(Object.keys(comp).map(function (k) { return comp[k]; }));
+    S.osAlias = {}; if (comp.os || ids.os) { S.osAlias.os = S.osAlias.option = S.osAlias["option specifique"] = "os"; if (prof && prof.os) S.osAlias[norm(prof.os)] = "os"; }
+    var recs = [], skipped = 0, dup = 0, per = {}, deduced = {}, st = rankStats();
+    function when(raw, date, rank) {
+      if (date) return date;
+      var d = spread(rank, S.align ? st.all : (st.per[norm(raw)] || 1));
+      (deduced[raw] = deduced[raw] || []).push(d); return d;
+    }
+    function dest(raw) { var id = mapOf(raw, targets); if (!id) return []; if (comp[id]) return comp[id].parts.filter(function (p) { return ids[p]; }); return ids[id] ? [id] : []; }
     var have = {}; if (A.profile() && S.mode !== "replace") A.records().forEach(function (r) { if (r.kind !== "tadef") have[key(r)] = 1; });
-    function sid(raw) { var id = mapOf(raw, subs); return id && ids[id] ? id : null; }
-    S.model.notes.forEach(function (n) {
-      var id = sid(n.raw); if (!id) { skipped++; return; }
-      var g = { id: uid(), subject: id, value: n.value, coef: n.coef, type: n.type, date: n.date || def, label: n.label };
-      if (have[key(g)]) { dup++; return; } have[key(g)] = 1; recs.push(g); per[id] = (per[id] || 0) + 1;
+    // Les notes passent dans l'ordre du fichier (rang), pour que les identifiants croissent avec l'ordre.
+    var order = S.model.notes.map(function (n, i) { return { n: n, i: i }; }).sort(function (x, y) { return x.n.rank - y.n.rank || x.i - y.i; });
+    order.forEach(function (o) {
+      var n = o.n, ds = dest(n.raw); if (!ds.length) { skipped++; return; }
+      var date = when(n.raw, n.date, n.rank);
+      ds.forEach(function (id) {
+        var g = { id: uid(), subject: id, value: n.value, coef: n.coef, type: n.type, date: date, label: n.label };
+        if (have[key(g)]) { dup++; return; } have[key(g)] = 1; recs.push(g); per[id] = (per[id] || 0) + 1;
+      });
     });
     var taCount = 0, etaCount = 0;
     S.model.tas.forEach(function (t) {
-      var id = sid(t.raw); if (!id) { skipped++; return; }
-      var d = { id: uid(), kind: "tadef", subject: id, label: t.label, points: t.points, value: 0, coef: 0, date: (t.etas[0].date || def) };
-      if (t.points) d.pct = t.pct;
-      var etas = [];
-      t.etas.forEach(function (e) {
-        var g = { id: uid(), subject: id, ta: d.id, coef: 1, type: "ta", date: e.date || def, label: e.label };
-        if (t.points) { g.pts = e.pts; g.max = e.max; g.value = Math.round(A.taScale(e.pts / e.max, t.pct / 100) * 100) / 100; } else g.value = e.value;
-        if (have[key(g)]) { dup++; return; } have[key(g)] = 1; etas.push(g);
+      var ds = dest(t.raw); if (!ds.length) { skipped++; return; }
+      var dates = t.etas.slice().sort(function (x, y) { return x.rank - y.rank; }).map(function (e) { return { e: e, date: when(t.raw, e.date, e.rank) }; });
+      ds.forEach(function (id) {
+        var d = { id: uid(), kind: "tadef", subject: id, label: t.label, points: t.points, value: 0, coef: 0, date: dates[0].date };
+        if (t.points) d.pct = t.pct;
+        var etas = [];
+        dates.forEach(function (x) {
+          var e = x.e, g = { id: uid(), subject: id, ta: d.id, coef: 1, type: "ta", date: x.date, label: e.label };
+          if (t.points) { g.pts = e.pts; g.max = e.max; g.value = Math.round(A.taScale(e.pts / e.max, t.pct / 100) * 100) / 100; } else g.value = e.value;
+          if (have[key(g)]) { dup++; return; } have[key(g)] = 1; etas.push(g);
+        });
+        if (etas.length) { recs.push(d); etas.forEach(function (g) { recs.push(g); }); taCount++; etaCount += etas.length; per[id] = (per[id] || 0) + 1; }
       });
-      if (etas.length) { recs.push(d); etas.forEach(function (g) { recs.push(g); }); taCount++; etaCount += etas.length; per[id] = (per[id] || 0) + 1; }
     });
     var goals = [], tps = [], exams = [], carried = [];
-    S.model.goals.forEach(function (g) { var id = sid(g.raw); if (id) goals.push({ id: id, v: g.goal }); });
-    S.model.tp.forEach(function (g) { var id = sid(g.raw); if (id) tps.push({ id: id, v: g.pct }); });
+    S.model.goals.forEach(function (g) { var id = mapOf(g.raw, targets); if (id && (ids[id] || comp[id])) goals.push({ id: id, v: g.goal }); });
+    S.model.tp.forEach(function (g) { dest(g.raw).forEach(function (id) { tps.push({ id: id, v: g.pct }); }); });
     // Examens et notes reprises : branches de l'année (y compris composées ou reprises), pas seulement les feuilles.
-    var all = prof ? G.build(prof) : [], aid = {}; all.forEach(function (s) { aid[s.id] = s; });
+    var all = allS, aid = {}; all.forEach(function (s) { aid[s.id] = s; });
     function anyId(raw) { var id = mapOf(raw, all); return id && aid[id] ? id : null; }
     S.model.exams.forEach(function (e) { var id = anyId(e.raw); if (id) exams.push({ id: id, w: e.w, o: e.o }); });
     S.model.carried.forEach(function (e) { var id = anyId(e.raw); if (id) carried.push({ id: id, v: e.value }); });
-    return { recs: recs, skipped: skipped, dup: dup, per: per, subs: subs, nTA: taCount, nETA: etaCount, goals: goals, tps: tps, exams: exams, carried: carried, prof: prof };
+    return { recs: recs, skipped: skipped, dup: dup, per: per, subs: subs, nTA: taCount, nETA: etaCount, goals: goals, tps: tps, exams: exams, carried: carried, prof: prof, targets: targets, comp: comp, deduced: deduced };
   }
 
   /* ================= Application ================= */
@@ -342,11 +386,13 @@
   }
   function say(t, bad) { var m = $("#imp-msg", S.root); if (m) { m.textContent = t; m.style.color = bad ? "var(--ios-red-text)" : ""; } }
 
+  function shortDate(iso) { var p = String(iso).split("-"); return p[2] + "." + p[1]; }
   function screenPreview() {
+    var keep = S.root && $(".ob-body", S.root), top = keep ? keep.scrollTop : 0;
     var plan = compile(), cur = A.profile(), M = S.model, labels = rawLabels(), subs = plan.subs, fp = S.fileProfile;
     var needProfile = !cur && !fp.profile, undated = M.undated;
     var rows = labels.map(function (l) {
-      var id = mapOf(l.raw, subs), opts = '<option value="">Ignorer</option>' + subs.map(function (s) { return '<option value="' + esc(s.id) + '"' + (s.id === id ? " selected" : "") + ">" + esc(s.name) + "</option>"; }).join("");
+      var id = mapOf(l.raw, plan.targets), opts = '<option value="">Ignorer</option>' + plan.targets.map(function (s) { return '<option value="' + esc(s.id) + '"' + (s.id === id ? " selected" : "") + ">" + esc(s.name) + (plan.comp[s.id] ? " (les deux parties)" : "") + "</option>"; }).join("");
       return '<label class="ob-row ob-static ios-imp-map"><span class="ob-txt"><span class="ob-n">' + esc(l.raw) + '</span><span class="ob-s">' + (id ? "reconnue" : "à choisir") + " · " + plural(l.n, "ligne", "lignes") + '</span></span><select class="ios-imp-sel" data-map="' + esc(l.raw) + '" aria-label="Branche pour ' + esc(l.raw) + '">' + opts + "</select></label>";
     }).join("");
     var summary = [plural(plan.recs.filter(function (r) { return r.kind !== "tadef" && !r.ta; }).length, "note", "notes")];
@@ -364,7 +410,17 @@
         x = x.split("|"); var on = S.mode === x[0];
         return '<button type="button" class="ob-row' + (on ? " on" : "") + '" data-imp="mode:' + x[0] + '" role="radio" aria-checked="' + on + '"><span class="ob-txt"><span class="ob-n">' + x[1] + '</span><span class="ob-s">' + x[2] + '</span></span><svg class="ob-chk" viewBox="0 0 24 24" aria-hidden="true">' + Icons.inner.check + "</svg></button>";
       }).join("") + "</div>" : "";
-    var datePart = undated ? '<label class="ob-field"><span>' + plural(undated, "ligne sans date", "lignes sans date") + " : date à leur donner</span><input type=\"date\" id=\"imp-date\" value=\"" + esc(S.defDate) + '"></label>' : "";
+    var datePart = "";
+    if (undated) {
+      var dl = Object.keys(plan.deduced).map(function (k) { var a = plan.deduced[k]; return "<li>" + esc(k) + " : " + a.slice(0, 12).map(shortDate).join(" · ") + (a.length > 12 ? " …" : "") + "</li>"; }).join("");
+      datePart = '<h2 class="ob-sec">Dates des notes sans date</h2><p class="ob-sub">' + plural(undated, "ligne n\'a pas de date", "lignes n\'ont pas de date") + " : l'app les place dans l'ordre du fichier, à intervalle régulier.</p>" +
+        '<label class="ob-field"><span>Début de l\'année scolaire</span><input type="date" id="imp-start" value="' + esc(S.start) + '"></label>' +
+        '<label class="ob-field"><span>Date de la dernière note</span><input type="date" id="imp-end" value="' + esc(S.end) + '"></label>' +
+        '<h2 class="ob-sec">Colonnes du tableau</h2><div class="ob-list" role="radiogroup">' + ["1|Même colonne, même date|Le rang 3 tombe le même jour dans toutes les branches (tableau à colonnes communes).", "0|Chaque branche à son rythme|Les notes de chaque branche sont étalées sur toute la période."].map(function (x) {
+          x = x.split("|"); var on = (S.align ? "1" : "0") === x[0];
+          return '<button type="button" class="ob-row' + (on ? " on" : "") + '" data-imp="align:' + x[0] + '" role="radio" aria-checked="' + on + '"><span class="ob-txt"><span class="ob-n">' + x[1] + '</span><span class="ob-s">' + x[2] + '</span></span><svg class="ob-chk" viewBox="0 0 24 24" aria-hidden="true">' + Icons.inner.check + "</svg></button>";
+        }).join("") + "</div>" + (dl ? '<details class="ios-imp-iss"><summary>Dates déduites</summary><ul>' + dl + "</ul></details>" : "");
+    }
     var issues = M.issues.slice(); if (plan.skipped) issues.unshift(plural(plan.skipped, "ligne", "lignes") + " sans branche : choisis une branche ci-dessus ou laisse « Ignorer ».");
     if (plan.dup) issues.unshift(plural(plan.dup, "note identique", "notes identiques") + " déjà dans l'app : ignorées.");
     var issueHtml = issues.length ? '<details class="ios-imp-iss"><summary>' + plural(issues.length, "remarque", "remarques") + '</summary><ul>' + issues.slice(0, 40).map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + (issues.length > 40 ? "<li>… et " + (issues.length - 40) + " autres.</li>" : "") + "</ul></details>" : "";
@@ -373,6 +429,7 @@
       (needProfile ? '<p class="ob-warn">Le fichier ne contient pas de profil complet et tu n\'as pas encore configuré l\'app : demande à l\'IA de remplir « profil » (le prompt générique le fait), ou configure ton profil d\'abord.</p>' : "") +
       modeRows + (rows ? '<h2 class="ob-sec">Branches du fichier</h2><div class="ob-list ob-recap">' + rows + "</div>" : "") + datePart + issueHtml + "</div>" +
       '<div class="ob-foot"><button type="button" class="btn ob-next" data-imp="go"' + (needProfile || nothing ? " disabled" : "") + ">" + (S.mode === "replace" && cur && A.records().length ? "Remplacer et importer" : "Importer") + "</button></div>");
+    var nb = $(".ob-body", S.root); if (nb && top) nb.scrollTop = top;
   }
   function screenDone(plan) {
     var n = plan.recs.filter(function (r) { return r.kind !== "tadef" && !r.ta; }).length;
@@ -387,7 +444,7 @@
     S.model = model;
     var p = model.profile, voie = p && String(pick(p, ["voie"]) || "mat").toLowerCase() === "ecg" ? "ecg" : "mat";
     return Promise.resolve(voie === "ecg" ? G.load("ecg") : null).then(function () {
-      S.fileProfile = readProfile(model.profile); S.map = {}; S.mode = A.profile() && A.records().length ? "add" : "replace"; S.defDate = S.defDate || today();
+      S.fileProfile = readProfile(model.profile); S.map = {}; S.mode = A.profile() && A.records().length ? "add" : "replace";
       if (!model.notes.length && !model.tas.length && !model.exams.length && !model.carried.length && !model.goals.length && !model.tp.length && !S.fileProfile.profile) { say("Le JSON est valide, mais il ne contient ni note, ni TA, ni profil.", true); return false; }
       screenPreview(); return true;
     }, function () { say("La voie « culture générale » doit se charger : connecte-toi à Internet, puis réessaie.", true); return false; });
@@ -408,6 +465,7 @@
     if (a === "file") { $("#imp-file", S.root).click(); return; }
     if (a === "read") { S.text = $("#imp-ta", S.root).value; readText(); return; }
     if (a.indexOf("mode:") === 0) { S.mode = a.slice(5); screenPreview(); return; }
+    if (a.indexOf("align:") === 0) { S.align = a.slice(6) === "1"; screenPreview(); return; }
     if (a === "go") {
       var plan = compile();
       if (S.mode === "replace" && A.profile() && A.records().length && !window.confirm("Remplacer toutes tes notes actuelles (" + A.records().filter(function (r) { return r.kind !== "tadef"; }).length + ") par celles du fichier ? Leurs photos seront supprimées. Cette action ne s'annule pas : exporte d'abord une sauvegarde si tu hésites.")) return;
@@ -425,14 +483,14 @@
       r.readAsText(f); return;
     }
     if (t.dataset && t.dataset.map != null) { S.map[t.dataset.map] = t.value || null; screenPreview(); return; }
-    if (t.id === "imp-date" && t.value) { S.defDate = t.value; }
+    if ((t.id === "imp-start" || t.id === "imp-end") && t.value) { if (t.id === "imp-start") S.start = t.value; else S.end = t.value; screenPreview(); }
   }
   function onInput(e) { var t = e.target; if (t.id === "imp-ta") { S.text = t.value; var n = $(".ob-next", S.root); if (n) n.disabled = !t.value.trim(); } }
 
   function open(opts) {
     opts = opts || {};
     if (S && S.root) return;
-    S = { text: "", model: null, fileProfile: { problems: [], profile: null }, mode: "add", map: {}, defDate: today(), root: null, onDone: opts.onDone || null };
+    S = { text: "", model: null, fileProfile: { problems: [], profile: null }, mode: "add", map: {}, start: schoolStart(), end: today(), align: true, root: null, onDone: opts.onDone || null };
     screenStart();
   }
   window.Import = { open: open, personalPrompt: personalPrompt, genericPrompt: genericPrompt, parse: function (t) { return readModel(lenientJSON(t)); }, resolve: resolve };
