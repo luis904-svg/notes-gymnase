@@ -370,18 +370,19 @@
     var hasProfile = !!A.profile(), canShare = !!navigator.share;
     mount(topbar(false, "Importer") +
       '<div class="ob-body"><h1 class="ob-title">Importer depuis un tableur</h1><p class="ob-sub">Tu as déjà tes notes dans Excel, Google Sheets, un PDF ou une photo ? Une IA les range pour toi.</p>' +
-      '<div class="ob-list ob-recap">' +
+      // Session B (choix de l'utilisateur) : sections titrées et lignes d'action en texte bleu, comme Réglages → Synchronisation.
+      '<p class="ios-grp-head">Comment faire</p><div class="ob-list ob-recap">' +
       '<div class="ob-row ob-static"><span class="ob-txt"><span class="ob-n">1. Copie le prompt</span><span class="ob-s">' + (hasProfile ? "Il contient déjà tes branches : l'IA classe chaque note au bon endroit." : "Sans profil encore : le prompt générique demande d'abord ta voie, ton année et tes options.") + '</span></span></div>' +
       '<div class="ob-row ob-static"><span class="ob-txt"><span class="ob-n">2. Donne-le à une IA avec ton fichier</span><span class="ob-s">ChatGPT, Claude, Gemini… Réponds à ses questions éventuelles.</span></span></div>' +
       '<div class="ob-row ob-static"><span class="ob-txt"><span class="ob-n">3. Colle sa réponse ici</span><span class="ob-s">Tu verras un aperçu avant que quoi que ce soit change.</span></span></div></div>' +
-      '<div class="ios-imp-btns">' + (hasProfile ? '<button type="button" class="btn" data-imp="copy-perso">Copier le prompt pour mon profil</button>' : "") +
-      '<button type="button" class="' + (hasProfile ? "btn-ghost" : "btn") + '" data-imp="copy-gen">Copier le prompt générique</button>' +
-      (canShare ? '<button type="button" class="link" data-imp="share-gen">Partager le prompt générique…</button>' : "") + '</div>' +
-      '<p class="ob-fine" id="imp-msg">' + esc(msg || "") + '</p>' +
-      '<label class="ob-field"><span>Réponse de l\'IA (le JSON)</span><textarea id="imp-ta" class="ios-imp-ta" rows="7" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="{ &quot;format&quot;: &quot;notes-import&quot;, … }">' + esc(S.text || "") + '</textarea></label>' +
-      '<div class="ios-imp-btns"><button type="button" class="btn-ghost" data-imp="paste">Coller depuis le presse-papiers</button><button type="button" class="link" data-imp="file">Choisir un fichier .json ou .txt</button>' +
+      '<p class="ios-grp-head">Prompt</p><div class="ios-grp">' + (hasProfile ? '<button type="button" class="ios-row ios-act" data-imp="copy-perso">Copier le prompt pour mon profil</button>' : "") +
+      '<button type="button" class="ios-row ios-act" data-imp="copy-gen">Copier le prompt générique</button>' +
+      (canShare ? '<button type="button" class="ios-row ios-act" data-imp="share-gen">Partager le prompt générique…</button>' : "") + '</div>' +
+      '<p class="ios-grp-foot" id="imp-msg">' + esc(msg || "") + '</p>' +
+      '<p class="ios-grp-head">Réponse de l\'IA</p><div class="ios-grp ios-imp-ans"><textarea id="imp-ta" class="ios-imp-ta" rows="7" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Réponse de l\'IA (le JSON)" placeholder="{ &quot;format&quot;: &quot;notes-import&quot;, … }">' + esc(S.text || "") + '</textarea>' +
+      '<button type="button" class="ios-row ios-act" data-imp="paste">Coller depuis le presse-papiers</button><button type="button" class="ios-row ios-act" data-imp="file">Choisir un fichier .json ou .txt</button>' +
       '<input type="file" id="imp-file" accept=".json,.txt,application/json,text/plain" hidden></div>' +
-      '<p class="ob-tip"><b>Confidentialité.</b> Ton fichier est envoyé à l\'IA que tu choisis, pas à cette app : retire noms et numéros avant de l\'envoyer. L\'import lui-même se fait sur ton appareil.</p></div>' +
+      '<p class="ios-grp-foot"><b>Confidentialité.</b> Ton fichier est envoyé à l\'IA que tu choisis, pas à cette app : retire noms et numéros avant de l\'envoyer. L\'import lui-même se fait sur ton appareil.</p></div>' +
       '<div class="ob-foot"><button type="button" class="btn ob-next" data-imp="read"' + ((S.text || "").trim() ? "" : " disabled") + '>Lire la réponse</button></div>');
   }
   function say(t, bad) { var m = $("#imp-msg", S.root); if (m) { m.textContent = t; m.style.color = bad ? "var(--ios-red-text)" : ""; } }
@@ -392,8 +393,12 @@
     var plan = compile(), cur = A.profile(), M = S.model, labels = rawLabels(), subs = plan.subs, fp = S.fileProfile;
     var needProfile = !cur && !fp.profile, undated = M.undated;
     var rows = labels.map(function (l) {
-      var id = mapOf(l.raw, plan.targets), opts = '<option value="">Ignorer</option>' + plan.targets.map(function (s) { return '<option value="' + esc(s.id) + '"' + (s.id === id ? " selected" : "") + ">" + esc(s.name) + (plan.comp[s.id] ? " (les deux parties)" : "") + "</option>"; }).join("");
-      return '<label class="ob-row ob-static ios-imp-map"><span class="ob-txt"><span class="ob-n">' + esc(l.raw) + '</span><span class="ob-s">' + (id ? "reconnue" : "à choisir") + " · " + plural(l.n, "ligne", "lignes") + '</span></span><select class="ios-imp-sel" data-map="' + esc(l.raw) + '" aria-label="Branche pour ' + esc(l.raw) + '">' + opts + "</select></label>";
+      var id = mapOf(l.raw, plan.targets), shown = "Ignorer", opts = '<option value="">Ignorer</option>' + plan.targets.map(function (s) {
+        var nm = s.name + (plan.comp[s.id] ? " (les deux parties)" : ""); if (s.id === id) shown = nm;
+        return '<option value="' + esc(s.id) + '"' + (s.id === id ? " selected" : "") + ">" + esc(nm) + "</option>"; }).join("");
+      // Menu iOS (session B, choix A) : la valeur en gris et ⌃⌄ ; le <select> natif, invisible, couvre la ligne et ouvre la liste du téléphone.
+      return '<label class="ob-row ob-static ios-imp-map"><span class="ob-txt"><span class="ob-n">' + esc(l.raw) + '</span><span class="ob-s">' + (id ? "reconnue" : "à choisir") + " · " + plural(l.n, "ligne", "lignes") + '</span></span>' +
+        '<span class="ios-imp-val">' + esc(shown) + '</span>' + Icons.svg("updown", "ios-imp-ud") + '<select class="ios-imp-sel" data-map="' + esc(l.raw) + '" aria-label="Branche pour ' + esc(l.raw) + '">' + opts + "</select></label>";
     }).join("");
     var summary = [plural(plan.recs.filter(function (r) { return r.kind !== "tadef" && !r.ta; }).length, "note", "notes")];
     if (plan.nTA) summary.push(plural(plan.nTA, "TA", "TA") + " (" + plural(plan.nETA, "ETA", "ETA") + ")");
@@ -405,7 +410,7 @@
       var vx = G.ext(fp.profile), same = cur && JSON.stringify(Object.assign({}, fp.profile, { classe: "" })) === JSON.stringify(Object.assign({}, cur, { classe: "" }));
       profLine = '<p class="ob-sub"><b>Profil du fichier :</b> ' + esc(profileSummary(fp.profile)) + (same ? " (identique au tien)." : cur ? (S.mode === "replace" ? " Il remplacera ton profil actuel." : " Ignoré en mode Ajouter : ton profil reste le même.") : " Il sera créé.") + "</p>";
     } else if (S.model.profile && fp.problems.length) profLine = '<p class="ob-warn">Profil du fichier ignoré : ' + esc(fp.problems.join(", ")) + (cur ? "." : " manquant ou invalide.") + "</p>";
-    var modeRows = cur && A.records().length ? '<h2 class="ob-sec">Que faire de tes notes actuelles ?</h2><div class="ob-list" role="radiogroup">' +
+    var modeRows = cur && A.records().length ? '<p class="ios-grp-head">Que faire de tes notes actuelles ?</p><div class="ob-list" role="radiogroup">' +
       ["add|Ajouter|Les notes importées s'ajoutent. Les doublons exacts sont ignorés.", "replace|Remplacer|Toutes tes notes actuelles (et leurs photos) sont supprimées, puis les notes importées arrivent."].map(function (x) {
         x = x.split("|"); var on = S.mode === x[0];
         return '<button type="button" class="ob-row' + (on ? " on" : "") + '" data-imp="mode:' + x[0] + '" role="radio" aria-checked="' + on + '"><span class="ob-txt"><span class="ob-n">' + x[1] + '</span><span class="ob-s">' + x[2] + '</span></span><svg class="ob-chk" viewBox="0 0 24 24" aria-hidden="true">' + Icons.inner.check + "</svg></button>";
@@ -413,10 +418,11 @@
     var datePart = "";
     if (undated) {
       var dl = Object.keys(plan.deduced).map(function (k) { var a = plan.deduced[k]; return "<li>" + esc(k) + " : " + a.slice(0, 12).map(shortDate).join(" · ") + (a.length > 12 ? " …" : "") + "</li>"; }).join("");
-      datePart = '<h2 class="ob-sec">Dates des notes sans date</h2><p class="ob-sub">' + plural(undated, "ligne n\'a pas de date", "lignes n\'ont pas de date") + " : l'app les place dans l'ordre du fichier, à intervalle régulier.</p>" +
-        '<label class="ob-field"><span>Début de l\'année scolaire</span><input type="date" id="imp-start" value="' + esc(S.start) + '"></label>' +
-        '<label class="ob-field"><span>Date de la dernière note</span><input type="date" id="imp-end" value="' + esc(S.end) + '"></label>' +
-        '<h2 class="ob-sec">Colonnes du tableau</h2><div class="ob-list" role="radiogroup">' + ["1|Même colonne, même date|Le rang 3 tombe le même jour dans toutes les branches (tableau à colonnes communes).", "0|Chaque branche à son rythme|Les notes de chaque branche sont étalées sur toute la période."].map(function (x) {
+      datePart = '<p class="ios-grp-head">Dates des notes sans date</p><div class="ios-grp">' +
+        '<label class="ios-row ios-imp-date"><span class="ios-row-l">Début de l\'année</span><input type="date" id="imp-start" value="' + esc(S.start) + '"></label>' +
+        '<label class="ios-row ios-imp-date"><span class="ios-row-l">Date de la dernière note</span><input type="date" id="imp-end" value="' + esc(S.end) + '"></label></div>' +
+        '<p class="ios-grp-foot">' + plural(undated, "ligne n\'a pas de date", "lignes n\'ont pas de date") + " : l'app les place dans l'ordre du fichier, à intervalle régulier.</p>" +
+        '<p class="ios-grp-head">Colonnes du tableau</p><div class="ob-list" role="radiogroup">' + ["1|Même colonne, même date|Le rang 3 tombe le même jour dans toutes les branches (tableau à colonnes communes).", "0|Chaque branche à son rythme|Les notes de chaque branche sont étalées sur toute la période."].map(function (x) {
           x = x.split("|"); var on = (S.align ? "1" : "0") === x[0];
           return '<button type="button" class="ob-row' + (on ? " on" : "") + '" data-imp="align:' + x[0] + '" role="radio" aria-checked="' + on + '"><span class="ob-txt"><span class="ob-n">' + x[1] + '</span><span class="ob-s">' + x[2] + '</span></span><svg class="ob-chk" viewBox="0 0 24 24" aria-hidden="true">' + Icons.inner.check + "</svg></button>";
         }).join("") + "</div>" + (dl ? '<details class="ios-imp-iss"><summary>Dates déduites</summary><ul>' + dl + "</ul></details>" : "");
@@ -427,7 +433,7 @@
     var nothing = !plan.recs.length && !plan.exams.length && !plan.carried.length && !plan.goals.length && !plan.tps.length && !fp.profile;
     mount(topbar(true, "Aperçu") + '<div class="ob-body"><h1 class="ob-title">Vérifie l\'import</h1><p class="ob-sub">' + esc(summary.join(" · ")) + (plan.prof ? "" : "") + '</p>' + profLine +
       (needProfile ? '<p class="ob-warn">Le fichier ne contient pas de profil complet et tu n\'as pas encore configuré l\'app : demande à l\'IA de remplir « profil » (le prompt générique le fait), ou configure ton profil d\'abord.</p>' : "") +
-      modeRows + (rows ? '<h2 class="ob-sec">Branches du fichier</h2><div class="ob-list ob-recap">' + rows + "</div>" : "") + datePart + issueHtml + "</div>" +
+      modeRows + (rows ? '<p class="ios-grp-head">Branches du fichier</p><div class="ob-list ob-recap">' + rows + "</div>" : "") + datePart + issueHtml + "</div>" +
       '<div class="ob-foot"><button type="button" class="btn ob-next" data-imp="go"' + (needProfile || nothing ? " disabled" : "") + ">" + (S.mode === "replace" && cur && A.records().length ? "Remplacer et importer" : "Importer") + "</button></div>");
     var nb = $(".ob-body", S.root); if (nb && top) nb.scrollTop = top;
   }
@@ -468,9 +474,14 @@
     if (a.indexOf("align:") === 0) { S.align = a.slice(6) === "1"; screenPreview(); return; }
     if (a === "go") {
       var plan = compile();
-      if (S.mode === "replace" && A.profile() && A.records().length && !window.confirm("Remplacer toutes tes notes actuelles (" + A.records().filter(function (r) { return r.kind !== "tadef"; }).length + ") par celles du fichier ? Leurs photos seront supprimées. Cette action ne s'annule pas : exporte d'abord une sauvegarde si tu hésites.")) return;
-      b.disabled = true;
-      apply(plan).then(function () { hap("success"); S.plan = plan; screenDone(plan); }, function () { b.disabled = false; window.alert("L'import a échoué : la voie demandée n'a pas pu se charger (connexion ?). Rien n'a été modifié pour le profil."); });
+      var nOld = A.records().filter(function (r) { return r.kind !== "tadef"; }).length;
+      var ask = S.mode === "replace" && A.profile() && A.records().length ?
+        IOSSheet.confirm({ title: "Remplacer tes " + nOld + " note" + (nOld > 1 ? "s" : "") + " ?", message: "Elles sont remplacées par celles du fichier, et leurs photos sont supprimées. Cette action ne s'annule pas : exporte d'abord une sauvegarde si tu hésites.", ok: "Remplacer et importer" }) : Promise.resolve(true);
+      ask.then(function (ok) {
+        if (!ok) return;
+        b.disabled = true;
+        apply(plan).then(function () { hap("success"); S.plan = plan; screenDone(plan); }, function () { b.disabled = false; IOSSheet.notice({ title: "Import impossible", message: "La voie demandée n'a pas pu se charger (connexion ?). Rien n'a été modifié." }); });
+      });
       return;
     }
     if (a === "finish") { var cb = S.onDone; close(); if (window.FX) FX.view("dash"); if (cb) cb(); }

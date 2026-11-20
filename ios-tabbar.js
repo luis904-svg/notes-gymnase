@@ -13,7 +13,7 @@
   "use strict";
   var bar = document.getElementById("tabbar");
   if (!bar || !window.NotesApp) return;
-  var mq = window.matchMedia("(max-width: 700px)");
+  var mq = window.matchMedia("all");
   function hap(k) { if (window.FX) FX.haptic(k); }
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function app() { return window.NotesApp; }

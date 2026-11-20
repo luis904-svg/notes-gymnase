@@ -33,6 +33,11 @@
   /* ---------- Illustrations ---------- */
   var V = {
     install: function () {
+      // Phase 3, point 2 (choix de l'utilisateur) : sur ordinateur, installation depuis Safari sur Mac ou Chrome.
+      if (deskNow()) return "<div class='gd-flow'><div class='gd-tile pulse'>" + ic("doc") + "<b>Fichier</b></div><span class='gd-arrow'>›</span>" +
+        "<div class='gd-tile'>" + ic("add") + "<b>Ajouter au Dock</b></div><span class='gd-arrow'>›</span>" +
+        "<div class='gd-tile'><img src='icon-180.png' alt=''><b>Notes</b></div></div>" +
+        "<p class='gd-cap'>Safari sur Mac, ou Chrome</p>";
       return "<div class='gd-flow'><div class='gd-tile pulse'>" + ic("share") + "<b>Partager</b></div><span class='gd-arrow'>›</span>" +
         "<div class='gd-tile'>" + ic("add") + "<b>Sur l'écran d'accueil</b></div><span class='gd-arrow'>›</span>" +
         "<div class='gd-tile'><img src='icon-180.png' alt=''><b>Notes</b></div></div>" +
@@ -52,9 +57,11 @@
         "<span class='gd-btn'>Ajouter</span></div>" + tabs("add");
     },
     edit: function () {
-      return "<div class='gd-notes'><div class='gd-n'><b>5.5</b><span>Physique OS · Test C</span><i><em>Modifier</em><em class='red'>Supprimer</em></i></div>" +
-        "<div class='gd-n'><b class='crit'>3.5</b><span>Histoire · Droits de l'homme</span><i><em>Modifier</em><em class='red conf'>Confirmer ?</em></i></div></div>" +
-        "<p class='gd-cap'>Une seconde touche confirme la suppression</p>";
+      // Session B : la feuille d'actions (ios-sheets.js) remplace les liens Modifier / « Confirmer ? ».
+      return "<div class='ios-shx-grp ios-gd-sheet'><div class='ios-shx-head'><b>Histoire · Droits de l'homme · 3.5</b><span>12.11.2026 · coef 1</span></div>" +
+        "<span class='ios-shx-btn'>Modifier</span><span class='ios-shx-btn'>Voir les photos</span><span class='ios-shx-btn is-danger'>Supprimer la note</span></div>" +
+        "<div class='ios-shx-grp ios-gd-sheet'><span class='ios-shx-btn is-bold'>Annuler</span></div>" +
+        "<p class='gd-cap'>Supprimer demande ensuite une confirmation</p>";
     },
     promo: function () {
       if (ecgNow()) return "<div class='gd-pr'><span class='gd-pill'>Promotion assurée</span>" +
@@ -170,9 +177,11 @@
   /* ---------- Contenu ---------- */
   var CH = [
     { t: "Prise en main", d: "4 min", s: [
-      { t: "Installe l'app", v: "install", p: [
-        "Ouvre le lien dans <b>Safari</b>, touche <b>Partager</b>, puis <b>Sur l'écran d'accueil</b> et <b>Ajouter</b>.",
-        "Ouvre ensuite toujours l'app par son icône <b>Notes</b> : ce que tu saisis dans Safari ne se retrouve pas dans l'app installée."] },
+      { t: "Installe l'app", v: "install", p: function () { return deskNow() ? [
+        "Sur ordinateur, dans <b>Safari sur Mac</b> : menu <b>Fichier</b> → <b>Ajouter au Dock</b>. Dans <b>Chrome</b> : clique l'icône d'installation à droite de la barre d'adresse, puis <b>Installer</b>.",
+        "Ouvre ensuite toujours l'app par son icône <b>Notes</b>. Sur ton téléphone, installe-la depuis Safari (iPhone) ou Chrome (Android) : l'écran d'arrivée le montre en animation."] : [
+        "Ouvre le lien dans <b>Safari</b>, touche <b>Partager</b> (depuis iOS 26 : d'abord <b>•••</b> en bas à droite), puis <b>Sur l'écran d'accueil</b> et <b>Ajouter</b>. L'écran d'arrivée le montre en animation.",
+        "Ouvre ensuite toujours l'app par son icône <b>Notes</b> : ce que tu saisis dans Safari ne se retrouve pas dans l'app installée."]; } },
       { t: "Fais la configuration", v: "config", p: [
         "Choisis ton gymnase, ton année, tes langues, ton option spécifique, ton niveau de maths et ta discipline artistique (et l'option complémentaire en 3e).",
         "L'app crée tes branches avec leurs périodes. Un choix impossible est grisé, avec la raison. Tu pourras tout changer plus tard dans <b>Réglages → Profil</b>."] },
@@ -187,7 +196,7 @@
         "Ensuite, touche la note dans le détail de la branche pour revoir les pages en plein écran, en ajouter ou en supprimer.",
         "<span class='note'>Les photos restent sur cet appareil : elles ne sont ni synchronisées ni dans la sauvegarde. Changer d'iPhone ou supprimer l'icône de l'app les fait perdre. La note, elle, est toujours tapée à la main.</span>"] },
       { t: "Corrige ou supprime", v: "edit", p: [
-        "Dans <b>Dernières notes</b> ou dans le détail d'une branche (sur téléphone, <b>touche la note</b> pour voir ses boutons) : <b>Modifier</b> rouvre la note, <b>Supprimer</b> demande une seconde touche (« Confirmer ? »). Supprimer une note supprime aussi ses photos."] }
+        "Dans <b>Dernières notes</b> ou dans le détail d'une branche, <b>touche la note</b> : une feuille propose <b>Modifier</b> (rouvre la note), <b>Voir les photos</b> et <b>Supprimer la note</b>. Supprimer demande une confirmation, car une note supprimée ne revient pas ; ses photos sont supprimées avec elle. Sur ordinateur, les liens Modifier et Supprimer sont à côté de chaque note."] }
     ] },
     { t: "Lire le tableau de bord", d: "3 min", s: [
       { t: "Le verdict de promotion", v: "promo", p: [
@@ -203,7 +212,7 @@
         "Sur téléphone, la liste <b>Branches</b> montre pour chaque branche sa <b>note de bulletin</b>, à droite. Tout suit la période choisie en haut. Touche une ligne pour ouvrir le détail."] },
       { t: "Le détail d'une branche", v: "detail", p: [
         "En haut : ta <b>moyenne exacte</b> et sa variation depuis la première note. Les boutons <b>Année</b>, <b>S1</b> et <b>S2</b> changent la période ; <b>glisse le doigt le long de la courbe</b>, comme dans l'app Bourse : la courbe est lissée et suit les vraies dates : une barre au-dessus montre la date sous ton doigt et ta moyenne à ce moment-là, au dixième ; lève le doigt pour la faire disparaître. Dessous, une carte de chiffres clés : moyenne exacte, plus haute et plus basse note, ton objectif avec l'écart, et la note à obtenir au prochain test pour passer à 4. Le <b>+</b> en haut à droite ajoute une note dans cette branche.",
-        "Plus bas : les notes de la plus récente à la plus ancienne, chacune avec son effet sur ta moyenne (+0.17, −0.30…). <b>Touche une note</b> pour voir Modifier, Supprimer et ses photos. Les photos s'ouvrent en plein écran : <b>balaie</b> d'une page à l'autre, <b>pince</b> ou touche deux fois pour zoomer, touche une fois pour cacher les boutons, glisse vers le bas pour fermer. Un TA se déplie pour montrer ses ETA."] },
+        "Plus bas : les notes de la plus récente à la plus ancienne, chacune avec son effet sur ta moyenne (+0.17, −0.30…). <b>Touche une note</b> : une feuille propose Modifier, Voir les photos et Supprimer. Les photos s'ouvrent en plein écran : <b>balaie</b> d'une page à l'autre, <b>pince</b> ou touche deux fois pour zoomer, touche une fois pour cacher les boutons, glisse vers le bas pour fermer. Un TA se déplie pour montrer ses ETA, avec Ajouter un ETA, Modifier le TA (nom et % du 4) et Supprimer le TA."] },
       { t: "Alertes et périodes", v: "watch", p: [
         "<b>À surveiller</b> liste les branches en difficulté (touche une ligne pour ouvrir la branche). Les boutons <b>Année</b>, <b>Semestre 1</b> et <b>Semestre 2</b> filtrent tout le tableau de bord."] },
       { t: "La barre du bas", v: "scrub", p: [
@@ -303,7 +312,7 @@
         "<button type='button' class='gd-x' data-gd='close' aria-label='Fermer le guide'>" + CLOSE + "</button></div>" +
         "<div class='gd-body'><p class='gd-kick'>Chapitre " + (c + 1) + " · " + ch.t + " · Étape " + (s + 1) + " sur " + ch.s.length + "</p>" +
         "<div class='gd-vis' aria-hidden='true'>" + V[stp.v.split(":")[0]](stp.v.split(":")[1]) + "</div>" +
-        "<h1 class='gd-title'>" + stp.t + "</h1><div class='gd-text'>" + stp.p.map(function (t) { return t.indexOf("<span class='note'>") === 0 ? "<p class='note'>" + t.replace(/^<span class='note'>|<\/span>$/g, "") + "</p>" : "<p>" + t + "</p>"; }).join("") + "</div></div>" +
+        "<h1 class='gd-title'>" + stp.t + "</h1><div class='gd-text'>" + (typeof stp.p === "function" ? stp.p() : stp.p).map(function (t) { return t.indexOf("<span class='note'>") === 0 ? "<p class='note'>" + t.replace(/^<span class='note'>|<\/span>$/g, "") + "</p>" : "<p>" + t + "</p>"; }).join("") + "</div></div>" +
         "<div class='gd-foot'>" + (s > 0 || c > 0 ? "<button type='button' class='btn-ghost' data-gd='prev'>Précédent</button>" : "") +
         "<button type='button' class='btn' data-gd='next'>" + (last ? "Terminer le chapitre" : "Suivant") + "</button></div>";
       st.last = { c: c, s: s }; save();
@@ -333,6 +342,8 @@
      les textes d'origine (maturité) sont gardés pour les remettre. */
   var gdProfile = null;     // profil en cours de configuration (l'assistant ouvre le guide avant de l'enregistrer)
   function curProfile() { return gdProfile || (window.NotesApp && NotesApp.profile()); }
+  // Ordinateur : grand écran avec souris (pas un iPad tactile).
+  function deskNow() { return window.matchMedia("(min-width: 768px) and (hover: hover) and (pointer: fine)").matches; }
   function ecgNow() { var pr = curProfile(); return !!(pr && window.Grid && !Grid.isMat(pr) && Grid.ext(pr)); }
   function adaptVoie() {
     var pr = curProfile(), x = pr && window.Grid && Grid.ext(pr), g = x && x.guide ? x.guide(pr) : null;

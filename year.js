@@ -95,19 +95,19 @@
           '<p class="muted small" style="margin:2px 0 10px">' + (e.verdict ? "Verdict en fin d'année : " + esc(e.verdict) + " · " : "") + n + " note" + (n > 1 ? "s" : "") + '</p>' +
           '<div class="ob-list">' + rows.map(function (r) { return rowHtml(e, r); }).join("") + '</div></section>';
       }).join("") +
-      '<button type="button" class="link danger" id="yp-undo-h" style="padding-left:0;margin-top:18px">Annuler le dernier passage…</button>' +
-      '<p class="ob-fine">Remet les notes de ' + esc(arch[0].label) + ' dans le tableau de bord et revient en ' + ORD[arch[0].year] + ' année.</p></div>',
-      function (e) { if (e.target.closest("#yp-undo-h") && undo()) close(); });
+      '<div class="ios-grp ios-ob-acts"><button type="button" class="ios-row ios-act is-danger" id="yp-undo-h">Annuler le dernier passage…</button></div>' +
+      '<p class="ios-grp-foot">Remet les notes de ' + esc(arch[0].label) + ' dans le tableau de bord et revient en ' + ORD[arch[0].year] + ' année.</p></div>',
+      function (e) { if (e.target.closest("#yp-undo-h")) { var u = undo(); if (u) u.then(function (ok) { if (ok) close(); }); } });
   }
 
   /* ---------- Annuler le dernier passage ---------- */
   function undo() {
     var arch = app().archive(); if (!arch.length) return;
     var e = arch[arch.length - 1], n = app().grades().length;
-    if (!window.confirm("Revenir à la " + ORD[e.year] + " année (" + e.label + ") ? Tes notes de " + e.label + " reviennent dans le tableau de bord." +
-      (n ? (n > 1 ? " Les " + n + " notes saisies depuis le passage seront supprimées." : " La note saisie depuis le passage sera supprimée.") : ""))) return;
-    app().undoPass(); hap("heavy");
-    return true;
+    // Feuille de confirmation (ios-sheets.js) : la réponse arrive plus tard ; `then` est appelé seulement si l'élève confirme.
+    return IOSSheet.confirm({ title: "Revenir à la " + ORD[e.year] + " année ?", message: "Tes notes de " + e.label + " reviennent dans le tableau de bord." +
+      (n ? (n > 1 ? " Les " + n + " notes saisies depuis le passage seront supprimées." : " La note saisie depuis le passage sera supprimée.") : ""), ok: "Revenir en " + ORD[e.year] + " année", danger: !!n })
+      .then(function (ok) { if (ok) { app().undoPass(); hap("heavy"); } return ok; });
   }
 
   /* ---------- Bloc dans Réglages ---------- */

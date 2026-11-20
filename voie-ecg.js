@@ -174,7 +174,7 @@
         '<li>Somme des écarts sous 4 d\'au plus 2 points (3 en dessous de 4 pèsent 1 point de déficit).</li>' +
         '<li>Au plus 3 notes inférieures à 4.</li>' +
         '<li>Pas de groupe de 16 points ni de double compensation : ces règles sont celles de la maturité.</li>' +
-        '<li>Cas limite : un demi-point sur une seule note suffirait. La conférence des maîtres décide.</li></ul></div>',
+        '<li>Cas limite : un demi-point de plus sur une seule note de branche (la note du bulletin, pas celle d\'un test) suffirait. La conférence des maîtres décide.</li></ul></div>',
       caveat: 'Sources : règlement de l\'ECG (RECG, BLV 413.05.1) art. 8-10 et 13, directives DRECG 8.1 (arrondi), plan d\'études ECG 2024 (grilles). Les listes de notes du bulletin viennent du vade-mecum du Gymnase de Burier : vérifie-les avec ton doyen.'
     };
   }
@@ -182,7 +182,7 @@
     if (year !== 3) return null;
     return { ok: ["t-good", "Bonne voie", "Tes moyennes actuelles remplissent les trois conditions du certificat, avec de la marge."],
       tight: ["t-warn", "Serré", "Les conditions sont remplies, mais une ou deux mauvaises notes peuvent les faire basculer."],
-      limit: ["t-warn", "Cas limite", "Un demi-point sur une seule note suffirait."],
+      limit: ["t-warn", "Cas limite", "Un demi-point de plus sur une seule note de branche suffirait."],
       danger: ["t-crit", "Compliqué", "Plusieurs conditions du certificat ne sont pas remplies avec tes moyennes actuelles."] }[k] || null;
   }
 

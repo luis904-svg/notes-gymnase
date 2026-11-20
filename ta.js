@@ -130,24 +130,31 @@
       subjSel.value = d.subject; typeSel.value = "ta"; fillTA(d.id);
       $(d.points ? "#f-pts" : "#f-val").focus({ preventScroll: true });
     }
-    if (t.dataset.taName && (d = defOf(t.dataset.taName))) {
-      var name = window.prompt("Nom du TA", d.label || ""); if (name == null) return;
-      name = name.trim().slice(0, 50); if (!name || name === d.label) return;
-      app().upsert([Object.assign({}, d, { label: name })]); hap("success");
-    }
-    if (t.dataset.taPct && (d = defOf(t.dataset.taPct))) {
-      var s = window.prompt("% des points qui donne 4 (de " + PCT_MIN + " à " + PCT_MAX + ")", String(pctOf(d))); if (s == null) return;
-      var pct = num(s);
-      if (!isFinite(pct) || pct < PCT_MIN || pct > PCT_MAX) { hap("error"); window.alert("Le % du 4 doit être entre " + PCT_MIN + " et " + PCT_MAX + "."); return; }
-      var nd = Object.assign({}, d, { pct: pct });
-      // La valeur indicative de chaque ETA suit le nouveau barème.
-      var upd = etasOf(d.id).map(function (x) { return x.max > 0 ? Object.assign({}, x, { value: etaValue(nd, +x.pts || 0, +x.max) }) : x; });
-      app().upsert(upd.concat([nd])); hap("success");
+    // « Modifier le TA » : feuille de saisie (ios-sheets.js) avec le nom et, en points, le % qui donne 4.
+    if (t.dataset.taEdit && (d = defOf(t.dataset.taEdit))) {
+      var fields = [{ key: "name", label: "Nom", value: d.label || "", placeholder: "Exposé", max: 50 }];
+      if (d.points) fields.push({ key: "pct", label: "% des points pour un 4", value: String(pctOf(d)), mode: "decimal", unit: "%" });
+      IOSSheet.form({ title: "Modifier le TA", ok: "Enregistrer", fields: fields,
+        foot: d.points ? "Le % va de " + PCT_MIN + " à " + PCT_MAX + ". Les notes des ETA suivent le nouveau barème." : "",
+        check: function (v) {
+          if (!v.name) return "Donne un nom au TA.";
+          if (d.points) { var x = num(v.pct); if (!isFinite(x) || x < PCT_MIN || x > PCT_MAX) return "Le % du 4 doit être entre " + PCT_MIN + " et " + PCT_MAX + "."; }
+          return null;
+        }
+      }).then(function (v) {
+        if (!v) return;
+        var nd = Object.assign({}, d, { label: v.name.slice(0, 50) });
+        if (d.points) nd.pct = num(v.pct);
+        // La valeur indicative de chaque ETA suit le nouveau barème.
+        var upd = d.points && nd.pct !== pctOf(d) ? etasOf(d.id).map(function (x) { return x.max > 0 ? Object.assign({}, x, { value: etaValue(nd, +x.pts || 0, +x.max) }) : x; }) : [];
+        if (nd.label === d.label && !upd.length) return;
+        app().upsert(upd.concat([nd])); hap("success");
+      });
     }
     if (t.dataset.taDel && (d = defOf(t.dataset.taDel))) {
-      var n = etasOf(d.id).length;
-      if (!window.confirm("Supprimer le TA « " + (d.label || "TA") + " » et " + (n > 1 ? "ses " + n + " ETA" : "son ETA") + " ?")) return;
-      app().remove([d.id].concat(etasOf(d.id).map(function (x) { return x.id; }))); hap("heavy");
+      var n = etasOf(d.id).length, dd = d;
+      IOSSheet.confirm({ title: "Supprimer le TA « " + (d.label || "TA") + " » ?", message: (n > 1 ? "Ses " + n + " ETA seront supprimés" : "Son ETA sera supprimé") + ", avec leurs photos. Cette action ne s'annule pas.", ok: "Supprimer le TA" })
+        .then(function (ok) { if (ok) { app().remove([dd.id].concat(etasOf(dd.id).map(function (x) { return x.id; }))); hap("heavy"); } });
     }
   });
 

@@ -139,7 +139,7 @@
     if (!host) return;
     var granted = meta.on && window.Notification && Notification.permission === "granted";
     // Téléphone (v58, style C) : deux interrupteurs iOS ; « Recevoir » active ou coupe les notifications de cet appareil.
-    if (window.matchMedia("(max-width: 700px)").matches) {
+    if (window.matchMedia("all").matches) {
       host.innerHTML = '<p class="ios-grp-head">Notifications</p><div class="ios-grp">' +
         '<label class="ios-row"><span class="ios-row-l">' + (busy ? "Activation…" : "Recevoir les notifications") + '</span><input type="checkbox" switch id="nt-recv"' + (granted ? " checked" : "") + (busy ? " disabled" : "") + '></label>' +
         '<label class="ios-row"><span class="ios-row-l">Tout couper</span><input type="checkbox" switch id="nt-all"' + (off() ? " checked" : "") + '></label></div>' +

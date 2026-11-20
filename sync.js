@@ -152,7 +152,7 @@
     var s = Math.round((Date.now() - t) / 1000);
     return s < 10 ? "à l'instant" : s < 60 ? "il y a " + s + " s" : s < 3600 ? "il y a " + Math.round(s / 60) + " min" : new Date(t).toLocaleString("fr-CH", { dateStyle: "short", timeStyle: "short" });
   }
-  function phone() { return window.matchMedia("(max-width: 700px)").matches; }
+  function phone() { return window.matchMedia("all").matches; }
   // Téléphone (v58, style C du canvas) : tuile d'état, code dans un groupe, actions en lignes, « Désactiver » seul en rouge.
   function paintPhone() {
     var Ic = window.Icons, ic = function (n) { return Ic ? Ic.svg(n) : ""; };
@@ -203,13 +203,14 @@
     ui.addEventListener("click", function (e) {
       var t = e.target;
       if (t.id === "sy-new") { start(newCode(), false); }
-      if (t.id === "sy-join") { var c = window.prompt("Code de synchronisation (16 caractères)"); if (c != null) join(c); }
+      if (t.id === "sy-join") askCode().then(function (c) { if (c != null) join(c); });
       if (t.id === "sy-copy") { if (navigator.clipboard) navigator.clipboard.writeText(meta.code).then(function () { t.textContent = "Copié"; }); }
       if (t.id === "sy-now") cycle();
-      if (t.id === "sy-off" && window.confirm("Arrêter la synchronisation sur cet appareil ? Tes notes restent ici et en ligne ; tu pourras reprendre avec le même code.")) {
+      if (t.id === "sy-off") IOSSheet.confirm({ title: "Arrêter la synchronisation ?", message: "Sur cet appareil seulement. Tes notes restent ici et en ligne ; tu pourras reprendre avec le même code.", ok: "Arrêter la synchronisation" }).then(function (ok) {
+        if (!ok) return;
         var bye = window.Notify ? Notify.stop() : Promise.resolve();
         bye.then(function () { meta = {}; store(); cryptoKey = null; vaultId = null; paint(); });
-      }
+      });
     });
     paint();
   }
@@ -223,6 +224,14 @@
     }).then(function () { loop(); paint(); if (window.FX) FX.haptic("success"); });
   }
   // Rejoindre : les données en ligne priment sur un appareil encore vide.
+  // « J'ai déjà un code » (Réglages et assistant) : feuille de saisie (ios-sheets.js) ; le code est vérifié avant de fermer.
+  function askCode() {
+    return IOSSheet.form({ title: "J'ai déjà un code", ok: "Rejoindre",
+      fields: [{ key: "c", label: "Code", placeholder: "XXXX-XXXX-XXXX-XXXX", upper: true, max: 24 }],
+      foot: "Le code (16 lettres ou chiffres) est sur ton autre appareil : Réglages → Synchronisation.",
+      check: function (v) { return normalize(v.c) ? null : "Ce code n'est pas valide : il faut 16 lettres ou chiffres."; }
+    }).then(function (v) { return v ? v.c : null; });
+  }
   function join(code) {
     var c = normalize(code);
     if (!c) { say("Ce code n'est pas valide : il faut 16 lettres ou chiffres."); if (window.FX) FX.haptic("error"); return Promise.resolve(false); }
@@ -236,7 +245,7 @@
     ctx: function () { return cryptoKey && vaultId ? { id: vaultId, key: cryptoKey, url: SYNC_URL } : null; },
     seal: function (obj) { return seal(obj); },
     applying: function () { return applying; },
-    join: join, enabled: function () { return !!meta.code && !!SYNC_URL; }, available: function () { return !!SYNC_URL; },
+    join: join, ask: askCode, enabled: function () { return !!meta.code && !!SYNC_URL; }, available: function () { return !!SYNC_URL; },
     // État et heure de la dernière synchronisation réussie (tuile de Réglages, ios-settings.js).
     status: function () { return lastStatus; }, last: function () { return meta.last || 0; }
   };

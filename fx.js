@@ -278,17 +278,21 @@
       var st = obj && obj.state ? obj.state : (obj && obj.data ? obj.data : obj);
       if (!st || !Array.isArray(st.grades)) { haptic("error"); say("Aucune note trouvée dans ce fichier.", true); return; }
       haptic("warn");
-      if (!window.confirm("Remplacer les notes de cet appareil par les " + st.grades.length + " notes du fichier ?")) return;
-      window.NotesApp.replace(st);
-      haptic("success"); say(st.grades.length + " notes importées.");
+      IOSSheet.confirm({ title: "Remplacer tes notes ?", message: "Les notes de cet appareil sont remplacées par les " + st.grades.length + " notes du fichier. Cette action ne s'annule pas.", ok: "Remplacer" }).then(function (ok) {
+        if (!ok) return;
+        window.NotesApp.replace(st);
+        haptic("success"); say(st.grades.length + " notes importées.");
+      });
     };
     r.readAsText(f);
   }
   function mountBackup() {
     var host = $("#set-block"); if (!host || $("#backup")) return;
     var div = document.createElement("div"); div.className = "backup"; div.id = "backup";
-    var phone = window.matchMedia("(max-width: 700px)").matches;
+    var phone = window.matchMedia("all").matches;
     var txt = "Tes notes restent sur ce téléphone. Exporte-les de temps en temps (Fichiers, AirDrop) pour ne rien perdre. Les photos des tests ne sont ni dans la sauvegarde ni synchronisées : changer d'iPhone ou supprimer l'icône de l'app les fait perdre.";
+    // Grand écran (session D) : même texte, pour un ordinateur.
+    if (window.matchMedia("(min-width: 701px)").matches) txt = "Tes notes restent dans ce navigateur. Exporte-les de temps en temps pour ne rien perdre. Les photos des tests ne sont ni dans la sauvegarde ni synchronisées : effacer les données du navigateur les fait perdre.";
     var hapRow = '<label class="row ios-bk-hap">Retours haptiques<input type="checkbox" switch id="bk-haptic"' + (hapticsOn ? " checked" : "") + '></label>';
     // Téléphone (v58, style C) : groupe de lignes iOS ; l'interrupteur haptique vit dans Réglages › Données (ios-settings.js).
     div.innerHTML = phone ?
@@ -307,7 +311,7 @@
     $("#bk-import").addEventListener("click", function () { $("#bk-file").click(); });
     // Import depuis un tableur (Excel…) via une IA : import.js n'est téléchargé qu'à cet instant.
     $("#bk-sheet").addEventListener("click", function () {
-      Grid.script("import.js").then(function () { Import.open(); }, function () { window.alert("L'import se charge à la première utilisation : connecte-toi à Internet, puis réessaie."); });
+      Grid.script("import.js").then(function () { Import.open(); }, function () { IOSSheet.notice({ title: "Connexion nécessaire", message: "L'import se charge à la première utilisation : connecte-toi à Internet, puis réessaie." }); });
     });
     $("#bk-file").addEventListener("change", function (e) { var f = e.target.files && e.target.files[0]; if (f) importFile(f); e.target.value = ""; });
     $("#bk-haptic").addEventListener("change", function (e) {
@@ -319,13 +323,15 @@
 
   /* ---------- Installation ---------- */
   function mountInstallTip() {
-    var ios = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    var ua = navigator.userAgent;
+    var ios = !/Android/i.test(ua) && (/iP(hone|ad|od)/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
+    var dots = (parseInt((ua.match(/Version\/(\d+)/) || [])[1], 10) || 0) >= 26;
     var standalone = window.navigator.standalone || window.matchMedia("(display-mode: standalone)").matches;
     var dismissed = false; try { dismissed = localStorage.getItem("notes2m01.tip") === "off"; } catch (e) {}
     if (!ios || standalone || dismissed) return;
     var tip = document.createElement("div"); tip.className = "install-tip";
     tip.innerHTML = window.Icons.svg("share") +
-      '<p>Installe l\'app : touche <b>Partager</b>, puis <b>Sur l\'écran d\'accueil</b>.</p><button type="button" class="link" id="tip-x">OK</button>';
+      '<p>Installe l\'app : touche ' + (dots ? '<b>•••</b>, puis ' : '') + '<b>Partager</b>, puis <b>Sur l\'écran d\'accueil</b>.</p><button type="button" class="link" id="tip-x">OK</button>';
     var wrap = $(".wrap"); wrap.insertBefore(tip, $("#demo"));
     $("#tip-x").addEventListener("click", function () {
       try { localStorage.setItem("notes2m01.tip", "off"); } catch (e) {}

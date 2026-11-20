@@ -12,7 +12,7 @@
   "use strict";
   var view = document.getElementById("view-settings");
   if (!view) return;
-  var mq = window.matchMedia("(max-width: 700px)");
+  var mq = window.matchMedia("all");
   var container = document.createElement("div");
   container.id = "ios-set"; container.className = "ios-set";
   view.insertBefore(container, view.firstChild);
@@ -46,7 +46,10 @@
     var seg = '<div class="ios-appseg" role="group" aria-label="Apparence">' + [["auto", "Auto"], ["light", "Clair"], ["dark", "Sombre"]].map(function (o) {
       return '<button type="button" data-theme-set="' + o[0] + '" aria-pressed="' + (cur === o[0]) + '">' + o[1] + '</button>';
     }).join("") + '</div>';
-    return grp([seg], "Apparence", "Auto suit le réglage de ton iPhone (Réglages > Affichage et luminosité). Ce choix reste sur cet appareil.");
+    // Grand écran (session D) : l'ordinateur a son propre réglage clair / sombre.
+    var foot = window.matchMedia("(min-width: 701px)").matches ? "Auto suit le réglage clair ou sombre de ton ordinateur. Ce choix reste sur cet appareil." :
+      "Auto suit le réglage de ton iPhone (Réglages > Affichage et luminosité). Ce choix reste sur cet appareil.";
+    return grp([seg], "Apparence", foot);
   }
   function cfg() { return app().get().cfg; }
   function subjects() { return app().subjectsAll().filter(function (s) { return !s.carried; }); }
@@ -388,7 +391,7 @@
         run("pop", function () { stack.pop(); stack.pop(); show(scrolls[key(top())] || 0); });
       } else pop();
     }
-    else if (kind === "imp") { Grid.script("import.js").then(function () { Import.open(); }, function () { window.alert("L'import se charge à la première utilisation : connecte-toi à Internet, puis réessaie."); }); }
+    else if (kind === "imp") { Grid.script("import.js").then(function () { Import.open(); }, function () { IOSSheet.notice({ title: "Connexion nécessaire", message: "L'import se charge à la première utilisation : connecte-toi à Internet, puis réessaie." }); }); }
     else if (kind === "step") { if (window.Onboard) Onboard.open(true, a[1]); }
     else if (kind === "cal") { cal.m += a[1] === "next" ? 1 : -1; if (cal.m > 11) { cal.m = 0; cal.y++; } if (cal.m < 0) { cal.m = 11; cal.y--; } show(window.scrollY); }
     else if (kind === "day") { app().setS1End(a[1]); show(window.scrollY); }

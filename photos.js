@@ -280,9 +280,9 @@
       }
       if (b.dataset.ph === "del") {
         var i = curIndex(), p = view.querySelectorAll(".ios-ph-page")[i]; if (!p) return;
-        hap("warn");
-        if (!window.confirm("Supprimer cette page ? Elle ne pourra pas être récupérée.")) return;
-        delPage(+p.dataset.id, vNote).then(function () { hap("heavy"); return drawView(i); });
+        IOSSheet.confirm({ title: "Supprimer cette page ?", message: "Elle ne pourra pas être récupérée.", ok: "Supprimer la page" }).then(function (ok) {
+          if (ok && view) delPage(+p.dataset.id, vNote).then(function () { hap("heavy"); return drawView(i); });
+        });
       }
     });
     document.addEventListener("keydown", onKey);
@@ -307,7 +307,7 @@
       var n = counts[PENDING]; delete counts[PENDING]; counts[note] = (counts[note] || 0) + n;
       tx("readwrite", function (s) {
         s.index("note").openCursor(IDBKeyRange.only(PENDING)).onsuccess = function (e) { var c = e.target.result; if (c) { var v = c.value; v.note = note; c.update(v); c.continue(); } };
-      }).then(null, function () { counts[note] = Math.max(0, counts[note] - n); window.alert(FULL); }).then(function () { if (window.NotesApp) NotesApp.redraw(); });
+      }).then(null, function () { counts[note] = Math.max(0, counts[note] - n); IOSSheet.notice({ title: "Photo non enregistrée", message: FULL }); }).then(function () { if (window.NotesApp) NotesApp.redraw(); });
     },
     drop: drop,
     open: openView

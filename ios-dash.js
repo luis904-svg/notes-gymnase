@@ -7,7 +7,7 @@
    - « À surveiller » : chaque alerte devient une ligne à carré d'icône coloré ; toucher = détail de la branche ;
    - « Toutes les moyennes » (#ios-bch, v60) : graphique en bâtons sous les tuiles ; la liste de barres horizontales
      « Moyennes par branche » est retirée (panneau masqué, #bars vidé) ;
-   - « Dernières notes » : lignes avec la note à droite ; toucher une ligne montre Modifier / Supprimer ;
+   - « Dernières notes » : lignes avec la note à droite ; toucher une ligne ouvre la feuille Modifier / Voir les photos / Supprimer ;
    - le graphique « Évolution de la moyenne » est masqué (la tuile Moyenne générale le remplace, la page d'une branche a
      sa propre courbe).
    Couleurs : uniquement le niveau (vert, orange à 4, rouge sous 4), jamais la variation. Ordre des sections par CSS.
@@ -17,7 +17,8 @@
   "use strict";
   var A = window.NotesApp, dash = document.getElementById("view-dash");
   if (!A || !dash) return;
-  var mq = window.matchMedia("(max-width: 700px)");
+  var mq = window.matchMedia("all");
+  var desk = window.matchMedia("(min-width: 701px)"), lastItems = null;   // grand écran (session D)
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function icon(n) { return window.Icons ? Icons.svg(n) : ""; }
   function txt(root, sel) { var e = root.querySelector(sel); return e ? e.textContent.trim() : ""; }
@@ -136,7 +137,11 @@
     var n = data.length;
     if (!n) { panel.innerHTML = ""; return; }
     // Axe fixe de 1 à 6 (l'échelle des notes a un sens). Peu de repères : 2, 4 et 6 ; le 4 est la ligne qui compte.
-    var W = 358, rot = n > 8, H = rot ? 248 : 222, L = 18, R = 2, T = 20, B = rot ? 54 : 30, slot = (W - L - R) / n, bw = Math.min(24, slot * 0.6);
+    // Grand écran (session D) : le dessin prend la largeur réelle du groupe (texte à sa vraie taille, pas agrandi), bâtons
+    // un peu plus larges ; noms des branches à plat dès qu'il y a la place. Téléphone : 358 de large, inchangé.
+    var wide = desk.matches && panel.clientWidth > 420, W = wide ? Math.round(panel.clientWidth - 24) : 358;
+    var slot0 = (W - 20) / n, rot = wide ? slot0 < 44 : n > 8, H = wide ? 280 : rot ? 248 : 222, L = 18, R = 2, T = 20, B = rot ? 54 : 30, slot = (W - L - R) / n, bw = Math.min(wide ? 32 : 24, slot * 0.6);
+    lastItems = items;
     function Y(v) { return T + (1 - (v - 1) / 5) * (H - T - B); }
     var base = Y(1), g = "", i;
     // Les lignes de repère s'interrompent derrière un chiffre qu'elles traverseraient (pas de liseré autour du chiffre : il ferait une
@@ -196,27 +201,21 @@
     box.innerHTML = "";
   }
 
-  /* ---------- Dernières notes : toucher une ligne montre ses actions ---------- */
-  var openNote = null;
+  /* ---------- Dernières notes : toucher une ligne ouvre la feuille d'actions (ios-sheets.js, session B) ---------- */
   function notes() {
     var ul = document.getElementById("notes"); if (!ul) return;
     [].forEach.call(ul.children, function (li) {
       if (li.classList.contains("empty") || li.classList.contains("ios-ta-li")) return;
       li.classList.add("ios-dnote");
       var ed = li.querySelector("[data-edit]"); if (ed) li.dataset.nid = ed.dataset.edit;
-      if (openNote && li.dataset.nid === openNote) li.classList.add("ios-open");
     });
   }
-  document.addEventListener("click", function (e) {
-    if (!mq.matches || !e.target.closest) return;
-    var li = e.target.closest("#notes > li.ios-dnote"); if (!li || e.target.closest("button, a, input, summary")) return;
-    var on = !li.classList.contains("ios-open");
-    [].forEach.call(document.querySelectorAll("#notes > li.ios-open"), function (x) { x.classList.remove("ios-open"); });
-    li.classList.toggle("ios-open", on); openNote = on ? li.dataset.nid || null : null;
-    if (window.FX) FX.haptic("select");
-  });
 
   function paint() { if (!mq.matches) return; wrapPanels(); top(); alerts(); bars(); notes(); }
+  // Grand écran : la largeur du graphique suit la fenêtre (et le passage téléphone ↔ grand écran sans recharger, qui laissait
+  // un bloc noir avant la session D).
+  var rz = 0;
+  window.addEventListener("resize", function () { cancelAnimationFrame(rz); rz = requestAnimationFrame(function () { if (lastItems) chart(lastItems); }); });
   document.addEventListener("ios:rendered", function () { Promise.resolve().then(paint); });
   // Passage grand écran → téléphone : ios-home.js demande déjà un nouveau rendu du moteur (NotesApp.redraw).
   paint();

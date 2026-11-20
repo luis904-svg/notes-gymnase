@@ -124,6 +124,37 @@
   --ios-tab-pop: 0.78;
   --ios-tab-pop-up: 1.16;
   --ios-pulse: 1.14;
+  /* Écran d'installation, démo « vidéo » (session A, 19 novembre 2026) : faux iPhone dessiné, à l'échelle --ios-inst-k (JS) */
+  --ios-inst-w: 210px;
+  --ios-inst-h: 440px;
+  --ios-inst-bezel: 7px;
+  --ios-inst-r: 40px;
+  --ios-inst-fs: 9px;
+  --ios-inst-dot: 26px;
+  --ios-inst-pad-w: 320px;      /* iPad : écran plus large, cadre plus fin */
+  --ios-inst-pad-h: 430px;
+  --ios-inst-pad-r: 24px;
+  /* Feuilles communes (ios-sheets.js, session B) : actions, confirmations, saisie ; au-dessus de la visionneuse de photos */
+  --ios-shx-z: 1500;
+  --ios-shx-max: 440px;        /* largeur maximale (grand écran) */
+  --ios-shx-gap: 8px;          /* marge autour de la feuille d'actions et entre ses deux groupes */
+  --ios-shx-btn: 56px;         /* hauteur d'un bouton de la feuille d'actions */
+  --ios-shx-btn-fs: 19px;
+  --ios-shx-top: 48px;         /* feuille de saisie : espace laissé en haut de l'écran */
+  --ios-dur-shx: 320ms;
+  --ios-shx-bg: var(--ios-cell);        /* groupes de la feuille (surface « élevée » en sombre) */
+  --ios-shx-form-bg: var(--ios-bg);     /* fond de la feuille de saisie */
+  --ios-inst-skip-delay: 6s;    /* rappel : SKIP_DELAY d'onboard.js (le lien « Continuer ici » arrive après la démo) */
+  --ios-inst-frame: #1C1C1E;
+  --ios-inst-island: #000000;
+  --ios-inst-screen: #FFFFFF;
+  --ios-inst-bar: #F2F2F7;
+  --ios-inst-chip: #E5E5EA;
+  --ios-inst-wall: #DCE3EE;
+  --ios-inst-app: #C7CEDA;
+  --ios-inst-touch: rgba(60, 60, 67, 0.38);
+  --ios-inst-touch-edge: rgba(255, 255, 255, 0.85);
+  --ios-inst-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
 
   /* Accueil « résumé à tuiles » (v51, ios-dash.js, proposition C du canvas) : valeurs de la maquette validée */
   --ios-orange-text: #B25000;
@@ -163,6 +194,25 @@
   --blob1: var(--ios-clear);
   --blob2: var(--ios-clear);
   --blob3: var(--ios-clear);
+  /* Grand écran (session D, option A : ios-desk.js) : barre latérale façon Réglages de l'iPad / du Mac */
+  --ios-side-w: 300px;          /* largeur de la barre latérale (≥ 1100 px) */
+  --ios-side-w-s: 248px;        /* entre 701 et 1099 px (iPad portrait, petite fenêtre) */
+  --ios-side-row: 40px;
+  --ios-side-sq: 26px;          /* carré d'icône d'une ligne */
+  --ios-side-lv: 8px;           /* point de niveau d'une branche */
+  --ios-side-sel: #E3E3E8;      /* ligne sélectionnée (gris, pas de bleu : peu de bleu, actions seulement) */
+  --ios-side-hover: rgba(120, 120, 128, 0.08);
+  --ios-r-side: 12px;
+  --ios-side-z: 30;
+  --ios-desk-max: 1120px;       /* largeur maximale du contenu */
+  --ios-desk-pad: 32px;         /* marge du contenu autour de la barre latérale */
+  --ios-desk-gap: 20px;         /* espace entre colonnes */
+  --ios-desk-add-w: 980px;      /* Ajouter sur deux colonnes */
+  --ios-desk-btn-w: 220px;      /* bouton principal en bas à droite */
+  --ios-desk-dlg-w: 400px;      /* feuille d'actions ou confirmation au centre */
+  --ios-desk-form-w: 520px;     /* feuille de saisie au centre */
+  --ios-col-w: 64px;            /* colonne chiffrée du tableau des branches (Notes, S1, S2, Année) */
+  --ios-focus: 0 0 0 3px rgba(0, 136, 255, 0.45);   /* anneau de focus clavier */
 }
 /* Ressort amorti (dépassement d'environ 8 %), échantillonné ; remplace le repli quand linear() existe. */
 @supports (animation-timing-function: linear(0, 1)) {
@@ -203,6 +253,19 @@
   --ios-back-bg: #2C2C2E;
   --ios-seg-active: #636366;
   --ios-track: #2C2C2E;
+  --ios-inst-frame: #3A3A3C;
+  --ios-inst-screen: #1C1C1E;
+  --ios-inst-bar: #2C2C2E;
+  --ios-inst-chip: #3A3A3C;
+  --ios-inst-wall: #23293A;
+  --ios-inst-app: #3A4256;
+  --ios-inst-touch: rgba(235, 235, 245, 0.45);
+  --ios-inst-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+  --ios-shx-bg: #2C2C2E;
+  --ios-shx-form-bg: #1C1C1E;
+  --ios-side-sel: #2C2C2E;
+  --ios-side-hover: rgba(235, 235, 245, 0.06);
+  --ios-focus: 0 0 0 3px rgba(0, 145, 255, 0.55);
 }
 /* Les variables historiques de l'app sont réaffectées aussi pour le thème (index.html les redéfinit pour le sombre). */
 :root[data-theme] {
@@ -277,7 +340,7 @@ header.top.scrolled { border-bottom-color: var(--ios-bar-hairline); box-shadow: 
 /* ---------- Téléphone : barre d'onglets en pilule flottante opaque, icônes seules ----------
    Pilule gris clair aplat (pas de verre ni d'ombre), pastille plus foncée sous l'onglet actif : c'est l'indicateur
    .ind de fx.js (placé sans animation). Les libellés restent pour les lecteurs d'écran. */
-@media (max-width: 700px) {
+@media all {
   .tabbar {
     left: 0; right: 0; margin: 0 auto; width: min(var(--ios-pill-w), calc(100% - 2 * var(--ios-pill-side)));
     bottom: calc(var(--ios-pill-bottom) + env(safe-area-inset-bottom, 0px)); transform: none;
@@ -341,7 +404,7 @@ button:active, button.is-pressed { transform: scale(var(--ios-press-scale)); tra
    Téléphone : l'en-tête n'est plus collant ; « Notes … » devient un grand titre dans le contenu. Une barre fixe
    (.ios-bar) affiche le petit titre centré et le filet quand le grand titre est passé dessous. */
 .ios-bar { display: none; }
-@media (max-width: 700px) {
+@media all {
   header.top, header.top.scrolled {
     position: static; display: block; margin: 0; border: 0; box-shadow: none; background: var(--ios-clear);
     padding: calc(var(--ios-bar-h) - 4px) 0 4px;
@@ -358,6 +421,7 @@ button:active, button.is-pressed { transform: scale(var(--ios-press-scale)); tra
   .ios-bar-title {
     font-size: var(--ios-title-inline); font-weight: var(--ios-title-inline-weight); letter-spacing: -0.022em; color: var(--ink);
     opacity: 0; transition: opacity var(--ios-dur-title) ease;
+    max-width: calc(100% - 112px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .ios-bar.is-on .ios-bar-title { opacity: 1; }
 }
@@ -370,7 +434,7 @@ html.noanim *, html.noanim *::before, html.noanim *::after {
 
 /* ---------- Barre de titre : bouton retour (chevron seul, rond opaque) et état vide ---------- */
 .ios-large, .ios-set { display: none; }
-@media (max-width: 700px) {
+@media all {
   .ios-bar.is-empty { visibility: hidden; }
   .ios-bar-back {
     display: none; align-items: center; justify-content: center; position: absolute; pointer-events: auto;
@@ -453,7 +517,7 @@ html.noanim *, html.noanim *::before, html.noanim *::after {
 }
 
 /* ---------- Calendrier de la page « Fin du semestre 1 » ---------- */
-@media (max-width: 700px) {
+@media all {
   .ios-cal { padding: 8px 12px 14px; }
   .ios-cal-head { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px 10px; font-size: 17px; }
   .ios-cal-head b { font-weight: 600; text-transform: capitalize; }
@@ -469,7 +533,7 @@ html.noanim *, html.noanim *::before, html.noanim *::after {
 
 /* ---------- Détail d'une matière : page entière (ios-detail.js) ---------- */
 .ios-detail { display: none; }
-@media (max-width: 700px) {
+@media all {
   body.ios-detail-open .ios-detail { display: block; }
   body.ios-detail-open #view-dash, body.ios-detail-open header.top, body.ios-detail-open #demo { display: none; }
   .ios-dpage { display: flex; flex-direction: column; gap: 16px; padding-bottom: 8px; }
@@ -504,7 +568,11 @@ html.noanim .ios-ta > summary .ios-ta-chev { transition: none; }
 .ios-eta-v.crit { color: var(--crit); }
 .ios-eta-what { font-size: 14px; min-width: 0; overflow-wrap: anywhere; }
 .notes .ios-eta .acts { grid-row: auto; }
-.ios-ta-acts { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 0 12px 6px; }
+/* Actions d'un TA (session B) : lignes d'action en texte bleu, rouge pour supprimer, comme Réglages → Synchronisation. */
+.ios-ta-acts { display: flex; flex-direction: column; margin: 6px 0 4px; }
+.ios-ta-act { display: flex; align-items: center; min-height: var(--ios-row-h); width: 100%; margin: 0; padding: 0; border: 0; background: var(--ios-clear); font: inherit; font-size: 17px; color: var(--ios-blue); text-align: left; cursor: pointer; box-shadow: inset 0 var(--ios-hair) 0 var(--ios-sep); }
+.ios-ta-act.is-danger { color: var(--ios-red-text); }
+.ios-ta-act:active { opacity: 0.4; transform: none; }
 .row2:has(> .ios-ta-off) { grid-template-columns: 1fr; }
 
 /* ---------- Photos des tests (photos.js) : formulaire, pastille dans la liste, visionneuse plein écran ---------- */
@@ -609,7 +677,7 @@ html.noanim .tabbar .ind { transition: none; }
 
 /* ---------- Détail d'une matière (objectif 9) : moyenne et courbe en haut, lignes groupées, liste des notes ---------- */
 .ios-tone-good { color: var(--ios-green-text); } .ios-tone-warn { color: var(--ios-orange); } .ios-tone-crit { color: var(--ios-red); } .ios-tone-none { color: var(--ios-label-2); }
-@media (max-width: 700px) {
+@media all {
   .ios-hero { padding: 16px var(--ios-pad) 8px; }
   .ios-hero-top { display: flex; align-items: center; gap: 16px; }
   .ios-hero-num { font-size: var(--ios-hero-num); line-height: 1; font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
@@ -732,7 +800,7 @@ html.noanim .tabbar .ind.ios-ind-ready { transition: none; }
    Le dock est fixe en bas de l'écran (zone sûre comprise) et porte la pilule, le bouton Rechercher et l'accessoire.
    Seuls l'assistant, le guide, la recherche et le clavier ouvert le recouvrent. */
 .ios-dock { display: none; }
-@media (max-width: 700px) {
+@media all {
   .ios-dock {
     display: flex; flex-direction: column; align-items: center; gap: var(--ios-dock-gap);
     position: fixed; left: 0; right: 0; bottom: calc(var(--ios-pill-bottom) + env(safe-area-inset-bottom, 0px)); z-index: 40;
@@ -794,7 +862,7 @@ body.ios-find-open { overflow: hidden; }
    En-tête aligné à gauche, moyenne exacte et variation, S1 / S2 / Année, grande courbe à points touchables, carte du point
    choisi, chiffres clés sur deux colonnes, notes avec pastille d'effet ; actions d'une note au toucher.
    La barre du bas sort de l'écran pendant la page ; le « + » est dans la barre de titre. */
-@media (max-width: 700px) {
+@media all {
   body.ios-detail-open .ios-dock { transform: translate3d(0, calc(100% + var(--ios-pill-bottom) + env(safe-area-inset-bottom, 0px) + 8px), 0); visibility: hidden;
     transition: transform var(--ios-dur-pill) var(--ios-ease-out), visibility 0s var(--ios-dur-pill); }
   body.ios-detail-open { padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
@@ -869,7 +937,7 @@ body.ios-find-open { overflow: hidden; }
 /* ---------- v50 : liste des branches de l'Accueil façon Bourse (ios-home.js) ----------
    Une ligne par branche, séparée par un filet : nom et petite ligne, mini-courbe, moyenne arrondie et pastille de l'effet
    de la dernière note. La carte du moteur garde son rôle de bouton (toucher = détail). */
-@media (max-width: 700px) {
+@media all {
   #subjects:has(.ios-srow) { display: flex; flex-direction: column; gap: 0; }
   #subjects .card.ios-srow { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px; min-height: 64px; margin: 0; padding: 10px 16px 10px var(--ios-pad);
     background: linear-gradient(var(--ios-sep), var(--ios-sep)) var(--ios-pad) 0 / 100% var(--ios-hair) no-repeat; border: 0; border-radius: 0; box-shadow: none; cursor: pointer; }
@@ -895,7 +963,7 @@ body.ios-find-open { overflow: hidden; }
 .ios-spk-thr { stroke: var(--ios-chev); stroke-width: 1; stroke-dasharray: 2 3; }
 .ios-spk-l { fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
 .ios-spk-e { fill: currentColor; stroke: var(--ios-cell); stroke-width: 1.5; }
-@media (max-width: 700px) {
+@media all {
   #view-dash .cols, #view-dash .main, #view-dash .side { display: contents; }
   #view-dash .panel.ios-dsec { background: var(--ios-clear); padding: 0; border-radius: 0; }
   #view-dash .panel.ios-dsec > h2 { font-size: var(--ios-sec-title); font-weight: 700; margin: 0 4px 8px; }
@@ -999,7 +1067,7 @@ body.ios-find-open { overflow: hidden; }
 /* ---------- v58 : toutes les pages au style C (Réglages, Synchronisation, Sauvegarde, sous-pages) ----------
    Titres de section en 22 px au-dessus des groupes (comme l'Accueil), tuiles d'état, actions en lignes bleues,
    « Désactiver » seul dans son groupe en rouge. Chiffres en noir (règle v56). */
-@media (max-width: 700px) {
+@media all {
   .ios-grp-head { margin: 0 4px; font-size: var(--ios-sec-title); font-weight: 700; line-height: 1.25; color: var(--ios-label); }
   .ios-page > .ios-grp-head { margin-top: 28px; }
   .ios-page > .ios-grp-head + .ios-grp { margin-top: 8px; }
@@ -1037,7 +1105,7 @@ body.ios-find-open { overflow: hidden; }
 /* ---------- v58 : formulaire Ajouter au style C (ios-add.js) ---------- */
 .ios-add-h, .ios-tseg, .ios-ph-ic, .ios-ph-chev { display: none; }
 .ios-add-grp { display: flex; flex-direction: column; gap: 12px; }   /* grand écran : même espacement qu'avant */
-@media (max-width: 700px) {
+@media all {
   #view-add > .panel { background: var(--ios-clear); padding: 0; border-radius: 0; }
   .ios-add-h { display: block; margin: 0 4px 8px; }
   #form .ios-add-h ~ .ios-add-h { margin-top: 28px; }
@@ -1065,7 +1133,7 @@ body.ios-find-open { overflow: hidden; }
 }
 
 /* ---------- v58 : page d'une branche au style C (ios-detail.js) ---------- */
-@media (max-width: 700px) {
+@media all {
   .ios-epage > .ios-sub { border-bottom: 0; padding-bottom: 0; }
   .ios-epanel { gap: var(--ios-tile-gap); margin-top: 12px; }
   .ios-etop { margin-top: 0; }
@@ -1133,13 +1201,13 @@ body.ios-find-open { overflow: hidden; }
 .ob-round:active { transform: none; opacity: 0.6; }
 .ob-bar-t { flex: 1; text-align: center; font-size: var(--ios-title-inline); font-weight: 600; }
 .ob-round-sp { flex: none; width: var(--ios-back); }
-.ob-top-c + .ob-prog { flex: none; height: 3px; margin: 6px 0 0; border-radius: 2px; }
+.ob-top-c + .ob-prog { flex: none; height: 3px; margin: 6px auto 0; border-radius: 2px; }
 .ob-prog i { background: var(--ios-green); }
 .ob-list { border: 0; border-radius: var(--ios-r-group); background: var(--ios-cell); }
 .ob-row { min-height: var(--ios-row-h); padding: 6px 16px 6px var(--ios-pad); }
 
 /* ---------- v58 : autres sous-pages au même style ---------- */
-@media (max-width: 700px) {
+@media all {
   /* À propos, notes reprises de 2e : leur contenu reste une carte blanche (les blocs Synchronisation et Sauvegarde sont en lignes) */
   .ios-slot #about, .ios-slot #carriedset { padding: var(--ios-pad); border-radius: var(--ios-r-group); background: var(--ios-cell); gap: 12px; }
 }
@@ -1148,7 +1216,7 @@ body.ios-find-open { overflow: hidden; }
 .yp-b { min-width: var(--ios-grade-w); text-align: center; font-family: inherit; font-size: var(--ios-title-inline); font-weight: 600; letter-spacing: 0; font-variant-numeric: tabular-nums; }
 
 /* ---------- v60 : piste A « liste compacte » (canvas Claude Design) : une carte de chiffres clés sous la courbe ---------- */
-@media (max-width: 700px) {
+@media all {
   .ios-ekey { border-radius: var(--ios-r-group); background: var(--ios-cell); overflow: hidden; }
   .ios-ekey-top { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 14px 0; }
   .ios-ekey-c { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; }
@@ -1176,8 +1244,356 @@ body.ios-find-open { overflow: hidden; }
 .ios-imp-ta { display: block; width: 100%; min-height: var(--ios-imp-ta-h); box-sizing: border-box; border: 0; border-radius: var(--ios-r-group); background: var(--ios-cell); color: var(--ios-label); font: inherit; font-size: var(--ios-imp-fs); padding: var(--ios-pad); resize: vertical; outline: none; }
 .ios-imp-btns { display: flex; flex-direction: column; align-items: stretch; gap: var(--ios-imp-gap); margin-top: var(--ios-grp-gap); }
 .ios-imp-map { display: flex; align-items: center; justify-content: space-between; gap: var(--ios-imp-gap); }
-.ios-imp-sel { max-width: var(--ios-imp-sel-w); border: 0; border-radius: var(--ios-r-pill); background: var(--ios-fill); color: var(--ios-label); font: inherit; padding: 6px 12px; }
+/* Session B : menu iOS (choix A) : valeur grise + ⌃⌄ ; le <select> natif, invisible, couvre toute la ligne. */
+.ios-imp-map { position: relative; }
+.ios-imp-val { flex: none; max-width: var(--ios-imp-sel-w); text-align: right; color: var(--ios-label-2); overflow-wrap: anywhere; }
+.ios-imp-ud { flex: none; width: 16px; height: 16px; color: var(--ios-label-2); stroke-width: 2; }
+.ios-imp-map .ios-imp-sel { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; margin: 0; cursor: pointer; font-size: 17px; }
 .ob-sec { margin: var(--ios-grp-gap) 0 8px; font: inherit; font-weight: 600; color: var(--ios-label-2); }
 .ios-imp-iss { margin-top: var(--ios-grp-gap); color: var(--ios-label-2); font-size: var(--ios-imp-fs); }
 .ios-imp-iss summary { cursor: pointer; color: var(--ios-label-2); }
 .ios-imp-iss ul { margin: 8px 0 0; padding-left: var(--ios-pad); }
+
+/* ---------- Écran d'installation : démo « vidéo » (onboard.js, openDemo ; session A, 19 novembre 2026) ----------
+   Un seul centre d'intérêt : le faux iPhone qui rejoue les gestes. Titre court au-dessus, légende synchronisée dessous,
+   lien discret « Continuer dans Safari » tout en bas. */
+.ios-inst { text-align: center; }
+.ios-inst-head h1 { margin: 8px 0 4px; font-size: var(--ios-title-large); font-weight: var(--ios-title-large-weight); letter-spacing: -0.02em; line-height: 1.1; }
+.ios-inst-head p { margin: 0; color: var(--ios-label-2); font-size: var(--ios-title-inline); }
+.ios-inst-stage { flex: 1 1 0; min-height: 300px; display: flex; align-items: center; justify-content: center; padding: 12px 0; }
+.ios-inst-ph { --ios-inst-k: 1; flex: none; position: relative; width: calc((var(--ios-inst-w) + 2 * var(--ios-inst-bezel)) * var(--ios-inst-k)); height: calc((var(--ios-inst-h) + 2 * var(--ios-inst-bezel)) * var(--ios-inst-k)); }
+.ios-inst-sc { position: absolute; left: 0; top: 0; width: var(--ios-inst-w); height: var(--ios-inst-h); transform: scale(var(--ios-inst-k)); transform-origin: 0 0;
+  border: var(--ios-inst-bezel) solid var(--ios-inst-frame); border-radius: var(--ios-inst-r); background: var(--ios-inst-screen); overflow: hidden; box-sizing: content-box;
+  font-size: var(--ios-inst-fs); line-height: 1.25; color: var(--ios-label); text-align: left; }
+.ios-inst-sc svg { width: 1.25em; height: 1.25em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.ios-inst-cap { min-height: 78px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 0 8px; }
+.ios-inst-n { font-size: 13px; font-weight: 600; color: var(--ios-label-2); }
+.ios-inst-t { font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+.ios-inst-nav { display: flex; align-items: center; justify-content: center; gap: 16px; min-height: 36px; }
+.ios-inst-dots { display: flex; gap: 6px; }
+.ios-inst-dots i { width: 7px; height: 7px; border-radius: var(--ios-r-pill); background: var(--ios-inst-chip); transition: width var(--ios-dur-pill) var(--ios-ease-out), background var(--ios-dur-pill); }
+.ios-inst-dots i.on { width: 18px; background: var(--ios-label); }
+.ios-inst-foot { padding: 4px 0 calc(8px + env(safe-area-inset-bottom, 0px)); }
+.ios-inst-foot .ob-fine { margin: 6px 12px 0; }
+.ios-inst-foot .inst-skip { margin-top: 2px; padding: 10px 16px; font-size: 15px; color: var(--ios-label-2); }
+
+/* Scène (coordonnées fixes 210 × 440, mises à l'échelle) */
+.ios-sc-island { position: absolute; top: 7px; left: 50%; width: 60px; height: 17px; margin-left: -30px; border-radius: var(--ios-r-pill); background: var(--ios-inst-island); z-index: 6; }
+.ios-sc-status { position: absolute; top: 9px; left: 22px; font-weight: 600; }
+.ios-sc-page { position: absolute; left: 14px; right: 14px; top: 40px; display: flex; flex-direction: column; align-items: center; gap: 7px; }
+.ios-sc-page img { width: 36px; height: 36px; border-radius: 9px; margin: 14px 0 6px; }
+.ios-sc-page i { display: block; width: 100%; height: 7px; border-radius: var(--ios-r-pill); background: var(--ios-fill); }
+.ios-sc-page i.t { width: 60%; height: 10px; background: var(--ios-inst-chip); }
+.ios-sc-page i.s { width: 80%; }
+.ios-sc-bar26 { position: absolute; left: 8px; right: 8px; bottom: 14px; height: 32px; display: flex; gap: 6px; align-items: center; }
+.ios-sc-c { width: 32px; height: 32px; border-radius: 50%; background: var(--ios-inst-bar); display: flex; align-items: center; justify-content: center; flex: none; }
+.ios-sc-addr { flex: 1; min-width: 0; height: 32px; border-radius: var(--ios-r-pill); background: var(--ios-inst-bar); display: flex; align-items: center; justify-content: center; padding: 0 8px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.ios-sc-bar18 { position: absolute; left: 0; right: 0; bottom: 0; height: 76px; background: var(--ios-inst-bar); box-shadow: inset 0 var(--ios-hair) 0 var(--ios-sep); }
+.ios-sc-bar18 .ios-sc-addr { position: absolute; left: 10px; right: 10px; top: 7px; height: 26px; display: block; line-height: 26px; text-align: center; background: var(--ios-inst-screen); }
+.ios-sc-tools { position: absolute; left: 10px; right: 10px; top: 38px; display: flex; justify-content: space-between; color: var(--ios-blue); }
+.ios-sc-tools span { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+.ios-sc-menu { position: absolute; right: 8px; bottom: 52px; width: 130px; border-radius: 13px; background: var(--ios-cell); box-shadow: var(--ios-inst-shadow); overflow: hidden; transform-origin: 90% 100%; opacity: 0; z-index: 2; }
+.ios-sc-li { display: flex; justify-content: space-between; align-items: center; gap: 6px; height: 25px; padding: 0 9px; }
+.ios-sc-li + .ios-sc-li { box-shadow: inset 0 var(--ios-hair) 0 var(--ios-sep); }
+.ios-sc-sheet { position: absolute; left: 0; right: 0; bottom: 0; height: 330px; border-radius: 18px 18px 0 0; background: var(--ios-bg); transform: translateY(105%); overflow: hidden; z-index: 3; }
+.ios-sc-sheet-in { padding: 12px 10px 40px; }
+.ios-sc-head { display: flex; gap: 7px; align-items: center; padding-bottom: 8px; box-shadow: inset 0 calc(-1 * var(--ios-hair)) 0 var(--ios-sep); }
+.ios-sc-head img, .ios-sc-card img { width: 26px; height: 26px; border-radius: 6px; }
+.ios-sc-head b, .ios-sc-card b { display: block; }
+.ios-sc-head small, .ios-sc-card small { display: block; color: var(--ios-label-2); font-size: 0.9em; }
+.ios-sc-round { display: flex; justify-content: space-between; margin: 9px 2px; }
+.ios-sc-round i { width: 30px; height: 30px; border-radius: 50%; background: var(--ios-inst-chip); }
+.ios-sc-apps i { border-radius: 8px; }
+.ios-sc-list { border-radius: 10px; background: var(--ios-cell); margin-top: 6px; }
+.ios-sc-add { position: absolute; left: 0; right: 0; top: 30px; bottom: 0; border-radius: 16px 16px 0 0; background: var(--ios-bg); transform: translateY(105%); z-index: 4; }
+.ios-sc-addh { display: flex; justify-content: space-between; align-items: center; gap: 4px; height: 36px; padding: 0 10px; }
+.ios-sc-addh b { font-size: 0.95em; text-align: center; }
+.ios-sc-blue { color: var(--ios-blue); }
+.ios-sc-ok { font-weight: 700; }
+.ios-sc-card { margin: 6px 10px; border-radius: 10px; background: var(--ios-cell); padding: 8px 9px; display: flex; gap: 8px; align-items: center; }
+.ios-sc-tg { justify-content: space-between; }
+.ios-sc-tg i { position: relative; width: 24px; height: 14px; border-radius: var(--ios-r-pill); background: var(--ios-green); }
+.ios-sc-tg i::after { content: ""; position: absolute; right: 2px; top: 2px; width: 10px; height: 10px; border-radius: 50%; background: var(--ios-white); }
+.ios-sc-home { position: absolute; inset: 0; background: var(--ios-inst-wall); opacity: 0; z-index: 5; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 10px; padding: 44px 16px; align-content: start; }
+.ios-sc-home i, .ios-sc-home img { width: 36px; height: 36px; border-radius: 9px; background: var(--ios-inst-app); justify-self: center; }
+.ios-sc-name { display: none; }
+.ios-sc-launch { position: absolute; left: 50%; top: 50%; width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 9px; background: var(--ios-inst-screen); opacity: 0; z-index: 7; pointer-events: none; }
+.ios-sc-dot { position: absolute; left: 0; top: 0; width: var(--ios-inst-dot); height: var(--ios-inst-dot); margin: calc(var(--ios-inst-dot) / -2) 0 0 calc(var(--ios-inst-dot) / -2);
+  border-radius: 50%; background: var(--ios-inst-touch); box-shadow: 0 0 0 2px var(--ios-inst-touch-edge); opacity: 0; z-index: 8; pointer-events: none; }
+/* Chrome sur Android : pas d'îlot, barre d'adresse en haut, menu ⋮ qui descend, boîte de dialogue centrée */
+.ios-inst-andr { border-radius: calc(var(--ios-inst-r) * 0.7); }
+.ios-sc-astatus { top: 7px; }
+.ios-sc-atop { position: absolute; left: 8px; right: 8px; top: 24px; height: 30px; display: flex; gap: 6px; align-items: center; }
+.ios-sc-atop .ios-sc-addr { height: 30px; justify-content: flex-start; }
+.ios-sc-atop .ios-sc-c { width: 26px; height: 30px; background: none; }
+.ios-sc-kebab svg { transform: rotate(90deg); }
+.ios-sc-apage { top: 60px; }
+.ios-sc-amenu { right: 6px; top: 26px; bottom: auto; width: 140px; border-radius: 8px; transform-origin: 95% 0; }
+.ios-sc-dlg { top: 50%; bottom: auto; left: 16px; right: 16px; margin-top: -62px; padding: 14px 6px 6px; border-radius: 18px; background: var(--ios-cell); box-shadow: var(--ios-inst-shadow); opacity: 0; transform: none; }
+.ios-sc-dlg > b { display: block; padding: 0 10px 4px; font-size: 1.15em; }
+.ios-sc-dlg .ios-sc-card { margin: 4px 4px; padding: 6px; background: var(--ios-bg); }
+.ios-sc-dlgb { display: flex; justify-content: flex-end; gap: 16px; padding: 10px 10px 6px; }
+.ios-inst-foot .ios-inst-go { margin: 4px 0 2px; }
+/* Gros bouton unique (Installer Notes, Ouvrir dans Safari / Chrome, Copier le lien), lien « Continuer ici » différé */
+.ios-inst-go { display: flex; align-items: center; justify-content: center; text-decoration: none; color: var(--ios-white); }
+.ios-inst-go[hidden] { display: none; }
+.ios-inst-foot .inst-url { margin: 8px 0 0; text-align: left; }
+.ios-inst-later { visibility: hidden; opacity: 0; transition: opacity var(--ios-dur-enter) var(--ios-ease-out); }
+.ios-inst-later.on { visibility: visible; opacity: 1; }
+/* Safari sur iPad : barre en haut avec Partager à droite, feuille en bulle, boîte « Ajouter » centrée */
+.ios-inst-ipad { width: var(--ios-inst-pad-w); height: var(--ios-inst-pad-h); border-radius: var(--ios-inst-pad-r); }
+.ios-sc-ptop { position: absolute; left: 8px; right: 8px; top: 24px; height: 28px; display: flex; gap: 4px; align-items: center; }
+.ios-sc-ptop .ios-sc-c { width: 26px; height: 26px; background: none; color: var(--ios-blue); }
+.ios-sc-ptop .ios-sc-addr { height: 26px; }
+.ios-sc-ppage { top: 60px; left: 40px; right: 40px; }
+.ios-inst-ipad .ios-sc-sheet { left: auto; right: 34px; top: 56px; bottom: auto; width: 180px; height: 300px; border-radius: 14px; box-shadow: var(--ios-inst-shadow); transform: none; opacity: 0; transform-origin: 85% 0; }
+.ios-inst-ipad .ios-sc-add { left: 50px; right: 50px; top: 70px; bottom: auto; height: 160px; border-radius: 14px; box-shadow: var(--ios-inst-shadow); transform: none; opacity: 0; }
+.ios-inst-ipad .ios-sc-home { grid-template-columns: repeat(6, 1fr); }
+/* Navigateur intégré (Moodle, réseaux sociaux…) : la page de Notes avec son bouton, puis Safari ou Chrome par-dessus */
+.ios-sc-inbar { position: absolute; left: 0; right: 0; top: 26px; height: 30px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 10px; background: var(--ios-inst-bar); box-shadow: inset 0 calc(-1 * var(--ios-hair)) 0 var(--ios-sep); }
+.ios-inst-andr .ios-sc-inbar { top: 22px; }
+.ios-sc-ipage { position: absolute; left: 16px; right: 16px; top: 90px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+.ios-sc-ipage img { width: 40px; height: 40px; border-radius: 10px; }
+.ios-sc-ipage b { font-size: 1.3em; }
+.ios-sc-btn { margin-top: 14px; padding: 9px 18px; border-radius: var(--ios-r-pill); background: var(--ios-blue); color: var(--ios-white); font-weight: 600; }
+.ios-sc-saf { position: absolute; inset: 0; background: var(--ios-inst-screen); opacity: 0; z-index: 6; }
+/* Écrans bas (iPhone SE) : moins d'air autour de la scène */
+@media (max-height: 700px) { .ios-inst-head h1 { font-size: 28px; } .ios-inst-stage { min-height: 240px; padding: 4px 0; } .ios-inst-foot .ob-fine { display: none; } }
+
+/* ---------- Feuilles communes (ios-sheets.js, session B, 19 novembre 2026) ----------
+   Feuille d'actions et de confirmation (choix A) : groupe blanc en bas, rouge pour l'action destructive, Annuler à part.
+   Feuille de saisie (choix A) : panneau haut, ronds Fermer / Valider, champs dans des lignes de groupe. */
+.ios-shx { position: fixed; inset: 0; z-index: var(--ios-shx-z); display: flex; flex-direction: column; justify-content: flex-end; align-items: center; }
+.ios-shx-scrim { position: absolute; inset: 0; background: var(--ios-scrim); opacity: 0; transition: opacity var(--ios-dur-shx) ease-out; }
+.ios-shx-panel { position: relative; width: 100%; max-width: var(--ios-shx-max); box-sizing: border-box; transform: translateY(100%); transition: transform var(--ios-dur-shx) var(--ios-ease-out); }
+.ios-shx.is-in .ios-shx-scrim { opacity: 1; }
+.ios-shx.is-in .ios-shx-panel { transform: none; }
+.ios-shx.is-out { pointer-events: none; }
+html.noanim .ios-shx-scrim, html.noanim .ios-shx-panel { transition: none; }
+@media (prefers-reduced-motion: reduce) { .ios-shx-scrim, .ios-shx-panel { transition: none; } }
+.ios-shx-acts .ios-shx-panel { padding: 0 var(--ios-shx-gap) calc(var(--ios-shx-gap) + env(safe-area-inset-bottom, 0px)); }
+.ios-shx-grp { background: var(--ios-shx-bg); border-radius: var(--ios-r-group); overflow: hidden; }
+.ios-shx-grp + .ios-shx-grp { margin-top: var(--ios-shx-gap); }
+.ios-shx-head { display: flex; flex-direction: column; gap: 2px; padding: 14px var(--ios-pad) 12px; text-align: center; font-size: 13px; color: var(--ios-label-2); }
+.ios-shx-head b { font-size: 15px; font-weight: 600; color: var(--ios-label); }
+.ios-shx-btn { display: block; width: 100%; min-height: var(--ios-shx-btn); border: 0; margin: 0; padding: 0 var(--ios-pad); background: transparent; font: inherit; font-size: var(--ios-shx-btn-fs); color: var(--ios-blue); text-align: center; cursor: pointer; }
+.ios-shx-head + .ios-shx-btn, .ios-shx-btn + .ios-shx-btn { box-shadow: inset 0 var(--ios-hair) 0 var(--ios-sep); }
+.ios-shx-btn.is-danger { color: var(--ios-red-text); }
+.ios-shx-btn.is-bold { font-weight: 600; }
+.ios-shx-btn:active { background: var(--ios-press-row); transform: none; }
+.ios-shx-btn:focus { outline: none; }
+.ios-shx-btn:focus-visible { outline: 2px solid var(--ios-blue); outline-offset: -2px; }
+.ios-shx-form .ios-shx-panel { height: calc(100% - var(--ios-shx-top) - env(safe-area-inset-top, 0px)); background: var(--ios-shx-form-bg); border-radius: var(--ios-r-group) var(--ios-r-group) 0 0; overflow-y: auto; }
+.ios-shx-bar { display: flex; align-items: center; gap: 8px; padding: 12px; }
+.ios-shx-bar b { flex: 1; text-align: center; font-size: var(--ios-title-inline); font-weight: var(--ios-title-inline-weight); }
+.ios-shx-ok { background: var(--ios-blue); color: var(--ios-white); }
+.ios-shx-body { padding: 4px 16px 24px; }
+.ios-shx-row { display: flex; align-items: center; gap: 12px; min-height: var(--ios-row-h); padding: 0 var(--ios-pad); }
+.ios-shx-row + .ios-shx-row { box-shadow: inset 0 var(--ios-hair) 0 var(--ios-sep); }
+.ios-shx-l { flex: none; max-width: 60%; font-size: 17px; }
+.ios-shx .ios-shx-row .ios-shx-in { flex: 1; width: auto; min-width: 0; min-height: 0; height: auto; border: 0; border-radius: 0; box-shadow: none; padding: 0; background: transparent; font: inherit; font-size: 17px; color: var(--ios-label); text-align: right; }
+.ios-shx-in::placeholder { color: var(--ios-label-2); }
+.ios-shx .ios-shx-row .ios-shx-in:focus { outline: none; box-shadow: none; }
+.ios-shx-u { color: var(--ios-label-2); }
+.ios-shx-err { margin: 8px var(--ios-pad) 0; font-size: 13px; color: var(--ios-red-text); }
+.ios-shx-err:empty { display: none; }
+.ios-shx-foot { margin: 8px var(--ios-pad) 0; font-size: 13px; color: var(--ios-label-2); }
+/* Sur téléphone, les actions d'une note ou d'un ETA passent par la feuille d'actions : les liens d'origine restent cachés. */
+@media all { .notes .ios-eta .acts { display: none; } }
+/* Guide (session B) : dessin de la feuille d'actions, à plat dans le visuel de l'étape « Corrige ou supprime ». */
+.ios-gd-sheet { width: 100%; text-align: center; }
+.ios-gd-sheet + .ios-gd-sheet { margin-top: var(--ios-shx-gap); }
+.ios-gd-sheet .ios-shx-btn { min-height: 0; padding: 10px; font-size: 17px; }
+.ios-gd-sheet { box-shadow: 0 0 0 var(--ios-hair) var(--ios-sep); }
+/* Guide (session B, choix « lignes de texte bleu » pour les boutons secondaires) : « Précédent » et « Liste » perdent leur contour. */
+.gd-foot .btn-ghost { border-color: var(--ios-clear); background: var(--ios-clear); font-weight: 400; }
+/* Import, assistant, passage d'année (session B, écrans .ob) : mêmes groupes, lignes et titres de section que Réglages,
+   sur téléphone comme sur grand écran (les règles .ios-grp / .ios-row de Réglages ne valent que sous 700 px). */
+.ob .ios-grp { background: var(--ios-cell); border-radius: var(--ios-r-group); overflow: hidden; }
+.ob .ios-grp-head { margin: 28px 4px 8px; font-size: var(--ios-sec-title); font-weight: 700; line-height: 1.25; color: var(--ios-label); }
+.ob .ios-grp-foot { margin: 8px var(--ios-pad) 0; font-size: 13px; line-height: 1.4; color: var(--ios-label-2); }
+.ob .ios-grp-foot:empty { display: none; }
+.ob .ios-row { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: var(--ios-row-h); margin: 0; padding: 0 16px 0 var(--ios-pad); border: 0; border-radius: 0; background: var(--ios-clear); color: var(--ios-label); text-align: left; font: inherit; font-size: 17px; }
+.ob button.ios-row { cursor: pointer; }
+.ob button.ios-row:active { background-color: var(--ios-press-row); transform: none; }
+.ob .ios-row + .ios-row, .ios-imp .ios-imp-ta + .ios-row { box-shadow: inset 0 var(--ios-hair) 0 var(--ios-sep); }
+.ob .ios-row + .ios-row::before { content: none; }
+.ob .ios-row-l { flex: 1; min-width: 0; }
+.ob .ios-act { color: var(--ios-blue); }
+.ob .ios-act.is-danger { color: var(--ios-red-text); }
+.ios-ob-acts { margin-top: var(--ios-grp-gap); text-align: left; }
+/* Phase 3, point 4 (choix de l'utilisateur) : sur grand écran, le groupe prend la largeur de la colonne, comme Commencer. */
+@media (min-width: 768px) { .ios-ob-acts { align-self: stretch; } }
+.ios-imp .ios-imp-ans .ios-imp-ta { border-radius: 0; }
+.ios-imp .ios-imp-date input { flex: none; width: auto; min-height: 0; margin: 0; padding: 0; border: 0; border-radius: 0; box-shadow: none; background: var(--ios-clear); color: var(--ios-label-2); font: inherit; font-size: 17px; text-align: right; }
+.ios-imp .ob-title + .ob-sub { margin-bottom: 0; }
+
+/* ---------- Grand écran (≥ 701 px), session D, option A choisie par l'utilisateur ----------
+   ios-desk.js pose body.ios-desk et ajoute la barre latérale .ios-side ; la barre du bas (dock) disparaît. Les pages sont
+   celles du téléphone (même apparence partout) ; le contenu prend la place à droite, en colonnes quand il y a la place. */
+.ios-side { display: none; }
+@media (min-width: 701px) {
+  body.ios-desk {
+    padding-left: calc(var(--ios-side-w-s) + var(--ios-desk-pad)); padding-right: var(--ios-desk-pad);
+    padding-bottom: var(--ios-desk-pad);
+  }
+  body.ios-desk .ios-dock { display: none; }
+  body.ios-desk .wrap { max-width: var(--ios-desk-max); }
+  body.ios-desk .ios-bar { left: var(--ios-side-w-s); }
+  body.ios-desk .ios-side {
+    display: flex; flex-direction: column; position: fixed; left: 0; top: 0; bottom: 0; z-index: var(--ios-side-z);
+    width: var(--ios-side-w-s); padding: 16px 12px 24px; overflow-y: auto; overscroll-behavior: contain;
+    background: var(--ios-bg); border-right: var(--ios-hair) solid var(--ios-bar-hairline);
+  }
+  .ios-side-find {
+    display: flex; align-items: center; gap: 6px; flex: none; height: 36px; padding: 0 10px; margin: 0 0 16px;
+    border-radius: 10px; background: var(--ios-fill); color: var(--ios-label-2);
+  }
+  .ios-side-find svg { width: 17px; height: 17px; flex: none; }
+  .ios-side-find input {
+    flex: 1; min-width: 0; height: 100%; padding: 0; border: 0; background: var(--ios-clear); color: var(--ios-label);
+    font: inherit; font-size: 16px; outline: none; box-shadow: none; -webkit-appearance: none; appearance: none;
+  }
+  .ios-side-find:focus-within { box-shadow: var(--ios-focus); }
+  .ios-side-grp { flex: none; border-radius: var(--ios-r-side); background: var(--ios-cell); overflow: hidden; }
+  .ios-side-grp + .ios-side-h { margin-top: 22px; }
+  .ios-side-h { margin: 0 12px 6px; font-size: 13px; font-weight: 600; color: var(--ios-label-2); }
+  .ios-side-none { margin: 4px 12px; font-size: 14px; color: var(--ios-label-2); }
+  .ios-side-row {
+    display: flex; align-items: center; gap: 11px; width: 100%; height: var(--ios-side-row); min-height: 0; padding: 0 12px; position: relative;
+    border: 0; border-radius: 0; background: var(--ios-clear); color: var(--ios-label); font: inherit; font-size: 15px; font-weight: 400;
+    letter-spacing: -0.01em; text-align: left; cursor: pointer; box-shadow: none;
+  }
+  .ios-side-row + .ios-side-row::before {
+    content: ""; position: absolute; top: 0; right: 0; left: calc(12px + var(--ios-side-sq) + 11px);
+    border-top: var(--ios-hair) solid var(--ios-sep);
+  }
+  .ios-side-subj .ios-side-row + .ios-side-row::before { left: calc(12px + var(--ios-side-lv) + 11px); }
+  .ios-side-row.is-sel::before, .ios-side-row.is-sel + .ios-side-row::before { display: none; }
+  .ios-side-row:hover { background: var(--ios-side-hover); }
+  .ios-side-row:active { transform: none; }
+  .ios-side-row.is-sel { background: var(--ios-side-sel); font-weight: 600; }
+  .ios-side-row:focus-visible { outline: none; box-shadow: inset var(--ios-focus); }
+  .ios-side-n { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ios-side-v { flex: none; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .ios-side-sq {
+    flex: none; display: flex; align-items: center; justify-content: center; width: var(--ios-side-sq); height: var(--ios-side-sq);
+    border-radius: var(--ios-r-icon); color: var(--ios-white);
+  }
+  .ios-side-sq svg { width: 17px; height: 17px; stroke-width: 2; }
+  .ios-side-sq.is-blue { background: var(--ios-blue); }
+  .ios-side-sq.is-green { background: var(--ios-green); }
+  .ios-side-sq.is-gray { background: var(--ios-gray); }
+  .ios-side-lv { flex: none; width: var(--ios-side-lv); height: var(--ios-side-lv); border-radius: 50%; background: var(--ios-fill); }
+  .ios-side-lv.is-good { background: var(--ios-green); }
+  .ios-side-lv.is-warn { background: var(--ios-orange); }
+  .ios-side-lv.is-crit { background: var(--ios-red); }
+  .ios-side-dot {
+    flex: none; min-width: 20px; height: 20px; padding: 0 6px; border-radius: var(--ios-r-pill); background: var(--ios-red);
+    color: var(--ios-white); font-size: 12px; font-style: normal; font-weight: 600; line-height: 20px; text-align: center;
+  }
+  .ios-side-dot:empty { min-width: 10px; width: 10px; height: 10px; padding: 0; }
+  /* En-tête de l'Accueil : titre à gauche, période à droite (barre d'outils), pas de bouton « Ajouter » (barre latérale). */
+  body.ios-desk:not(.ios-detail-open) .wrap:not(.is-sub) header.top { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-top: 28px; }
+  body.ios-desk header.top .controls { margin: 0; }
+  body.ios-desk header.top .seg { width: auto; }
+}
+@media (min-width: 1100px) {
+  body.ios-desk { padding-left: calc(var(--ios-side-w) + var(--ios-desk-pad)); }
+  body.ios-desk .ios-side { width: var(--ios-side-w); }
+  body.ios-desk .ios-bar { left: var(--ios-side-w); }
+}
+
+/* ---------- Grand écran : Accueil en colonnes (session D) ----------
+   Tuiles sur une ligne ; à gauche « Toutes les moyennes » puis le tableau des branches (colonnes Notes, S1, S2, Année,
+   Bulletin) ; à droite « À surveiller » puis « Dernières notes ». Survol et focus visibles sur tout ce qui s'ouvre. */
+@media (min-width: 701px) {
+  body.ios-desk header.top .seg button { flex: none; white-space: nowrap; padding-left: 16px; padding-right: 16px; }
+  body.ios-desk #subjects .card.ios-srow-wide { grid-template-columns: minmax(0, 1fr) repeat(4, var(--ios-col-w)) var(--ios-grade-w); gap: 8px; min-height: 56px; }
+  .ios-srow-c { text-align: right; font-size: 15px; color: var(--ios-label-2); font-variant-numeric: tabular-nums; }
+  .ios-srow-head {
+    display: grid; grid-template-columns: minmax(0, 1fr) repeat(4, var(--ios-col-w)) var(--ios-grade-w); gap: 8px; align-items: end;
+    padding: 12px 16px 8px var(--ios-pad); border-bottom: var(--ios-hair) solid var(--ios-sep);
+    font-size: 12px; font-weight: 600; color: var(--ios-label-2);
+  }
+  .ios-srow-head span:not(:first-child) { text-align: right; }
+  .ios-srow-head span:last-child { text-align: center; }
+  body.ios-desk #subjects .card.ios-srow-wide:first-of-type { background: var(--ios-clear); }
+  body.ios-desk #subjects .card.ios-srow:hover, body.ios-desk #alerts li.ios-arow:hover, body.ios-desk #notes > li.ios-dnote:hover { box-shadow: inset 0 0 0 100vmax var(--ios-side-hover); }
+  body.ios-desk #subjects .card.ios-srow:focus-visible, body.ios-desk #alerts li.ios-arow:focus-visible, body.ios-desk #ios-bch [data-subj]:focus-visible { outline: none; box-shadow: inset var(--ios-focus); }
+  body.ios-desk #ios-bch .ios-bch-g { cursor: pointer; }
+  body.ios-desk #ios-bch .ios-bch-g:hover .ios-bch-bar { opacity: 0.82; }
+}
+@media (min-width: 1100px) {
+  body.ios-desk:not(.ios-detail-open) #view-dash {
+    display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr); gap: var(--ios-desk-gap) var(--ios-desk-gap); align-items: start;
+  }
+  body.ios-desk #ios-dtop { grid-column: 1 / -1; grid-row: 1; }
+  body.ios-desk #view-dash .ios-dsec-bch { grid-column: 1; grid-row: 2 / span 2; }
+  body.ios-desk #view-dash .ios-dsec-alerts { grid-column: 2; grid-row: 2; }
+  body.ios-desk #view-dash .ios-dsec-notes { grid-column: 2; grid-row: 3 / span 2; }
+  body.ios-desk #view-dash .ios-dsec-subjects { grid-column: 1; grid-row: 4; }
+}
+
+/* ---------- Grand écran : page d'une branche en deux colonnes (session D) ----------
+   À gauche le panneau façon Bourse (période, grand chiffre, courbe à sa vraie taille, chiffres clés) ; à droite les notes. */
+@media (min-width: 1100px) {
+  body.ios-desk .ios-epage { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); column-gap: var(--ios-desk-gap); align-items: start; }
+  body.ios-desk .ios-epage > * { grid-column: 1; }
+  body.ios-desk .ios-epage > .ios-large, body.ios-desk .ios-epage > .ios-sub { grid-column: 1 / -1; }
+  body.ios-desk .ios-epage > .ios-epanel { grid-row: 3 / span 8; }
+  body.ios-desk .ios-epage > .ios-enotes-h { grid-column: 2; grid-row: 3; margin-top: 12px; }
+  body.ios-desk .ios-epage > .ios-enotes { grid-column: 2; grid-row: 4; }
+}
+@media (min-width: 701px) {
+  body.ios-desk .ios-enotes .notes > li:hover { box-shadow: inset 0 0 0 100vmax var(--ios-side-hover); }
+  body.ios-desk .ios-erange button { cursor: pointer; }
+}
+
+/* ---------- Grand écran : Ajouter en deux colonnes, Réglages (session D) ----------
+   Ajouter : la note à gauche, la photo du test à droite, le bouton en bas à droite (comme une fenêtre du Mac).
+   Réglages : pas de « Retours haptiques » (il n'y a rien à faire vibrer sur un ordinateur). */
+@media (min-width: 1100px) {
+  body.ios-desk #view-add:not(.wide) { max-width: var(--ios-desk-add-w); }
+  body.ios-desk #form { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); column-gap: var(--ios-desk-gap); align-items: start; }
+  body.ios-desk #form > .ios-add-h:first-of-type { grid-column: 1; grid-row: 1; }
+  body.ios-desk #form > .ios-add-grp { grid-column: 1; grid-row: 2; }
+  body.ios-desk #form > .ios-add-h:not(:first-of-type) { grid-column: 2; grid-row: 1; }
+  body.ios-desk #form > .ios-ph-box { grid-column: 2; grid-row: 2; }
+  body.ios-desk #form > .msg, body.ios-desk #form > .btns { grid-column: 1 / -1; }
+  body.ios-desk #form > .btns { justify-content: flex-end; }
+  body.ios-desk #form > .btns #f-submit, body.ios-desk #form > .btns #f-cancel { flex: none; width: auto; min-width: var(--ios-desk-btn-w); }
+  body.ios-desk #form > .ios-add-h { align-self: end; margin-top: 0; }
+}
+@media (min-width: 701px) {
+  body.ios-desk .ios-row:has(#ios-haptic) { display: none; }
+  body.ios-desk .ios-row:hover:not(label):not(:has(input)) { box-shadow: inset 0 0 0 100vmax var(--ios-side-hover); }
+  body.ios-desk .ios-row:focus-visible { outline: none; box-shadow: inset var(--ios-focus); }
+}
+
+/* ---------- Grand écran : feuilles (ios-sheets.js) au centre, comme une fenêtre de dialogue du Mac (session D) ----------
+   Mêmes composants que sur le téléphone (groupes, lignes, ronds ✕ / ✓) ; seule la position change : au milieu au lieu
+   d'en bas, entrée en fondu avec un léger glissement. Échap ferme (ios-sheets.js). */
+@media (min-width: 701px) {
+  body.ios-desk .ios-shx { justify-content: center; padding: var(--ios-desk-pad); }
+  body.ios-desk .ios-shx-panel { max-width: var(--ios-desk-dlg-w); opacity: 0; transform: translateY(var(--ios-enter-shift)); transition: transform var(--ios-dur-shx) var(--ios-ease-out), opacity var(--ios-dur-shx) ease-out; }
+  body.ios-desk .ios-shx.is-in .ios-shx-panel { opacity: 1; transform: none; }
+  body.ios-desk .ios-shx-acts .ios-shx-panel { padding: 0; }
+  body.ios-desk .ios-shx-form .ios-shx-panel { max-width: var(--ios-desk-form-w); height: auto; max-height: 100%; border-radius: var(--ios-r-group); }
+  body.ios-desk .ios-shx-btn:hover { background: var(--ios-side-hover); }
+}
+
+/* ---------- Grand écran étroit (701 à 959 px : iPad en portrait, petite fenêtre) ----------
+   Tuiles par deux (comme le téléphone) et tableau des branches sans S1 ni S2. Dès 960 px : quatre tuiles sur une ligne. */
+@media (min-width: 960px) {
+  body.ios-desk .ios-dtiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (min-width: 701px) and (max-width: 959px) {
+  body.ios-desk #subjects .card.ios-srow-wide, body.ios-desk .ios-srow-head { grid-template-columns: minmax(0, 1fr) repeat(2, var(--ios-col-w)) var(--ios-grade-w); }
+  body.ios-desk #subjects .card.ios-srow-wide > :nth-child(3), body.ios-desk #subjects .card.ios-srow-wide > :nth-child(4),
+  body.ios-desk .ios-srow-head > :nth-child(3), body.ios-desk .ios-srow-head > :nth-child(4) { display: none; }
+}
+
+/* ---------- Phase 3, point 3 (choix de l'utilisateur) : ligne « Voir avec des notes d'exemple » ----------
+   Dans « Dernières notes » vide : ligne de texte bleu sous un filet, jusqu'aux bords du groupe (plus de contour). */
+#notes li.empty .ios-demo-row { margin: 10px -16px -10px -20px; border-top: var(--ios-hair) solid var(--ios-sep); }

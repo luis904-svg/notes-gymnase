@@ -1,5 +1,5 @@
 /* ios-nav.js : navigation « push / pop » à la iOS et retour par balayage du bord gauche (téléphone, ≤ 700 px).
-   Remis en v44 (version à ressorts de la v39, voir design/avant-simplification/) à la demande de l'utilisateur.
+   Remis en v44 (version à ressorts de la v39, voir design/archives/avant-simplification/) à la demande de l'utilisateur.
    Les onglets (Accueil, Ajouter, Réglages) changent sans glissement de page, comme dans une app iOS (leur entrée en
    scène est dans ios-anim.js). Le mouvement de page sert aux sous-pages : IOSNav.run("push" | "pop", mutate) joue le
    ressort « dialog » d'UIKit autour d'un changement de DOM fait par `mutate`.

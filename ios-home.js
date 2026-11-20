@@ -13,7 +13,8 @@
   "use strict";
   var box = document.getElementById("subjects");
   if (!box || !window.NotesApp) return;
-  var mq = window.matchMedia("(max-width: 700px)");
+  var mq = window.matchMedia("all");
+  var desk = window.matchMedia("(min-width: 701px)");   // grand écran (session D) : colonnes en plus
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function signed(d) { return (d >= 0 ? "+" : "−") + Math.abs(d).toFixed(2); }
 
@@ -60,15 +61,33 @@
       card.classList.add("ios-srow");
       card.setAttribute("aria-label", name + " : " + (val === "–" ? "pas encore de note" : "bulletin " + val) + ", " + effLbl + ". Voir le détail.");
       // Ligne v55 (demande de l'utilisateur) : nom et petite ligne à gauche, la note de bulletin seule à droite, en noir.
+      if (desk.matches) {
+        // Grand écran (session D) : même ligne, plus d'informations en colonnes (nombre de notes, S1, S2, moyenne exacte de
+        // l'année), chiffres en noir (v56). La note de bulletin de la période choisie reste à droite.
+        var raw = lines.filter(function (t) { return /note/.test(t) && !/^moy/.test(t); })[0] || "", m = raw.match(/(\d+) notes?(?: sur (\d+))?/), cnt = m ? m[1] + (m[2] ? " / " + m[2] : "") : "0";
+        var sub2 = need ? need.textContent : [per ? per.textContent : "", off ? "hors promotion" : ""].filter(Boolean).join(" · ");
+        card.classList.add("ios-srow-wide");
+        card.innerHTML = '<span class="ios-srow-l"><b>' + esc(name) + '</b><span class="' + (need ? "ios-srow-need" : "") + '">' + esc(sub2) + '</span></span>' +
+          '<span class="ios-srow-c">' + esc(cnt) + '</span><span class="ios-srow-c">' + last(id, "s1") + '</span><span class="ios-srow-c">' + last(id, "s2") + '</span>' +
+          '<span class="ios-srow-c">' + last(id, "year") + '</span><span class="ios-srow-v">' + esc(val) + '</span>';
+        return;
+      }
       card.innerHTML = '<span class="ios-srow-l"><b>' + esc(name) + '</b><span class="' + (need ? "ios-srow-need" : "") + '">' + esc(sub) + '</span></span>' +
         '<span class="ios-srow-v">' + esc(val) + '</span>';
     });
+    if (desk.matches && box.querySelector(".ios-srow-wide") && !box.querySelector(".ios-srow-head")) {
+      var head = document.createElement("div"); head.className = "ios-srow-head"; head.setAttribute("aria-hidden", "true");
+      head.innerHTML = "<span>Branche</span><span>Notes</span><span>S1</span><span>S2</span><span>Année</span><span>Bulletin</span>";
+      box.insertBefore(head, box.firstChild);
+    }
   }
+  // Moyenne exacte (deux décimales) d'une période, pour les colonnes du grand écran.
+  function last(id, period) { var pts = window.NotesApp.series ? window.NotesApp.series(id, period) : []; return pts.length ? pts[pts.length - 1].avg.toFixed(2) : "–"; }
   document.addEventListener("ios:rendered", paint);
   // Passage téléphone ↔ grand écran : le moteur redessine ses cartes (événement change, et resize en secours).
-  var wasPhone = mq.matches;
-  function check() { if (mq.matches !== wasPhone) { wasPhone = mq.matches; if (window.NotesApp.redraw) window.NotesApp.redraw(); } }
-  if (mq.addEventListener) mq.addEventListener("change", check);
+  var wasPhone = desk.matches;
+  function check() { if (desk.matches !== wasPhone) { wasPhone = desk.matches; if (window.NotesApp.redraw) window.NotesApp.redraw(); } }
+  if (desk.addEventListener) desk.addEventListener("change", check);
   window.addEventListener("resize", check);
   paint();
 })();

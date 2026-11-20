@@ -13,7 +13,8 @@
   "use strict";
   var wrap = document.querySelector(".wrap");
   if (!wrap) return;
-  var mq = window.matchMedia("(max-width: 700px)");
+  var mq = window.matchMedia("all");
+  var desk = window.matchMedia("(min-width: 701px)");   // grand écran (session D) : courbe à la largeur réelle
   var container = document.createElement("div");
   container.id = "ios-detail"; container.className = "ios-detail";
   wrap.appendChild(container);
@@ -45,7 +46,7 @@
      3. le bloc « Prochain test » et le certificat (3e) tels quels ;
      4. les notes (liste du moteur, avec son écouteur), de la plus récente à la plus ancienne : date et coef en petites
         capitales, intitulé, note à droite et pastille de son effet sur la moyenne de l'année (+0.17, −0.30…). Toucher une
-        ligne montre ses actions (Modifier, Supprimer, Photos) ; un TA reste dépliable. */
+        ligne ouvre la feuille d'actions (Modifier, Voir les photos, Supprimer : ios-sheets.js) ; un TA reste dépliable. */
   var MONTHS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
   var LAB = { year: "Année", s1: "Semestre 1", s2: "Semestre 2" };
   var openRow = null;                       // note dont les actions sont montrées (gardée d'un rendu à l'autre)
@@ -176,7 +177,12 @@
       '<section class="ios-ehero"><span class="ios-dk">Moyenne · ' + LAB[range] + '</span>' +
       '<div class="ios-evalue"><span class="ios-evalue-n">' + roundHalf(last) + '</span></div>' +
       (n > 1 ? '<p class="ios-ecap">' + (Math.abs(d) < 0.005 ? "stable" : (up ? "▲ " : "▼ ") + Math.abs(d).toFixed(2)) + " depuis le " + fmtLong(pts[0].date) + '</p>' : '<p class="ios-ecap">1re note</p>') +
-      chartHtml(pts, up) + '</section>' + key;
+      '<div class="ios-echart-fit"></div>' + '</section>' + key;
+    // Grand écran (session D) : la courbe est dessinée à la largeur réelle de la tuile (texte à sa vraie taille) ; on
+    // mesure une fois la tuile en place. Téléphone : 358 × 176, inchangé.
+    var fitBox = panel.querySelector(".ios-echart-fit"), wide = desk.matches && fitBox && fitBox.clientWidth > 420;
+    CW = wide ? Math.round(fitBox.clientWidth) : 358; CH = wide ? 260 : 176; PX1 = CW - CR - 12;
+    fitBox.outerHTML = chartHtml(pts, up);
     rest(panel);
   }
 
@@ -333,16 +339,10 @@
     if (window.FX) FX.haptic("select");
     paintPanel(container.querySelector(".ios-epanel"));
   });
-  // Toucher une note montre ses actions (Modifier, Supprimer, Photos) ; un seul bloc ouvert à la fois.
+  // Toucher une note ouvre la feuille d'actions (Modifier, Voir les photos, Supprimer) : ios-sheets.js (session B).
   container.addEventListener("click", function (e) {
     var ph = e.target.closest("[data-ph-open]");
     if (ph) { if (window.Photos && Photos.open) Photos.open(ph.dataset.phOpen); return; }
-    if (e.target.closest("button, a, input, select, summary, details")) return;
-    var li = e.target.closest("li.ios-nrow"); if (!li) return;
-    var on = !li.classList.contains("ios-open");
-    [].forEach.call(container.querySelectorAll("li.ios-nrow.ios-open"), function (x) { x.classList.remove("ios-open"); });
-    li.classList.toggle("ios-open", on); openRow = on ? li.dataset.nid || null : null;
-    if (window.FX) FX.haptic("select");
   });
 
   // « + » de la barre de titre et état vide : « Ajouter une note » ouvre le formulaire sur cette matière.
@@ -376,7 +376,7 @@
     if (!ready()) return false;
     var page = buildPage(); if (!page) return false;
     if (active) {                                   // nouveau rendu pendant que la page est ouverte : on garde le défilement
-      var y = window.scrollY; container.replaceChildren(page); window.scrollTo(0, y); IOSTitle.set(ctxFor(page)); return true;
+      var y = window.scrollY; container.replaceChildren(page); if (desk.matches) refit(); window.scrollTo(0, y); IOSTitle.set(ctxFor(page)); return true;
     }
     scrollDash = window.scrollY; openRow = null; range = "year";
     // Affichage de l'Accueil avant l'ouverture : la copie du balayage de retour le reprend tel quel.
@@ -387,6 +387,7 @@
       container.replaceChildren(page); window.scrollTo(0, 0);
       IOSTitle.set(ctxFor(page)); IOSTitle.pill("detail", true); IOSNav.setBack(provider);
     });
+    if (desk.matches) refit();
     return true;
   }
   function close() {
@@ -398,6 +399,11 @@
     if (!cur || cur.dataset.tab === "dash") document.dispatchEvent(new CustomEvent("ios:view", { detail: "dash" }));
     return true;
   }
+  // Grand écran : la page est dessinée avant d'être dans le document (largeur inconnue) ; on redessine le panneau une fois
+  // en place, et quand la fenêtre change de taille.
+  function refit() { var p = container.querySelector(".ios-epanel"); if (active && p) paintPanel(p); }
+  var rzf = 0;
+  window.addEventListener("resize", function () { if (!active) return; cancelAnimationFrame(rzf); rzf = requestAnimationFrame(refit); });
   function back() {
     if (!active) return;
     IOSNav.run("pop", function () { window.NotesApp.closeDetail(); });
