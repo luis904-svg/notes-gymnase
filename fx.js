@@ -311,6 +311,8 @@
     $("#bk-import").addEventListener("click", function () { $("#bk-file").click(); });
     // Import depuis un tableur (Excel…) via une IA : import.js n'est téléchargé qu'à cet instant.
     $("#bk-sheet").addEventListener("click", function () {
+      // Dans Réglages (Sauvegarde) : sous-page « Importer », comme depuis la ligne de Réglages.
+      if (window.IOSSettings && IOSSettings.active() && IOSSettings.openImport) { IOSSettings.openImport(); return; }
       Grid.script("import.js").then(function () { Import.open(); }, function () { IOSSheet.notice({ title: "Connexion nécessaire", message: "L'import se charge à la première utilisation : connecte-toi à Internet, puis réessaie." }); });
     });
     $("#bk-file").addEventListener("change", function (e) { var f = e.target.files && e.target.files[0]; if (f) importFile(f); e.target.value = ""; });

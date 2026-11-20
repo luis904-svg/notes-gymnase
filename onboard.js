@@ -29,7 +29,11 @@
     { id: "oc", title: "Option complémentaire", sub: "Suivie en 3e année seulement.", when: function () { return mat() && p.year === 3; } },
     { id: "recap", title: "Tes branches" }
   ];
-  function visible() { return STEPS.filter(function (s) { return !s.when || s.when(); }); }
+  // « Pour les parents » (20 novembre 2026, choix de l'utilisateur) : depuis Bienvenue, une page à part pour entrer le code de l'enfant.
+  var parentMode = false, pcode = "", pbusy = false;
+  var PARENT = { id: "parent", title: "Pour les parents", sub: "Entre le code de synchronisation de ton enfant. Il le trouve dans son app : Réglages → Synchronisation." };
+  function codeOk(c) { return String(c || "").replace(/[^A-Za-z0-9]/g, "").length === 16; }
+  function visible() { if (parentMode) return [STEPS[0], PARENT]; return STEPS.filter(function (s) { return !s.when || s.when(); }); }
 
   function row(name, sub, value, field, block, extra) {
     var on = p[field] === value, dis = !!block;
@@ -46,6 +50,7 @@
   function valid(s) {
     switch (s.id) {
       case "welcome": return true;
+      case "parent": return codeOk(pcode) && !pbusy;
       case "voie": return !!p.voie && !loading && !loadErr;
       case "domaine": return !!p.domaine && !G.ext(p).blocked("domaine", p.domaine, p);
       case "gymnase": return !!p.gymnase;
@@ -84,9 +89,15 @@
         '<p class="ob-fine">Écoles vaudoises · règles 2026-2027</p>' +
         '<p class="ob-fine ob-disc">' + esc(window.Guide ? Guide.disclaimer : "Application non officielle. Résultats indicatifs : seul ton bulletin fait foi.") + '</p>' +
         // Session B : lignes d'action en texte bleu dans un groupe (comme Réglages → Synchronisation).
+        // Les parents ont leur bouton « Pour les parents » sous « Commencer » (20 novembre 2026) : plus de petite ligne ici.
         '<div class="ios-grp ios-ob-acts">' + (window.Sync && Sync.available() ? '<button type="button" class="ios-row ios-act" id="ob-sync">J\'ai déjà mes notes sur un autre appareil</button>' : '') +
-        '<button type="button" class="ios-row ios-act" id="ob-sheet">J\'ai mes notes dans un tableur (Excel…)</button></div>' +
-        (window.Sync && Sync.available() ? '<p class="ios-grp-foot">Parent d\'élève ? ' + (window.matchMedia("(min-width: 768px) and (hover: hover) and (pointer: fine)").matches ? "Clique sur" : "Touche") + ' la première ligne et entre le code de synchronisation de ton enfant.</p>' : '') + '</div>';
+        '<button type="button" class="ios-row ios-act" id="ob-sheet">J\'ai mes notes dans un tableur (Excel…)</button></div>' + '</div>';
+    }
+    if (s.id === "parent") {
+      return '<h1 class="ob-title">' + esc(s.title) + '</h1><p class="ob-sub">' + esc(s.sub) + '</p>' +
+        '<label class="ob-field"><span>Code de ton enfant</span><input id="ob-pcode" type="text" maxlength="24" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX" value="' + esc(pcode) + '"></label>' +
+        '<p class="ob-warn" id="ob-pwarn" hidden></p>' +
+        '<p class="ob-fine">Les notes de ton enfant s\'affichent ici et se mettent à jour toutes seules. Tu peux aussi recevoir une notification à chaque nouvelle note : Réglages → Synchronisation.</p>';
     }
     if (s.id === "guide") {
       return '<div class="ob-hero"><div class="ob-gi">' + window.Icons.svg("book") + '</div>' +
@@ -146,13 +157,19 @@
       // v58 (style C) : rond Retour (chevron) ou Fermer (croix, en modification), titre « Étape n sur N », fine barre verte.
       '<div class="ob-top ob-top-c"><button type="button" class="ob-back ob-round"' + (editing && step <= firstStep ? ' data-cancel aria-label="Annuler"' : step === 0 ? ' hidden aria-label="Retour"' : ' aria-label="Retour"') + '>' +
       (window.Icons ? Icons.svg(editing && step <= firstStep ? "times" : "chevl") : "‹") + '</button>' +
-      (s.id !== "welcome" ? '<b class="ob-bar-t">Étape ' + step + ' sur ' + (vs.length - 1) + '</b>' : '<span class="ob-bar-t"></span>') + '<span class="ob-round-sp"></span></div>' +
-      (s.id !== "welcome" ? '<div class="ob-prog" aria-hidden="true"><i style="width:' + pct + '%"></i></div>' : "") +
+      (s.id !== "welcome" && s.id !== "parent" ? '<b class="ob-bar-t">Étape ' + step + ' sur ' + (vs.length - 1) + '</b>' : '<span class="ob-bar-t"></span>') + '<span class="ob-round-sp"></span></div>' +
+      (s.id !== "welcome" && s.id !== "parent" ? '<div class="ob-prog" aria-hidden="true"><i style="width:' + pct + '%"></i></div>' : "") +
       '<div class="ob-body" id="ob-body">' + body(s) + '</div>' +
-      (s.id === "guide"
+      (s.id === "parent"
+        ? '<div class="ob-foot"><button type="button" class="btn ob-next" id="ob-pjoin"' + (valid(s) ? "" : " disabled") + '>' + (pbusy ? "Récupération…" : "Voir les notes de mon enfant") + '</button></div>'
+        : s.id === "guide"
         ? '<div class="ob-foot"><button type="button" class="btn" id="ob-guide">' + (guideTouched ? "Reprendre le guide" : "Suivre le guide maintenant") + '</button><button type="button" class="link ob-later" id="ob-later">' + (guideTouched ? "Continuer la configuration" : "Plus tard") + '</button></div>'
         : '<div class="ob-foot"><button type="button" class="btn ob-next"' + (valid(s) ? "" : " disabled") + '>' +
-          (s.id === "welcome" ? "Commencer" : last ? (editing ? "Enregistrer" : "Créer mon tableau de bord") : "Continuer") + '</button></div>');
+          (s.id === "welcome" ? "Commencer" : last ? (editing ? "Enregistrer" : "Créer mon tableau de bord") : "Continuer") + '</button>' +
+          // Bienvenue : un vrai bouton pour les parents, sous « Commencer » (à la place de la petite ligne d'avant).
+          (s.id === "welcome" && !editing && window.Sync && Sync.available() ? '<button type="button" class="btn ios-ob-parents" id="ob-parents">' + window.Icons.svg("people") + 'Pour les parents</button>' : "") + '</div>');
+    var pin = $("#ob-pcode", root);
+    if (pin) pin.addEventListener("input", function () { pcode = pin.value; var w = $("#ob-pwarn", root); if (w) w.hidden = true; refreshNext(); var b = $("#ob-pjoin", root); if (b) b.disabled = !valid(PARENT); });
     var input = $("#ob-classe", root);
     if (input) input.addEventListener("input", function () { p.classe = input.value.trim(); });
     root.scrollTop = 0;
@@ -169,6 +186,7 @@
     var vs = visible();
     if (d > 0 && !valid(vs[step])) return;
     dir = d; step = Math.max(0, Math.min(vs.length - 1, step + d));
+    if (step === 0 && parentMode) parentMode = false; // retour à Bienvenue : on quitte la page des parents
     render();
   }
 
@@ -207,8 +225,27 @@
     else done();
   }
 
+  // Le parent entre le code de l'enfant : les notes arrivent par la synchronisation, puis le tableau de bord s'ouvre.
+  function joinParent() {
+    if (!root || pbusy || !codeOk(pcode)) return;
+    pbusy = true; var b = $("#ob-pjoin", root); if (b) { b.disabled = true; b.textContent = "Récupération…"; }
+    window.Sync.join(pcode).then(function (ok) {
+      pbusy = false;
+      if (ok) { hap("success"); parentMode = false; close(); return; }
+      if (!root) return;
+      hap("error");
+      var w = $("#ob-pwarn", root); if (w) { w.textContent = "Aucune note trouvée pour ce code. Vérifie-le avec ton enfant : 16 lettres ou chiffres, dans son app sous Réglages → Synchronisation."; w.hidden = false; }
+      if (b) { b.textContent = "Voir les notes de mon enfant"; b.disabled = !codeOk(pcode); }
+    }, function () {
+      pbusy = false; if (!root) return;
+      var w = $("#ob-pwarn", root); if (w) { w.textContent = "Pas de connexion au serveur. Vérifie Internet, puis réessaie."; w.hidden = false; }
+      if (b) { b.textContent = "Voir les notes de mon enfant"; b.disabled = false; }
+    });
+  }
+
   function open(edit, startId) {
     if (root) return;
+    parentMode = false; pcode = ""; pbusy = false;
     editing = !!edit; allowVoie = startId === "voie"; loading = false; loadErr = false;
     var cur = window.NotesApp.profile();
     p = cur ? JSON.parse(JSON.stringify(cur)) : {};
@@ -232,6 +269,8 @@
         });
         return;
       }
+      if (e.target.closest("#ob-parents")) { parentMode = true; pcode = ""; pbusy = false; go(1); return; }
+      if (e.target.closest("#ob-pjoin")) { joinParent(); return; }
       if (e.target.id === "ob-sheet") {
         window.Grid.script("import.js").then(function () { Import.open({ onDone: close }); }, function () { IOSSheet.notice({ title: "Connexion nécessaire", message: "L'import se charge à la première utilisation : connecte-toi à Internet, puis réessaie." }); });
         return;
@@ -267,7 +306,10 @@
       var back = e.target.closest(".ob-back");
       if (back) { if (back.hasAttribute("data-cancel")) close(); else go(-1); }
     });
-    root.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.id === "ob-classe") { e.preventDefault(); go(1); } });
+    root.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && e.target.id === "ob-classe") { e.preventDefault(); go(1); }
+      if (e.key === "Enter" && e.target.id === "ob-pcode") { e.preventDefault(); joinParent(); }
+    });
     render();
     A(root, { opacity: [0, 1] }, { duration: 0.3 });
   }
@@ -427,6 +469,7 @@
       '<p class="ob-fine">' + (andr ? "Notes s\'ouvrira en plein écran, comme une vraie app, et marchera sans connexion."
         : inapp ? "Si rien ne s\'ouvre, copie le lien et colle-le dans la barre d\'adresse de " + target() + "."
         : "Safari et l\'app de l\'écran d\'accueil ne partagent pas leurs données : configure Notes dans l\'app, pas ici.") + '</p>' +
+      '<p class="ob-fine ios-inst-parent">Parent d\'élève ? Installe d\'abord l\'app comme ton enfant, puis touche « Pour les parents ».</p>' +
       '<button type="button" class="link inst-skip ios-inst-later" id="inst-skip">Continuer ' + here + '</button></div>';
     document.body.appendChild(el);
     document.body.classList.add("ob-open");

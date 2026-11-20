@@ -268,7 +268,7 @@
         "Les appareils reliés au même code peuvent recevoir une <b>notification</b> quand une note (ou un ETA) est ajoutée, et à chaque changement de verdict. Elle indique la branche, la note et la moyenne.",
         "Sur chaque appareil qui veut les recevoir : <b>Réglages → Synchronisation → Activer les notifications</b>. Sur iPhone, l'app doit être sur l'écran d'accueil (iOS 16.4 ou plus). L'appareil qui ajoute la note ne reçoit rien."] },
       { t: "Installer l'app chez un parent", v: "parents", p: [
-        "Ton parent ouvre le même lien et installe l'app sur son téléphone. À l'écran de bienvenue, il touche <b>J'ai déjà mes notes sur un autre appareil</b> et tape <b>ton code de synchronisation</b>.",
+        "Ton parent ouvre le même lien et installe l'app sur son téléphone. À l'écran de bienvenue, il touche <b>Pour les parents</b> et tape <b>ton code de synchronisation</b>.",
         "Il active ensuite les notifications dans Réglages → Synchronisation. Il voit les mêmes notes que toi et peut aussi en ajouter : dans ce cas, c'est toi qui es prévenu."] },
       { t: "Tout couper et confidentialité", v: "mute", p: [
         "<b>Tout couper</b> (Réglages → Synchronisation) arrête les notifications pour <b>tous</b> les appareils du code, jusqu'à ce que quelqu'un le réactive. <b>Désactiver sur cet appareil</b> ne concerne que le téléphone en main.",

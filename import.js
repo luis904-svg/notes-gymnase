@@ -355,7 +355,28 @@
 
   /* ================= Écrans ================= */
   function close() { if (!S || !S.root) return; var r = S.root; S.root = null; r.remove(); document.body.classList.remove("ob-open"); }
-  function mount(html) {
+  /* Sous-pages de Réglages (choix A de l'utilisateur, 20 novembre 2026) : depuis Réglages, l'import n'est plus un écran
+     plein à part. Ses deux écrans vivent dans deux blocs gardés (#imp-blk-start, #imp-blk-prev), que ios-settings.js
+     place dans ses sous-pages « Importer » et « Aperçu » (comme Synchronisation) : barre « ‹ Réglages », glissement
+     depuis la droite, retour par le chevron ou par balayage du bord gauche, barre du bas visible. Depuis Bienvenue
+     (pas encore de Réglages), l'écran plein reste, avec un glissement entre ses deux écrans. */
+  function blk(id) {
+    var n = document.getElementById(id);
+    if (!n) {
+      n = document.createElement("div"); n.id = id; n.className = "ios-imp ios-imp-in";
+      (document.getElementById("set-block") || document.body).appendChild(n);
+      n.addEventListener("click", onClick); n.addEventListener("change", onChange); n.addEventListener("input", onInput);
+    }
+    return n;
+  }
+  function here(e) { if (S && S.inline && e.currentTarget && e.currentTarget.nodeType === 1) S.root = e.currentTarget; }
+  function mount(html, which) {
+    if (S.inline) { S.root = blk(which === "prev" ? "imp-blk-prev" : "imp-blk-start"); S.root.innerHTML = html; return; }
+    var was = S.screen; S.screen = which || "start";
+    if (S.root && was && was !== S.screen && !(window.FX && document.documentElement.classList.contains("noanim"))) {
+      S.root.classList.remove("ios-imp-fwd", "ios-imp-bwd"); void S.root.offsetWidth;
+      S.root.classList.add(S.screen === "start" ? "ios-imp-bwd" : "ios-imp-fwd");
+    }
     if (!S.root) {
       var r = document.createElement("div"); r.className = "ob ios-imp"; r.setAttribute("role", "dialog"); r.setAttribute("aria-modal", "true"); r.setAttribute("aria-label", "Importer depuis un tableur");
       document.body.appendChild(r); document.body.classList.add("ob-open"); S.root = r;
@@ -368,8 +389,8 @@
   }
   function screenStart(msg) {
     var hasProfile = !!A.profile(), canShare = !!navigator.share;
-    mount(topbar(false, "Importer") +
-      '<div class="ob-body"><h1 class="ob-title">Importer depuis un tableur</h1><p class="ob-sub">Tu as déjà tes notes dans Excel, Google Sheets, un PDF ou une photo ? Une IA les range pour toi.</p>' +
+    mount((S.inline ? "" : topbar(false, "Importer")) +
+      '<div class="ob-body">' + (S.inline ? "" : '<h1 class="ob-title">Importer depuis un tableur</h1>') + '<p class="ob-sub">Tu as déjà tes notes dans Excel, Google Sheets, un PDF ou une photo ? Une IA les range pour toi.</p>' +
       // Session B (choix de l'utilisateur) : sections titrées et lignes d'action en texte bleu, comme Réglages → Synchronisation.
       '<p class="ios-grp-head">Comment faire</p><div class="ob-list ob-recap">' +
       '<div class="ob-row ob-static"><span class="ob-txt"><span class="ob-n">1. Copie le prompt</span><span class="ob-s">' + (hasProfile ? "Il contient déjà tes branches : l'IA classe chaque note au bon endroit." : "Sans profil encore : le prompt générique demande d'abord ta voie, ton année et tes options.") + '</span></span></div>' +
@@ -383,8 +404,10 @@
       '<button type="button" class="ios-row ios-act" data-imp="paste">Coller depuis le presse-papiers</button><button type="button" class="ios-row ios-act" data-imp="file">Choisir un fichier .json ou .txt</button>' +
       '<input type="file" id="imp-file" accept=".json,.txt,application/json,text/plain" hidden></div>' +
       '<p class="ios-grp-foot"><b>Confidentialité.</b> Ton fichier est envoyé à l\'IA que tu choisis, pas à cette app : retire noms et numéros avant de l\'envoyer. L\'import lui-même se fait sur ton appareil.</p></div>' +
-      '<div class="ob-foot"><button type="button" class="btn ob-next" data-imp="read"' + ((S.text || "").trim() ? "" : " disabled") + '>Lire la réponse</button></div>');
+      foot('<button type="button" class="btn ob-next" data-imp="read"' + ((S.text || "").trim() ? "" : " disabled") + '>Lire la réponse</button>'), "start");
   }
+  // Bouton qui fait avancer : collé en bas dans l'écran plein ; à la fin de la page dans Réglages (la barre du bas reste dessous).
+  function foot(btn) { return '<div class="' + (S.inline ? "ios-imp-go" : "ob-foot") + '">' + btn + "</div>"; }
   function say(t, bad) { var m = $("#imp-msg", S.root); if (m) { m.textContent = t; m.style.color = bad ? "var(--ios-red-text)" : ""; } }
 
   function shortDate(iso) { var p = String(iso).split("-"); return p[2] + "." + p[1]; }
@@ -431,16 +454,16 @@
     if (plan.dup) issues.unshift(plural(plan.dup, "note identique", "notes identiques") + " déjà dans l'app : ignorées.");
     var issueHtml = issues.length ? '<details class="ios-imp-iss"><summary>' + plural(issues.length, "remarque", "remarques") + '</summary><ul>' + issues.slice(0, 40).map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + (issues.length > 40 ? "<li>… et " + (issues.length - 40) + " autres.</li>" : "") + "</ul></details>" : "";
     var nothing = !plan.recs.length && !plan.exams.length && !plan.carried.length && !plan.goals.length && !plan.tps.length && !fp.profile;
-    mount(topbar(true, "Aperçu") + '<div class="ob-body"><h1 class="ob-title">Vérifie l\'import</h1><p class="ob-sub">' + esc(summary.join(" · ")) + (plan.prof ? "" : "") + '</p>' + profLine +
+    mount((S.inline ? "" : topbar(true, "Aperçu")) + '<div class="ob-body">' + (S.inline ? "" : '<h1 class="ob-title">Vérifie l\'import</h1>') + '<p class="ob-sub">' + esc(summary.join(" · ")) + (plan.prof ? "" : "") + '</p>' + profLine +
       (needProfile ? '<p class="ob-warn">Le fichier ne contient pas de profil complet et tu n\'as pas encore configuré l\'app : demande à l\'IA de remplir « profil » (le prompt générique le fait), ou configure ton profil d\'abord.</p>' : "") +
       modeRows + (rows ? '<p class="ios-grp-head">Branches du fichier</p><div class="ob-list ob-recap">' + rows + "</div>" : "") + datePart + issueHtml + "</div>" +
-      '<div class="ob-foot"><button type="button" class="btn ob-next" data-imp="go"' + (needProfile || nothing ? " disabled" : "") + ">" + (S.mode === "replace" && cur && A.records().length ? "Remplacer et importer" : "Importer") + "</button></div>");
+      foot('<button type="button" class="btn ob-next" data-imp="go"' + (needProfile || nothing ? " disabled" : "") + ">" + (S.mode === "replace" && cur && A.records().length ? "Remplacer et importer" : "Importer") + "</button>"), "prev");
     var nb = $(".ob-body", S.root); if (nb && top) nb.scrollTop = top;
   }
   function screenDone(plan) {
     var n = plan.recs.filter(function (r) { return r.kind !== "tadef" && !r.ta; }).length;
     mount('<div class="ob-body"><div class="ob-hero"><div class="ob-gi">' + Icons.svg("check") + '</div><h1>C\'est importé</h1><p>' + plural(n, "note", "notes") + (plan.nTA ? ", " + plural(plan.nTA, "TA", "TA") + " (" + plural(plan.nETA, "ETA", "ETA") + ")" : "") + (plan.exams.length ? ", " + plural(plan.exams.length, "examen", "examens") : "") +
-      ' sont dans ton tableau de bord. Vérifie quelques moyennes avec ton bulletin : seul lui fait foi.</p></div></div><div class="ob-foot"><button type="button" class="btn ob-next" data-imp="finish">Voir mon tableau de bord</button></div>');
+      ' sont dans ton tableau de bord. Vérifie quelques moyennes avec ton bulletin : seul lui fait foi.</p></div></div>' + foot('<button type="button" class="btn ob-next" data-imp="finish">Voir mon tableau de bord</button>'), "prev");
   }
 
   /* ================= Événements ================= */
@@ -452,10 +475,11 @@
     return Promise.resolve(voie === "ecg" ? G.load("ecg") : null).then(function () {
       S.fileProfile = readProfile(model.profile); S.map = {}; S.mode = A.profile() && A.records().length ? "add" : "replace";
       if (!model.notes.length && !model.tas.length && !model.exams.length && !model.carried.length && !model.goals.length && !model.tp.length && !S.fileProfile.profile) { say("Le JSON est valide, mais il ne contient ni note, ni TA, ni profil.", true); return false; }
-      screenPreview(); return true;
+      screenPreview(); if (S.inline && window.IOSSettings && IOSSettings.current() !== "importp") IOSSettings.push("importp"); return true;
     }, function () { say("La voie « culture générale » doit se charger : connecte-toi à Internet, puis réessaie.", true); return false; });
   }
   function onClick(e) {
+    here(e);
     var b = e.target.closest("[data-imp]"); if (!b) return;
     var a = b.dataset.imp;
     if (a === "close") { close(); return; }
@@ -484,9 +508,16 @@
       });
       return;
     }
-    if (a === "finish") { var cb = S.onDone; close(); if (window.FX) FX.view("dash"); if (cb) cb(); }
+    if (a === "finish") {
+      var cb = S.onDone;
+      if (S.inline) { if (window.IOSSettings) IOSSettings.root(); } else close();
+      // Onglet Accueil (FX.view ne fait que replacer la pastille de la barre).
+      var tab = document.querySelector('#tabbar [data-tab="dash"]'); if (tab) tab.click();
+      if (cb) cb();
+    }
   }
   function onChange(e) {
+    here(e);
     var t = e.target;
     if (t.id === "imp-file" && t.files && t.files[0]) {
       var f = t.files[0]; if (f.size > 2e6) { say("Ce fichier est trop gros pour être un JSON de notes.", true); return; }
@@ -496,13 +527,31 @@
     if (t.dataset && t.dataset.map != null) { S.map[t.dataset.map] = t.value || null; screenPreview(); return; }
     if ((t.id === "imp-start" || t.id === "imp-end") && t.value) { if (t.id === "imp-start") S.start = t.value; else S.end = t.value; screenPreview(); }
   }
-  function onInput(e) { var t = e.target; if (t.id === "imp-ta") { S.text = t.value; var n = $(".ob-next", S.root); if (n) n.disabled = !t.value.trim(); } }
+  function onInput(e) { here(e); var t = e.target; if (t.id === "imp-ta") { S.text = t.value; var n = $(".ob-next", S.root); if (n) n.disabled = !t.value.trim(); } }
 
   function open(opts) {
     opts = opts || {};
-    if (S && S.root) return;
-    S = { text: "", model: null, fileProfile: { problems: [], profile: null }, mode: "add", map: {}, start: schoolStart(), end: today(), align: true, root: null, onDone: opts.onDone || null };
+    if (S && S.root && !S.inline) return;
+    S = fresh(opts);
     screenStart();
+    // Retour par balayage du bord gauche dans l'écran plein (Bienvenue) : depuis l'Aperçu, revient au premier écran.
+    var x0 = null, y0 = 0, r = S.root;
+    r.addEventListener("touchstart", function (e) { var t = e.touches[0]; x0 = e.touches.length === 1 && t.clientX <= 24 && S.screen === "prev" ? t.clientX : null; y0 = t.clientY; }, { passive: true });
+    r.addEventListener("touchmove", function (e) {
+      if (x0 == null) return; var t = e.touches[0], dx = t.clientX - x0, dy = t.clientY - y0;
+      if (Math.abs(dy) > 12 && Math.abs(dy) > Math.abs(dx)) { x0 = null; return; }
+      if (dx > 60) { x0 = null; hap("tap"); screenStart(); }
+    }, { passive: true });
   }
-  window.Import = { open: open, personalPrompt: personalPrompt, genericPrompt: genericPrompt, parse: function (t) { return readModel(lenientJSON(t)); }, resolve: resolve };
+  function fresh(opts) {
+    return { text: "", model: null, fileProfile: { problems: [], profile: null }, mode: "add", map: {}, start: schoolStart(), end: today(), align: true, root: null, onDone: (opts && opts.onDone) || null, inline: false, screen: null };
+  }
+  // Depuis Réglages : prépare le premier écran dans son bloc ; ios-settings.js pousse ensuite la sous-page « Importer ».
+  function inline() {
+    if (S && S.root && !S.inline) return false;
+    S = fresh(); S.inline = true;
+    var old = document.getElementById("imp-blk-prev"); if (old) old.innerHTML = "";
+    screenStart(); return true;
+  }
+  window.Import = { open: open, inline: inline, personalPrompt: personalPrompt, genericPrompt: genericPrompt, parse: function (t) { return readModel(lenientJSON(t)); }, resolve: resolve };
 })();

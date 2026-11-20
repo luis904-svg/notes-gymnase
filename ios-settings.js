@@ -290,6 +290,9 @@
     sync: { title: "Synchronisation", adopt: "sync", html: function () { return '<div class="ios-slot" data-slot="sync"></div>'; } },
     backup: { title: "Sauvegarde", adopt: "backup", html: function () { return '<div class="ios-slot" data-slot="backup"></div>'; } },
     carried: { title: function () { return window.Grid && !Grid.isMat(app().profile()) ? "Notes reprises de 1re" : "Notes reprises de 2e"; }, adopt: "carriedset", html: function () { return '<div class="ios-slot" data-slot="carriedset"></div>'; } },
+    // Import depuis un tableur (choix A, 20 novembre 2026) : deux sous-pages, blocs gardés par import.js.
+    import: { title: "Importer", adopt: "imp", html: function () { return '<div class="ios-slot" data-slot="imp-blk-start"></div>'; } },
+    importp: { title: "Aperçu", adopt: "imp", html: function () { return '<div class="ios-slot" data-slot="imp-blk-prev"></div>'; } },
     about: { title: "À propos", adopt: "about", html: function () { return '<div class="ios-slot" data-slot="about"></div>'; } },
     rules: {
       title: "Calcul des moyennes",
@@ -355,7 +358,11 @@
   var provider = {
     can: function () { return active && stack.length > 1 && settingsVisible(); },
     parent: function (clone) {                    // la copie montre la page du dessous
-      var c = clone.querySelector("#ios-set"); if (c) c.replaceChildren(build(stack[stack.length - 2]));
+      var c = clone.querySelector("#ios-set"); if (!c) return;
+      var pg = build(stack[stack.length - 2]);
+      // Une page à bloc gardé (ex. Importer sous Aperçu) : la copie montre une copie du bloc, sinon elle serait vide.
+      [].forEach.call(pg.querySelectorAll("[data-slot]"), function (slot) { var n = document.getElementById(slot.dataset.slot); if (n) slot.appendChild(n.cloneNode(true)); });
+      c.replaceChildren(pg);
     },
     parentScroll: function () { return scrolls[key(stack[stack.length - 2])] || 0; },
     parentBar: function () {
@@ -391,11 +398,14 @@
         run("pop", function () { stack.pop(); stack.pop(); show(scrolls[key(top())] || 0); });
       } else pop();
     }
-    else if (kind === "imp") { Grid.script("import.js").then(function () { Import.open(); }, function () { IOSSheet.notice({ title: "Connexion nécessaire", message: "L'import se charge à la première utilisation : connecte-toi à Internet, puis réessaie." }); }); }
+    else if (kind === "imp") { openImport(); }
     else if (kind === "step") { if (window.Onboard) Onboard.open(true, a[1]); }
     else if (kind === "cal") { cal.m += a[1] === "next" ? 1 : -1; if (cal.m > 11) { cal.m = 0; cal.y++; } if (cal.m < 0) { cal.m = 11; cal.y--; } show(window.scrollY); }
     else if (kind === "day") { app().setS1End(a[1]); show(window.scrollY); }
   });
+  function openImport() {
+    Grid.script("import.js").then(function () { if (Import.inline()) push("import"); }, function () { IOSSheet.notice({ title: "Connexion nécessaire", message: "L'import se charge à la première utilisation : connecte-toi à Internet, puis réessaie." }); });
+  }
   /* Objectif : slider de 1 à 6 (pas 0,1) ; toucher la valeur ouvre le clavier numérique, ancienne valeur sélectionnée
      (la première touche l'efface). Le réglage est enregistré au relâchement ou à la validation, jamais pendant le glissement. */
   function clampGoal(v) { return Math.min(6, Math.max(1, Math.round(v * 100) / 100)); }
@@ -488,6 +498,6 @@
   // Les autres modules montent leurs blocs dans #set-block pendant le chargement : on démarre une fois la page chargée.
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", sync); else sync();
 
-  window.IOSSettings = { push: push, pop: pop, root: root, depth: function () { return active ? stack.length : 1; } };
+  window.IOSSettings = { push: push, pop: pop, root: root, openImport: openImport, active: function () { return active; }, current: function () { return active ? top().id : null; }, depth: function () { return active ? stack.length : 1; } };
   window.IOSIcons = { SVG: SVG, icon: icon, domain: domain };
 })();
