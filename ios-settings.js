@@ -289,6 +289,8 @@
     },
     sync: { title: "Synchronisation", adopt: "sync", html: function () { return '<div class="ios-slot" data-slot="sync"></div>'; } },
     backup: { title: "Sauvegarde", adopt: "backup", html: function () { return '<div class="ios-slot" data-slot="backup"></div>'; } },
+    // Exporter (22 novembre 2026, demande de l'utilisateur) : contenu du fichier façon Stockage iPhone et interrupteur « Inclure les photos », contenu donné par fx.js.
+    export: { title: "Exporter", html: function () { return '<div class="ios-bx">' + (window.FX && FX.exportHtml ? FX.exportHtml() : "") + '</div>'; } },
     carried: { title: function () { return window.Grid && !Grid.isMat(app().profile()) ? "Notes reprises de 1re" : "Notes reprises de 2e"; }, adopt: "carriedset", html: function () { return '<div class="ios-slot" data-slot="carriedset"></div>'; } },
     // Guide d'utilisation (20 novembre 2026, comme l'import) : blocs gardés par guide.js.
     guide: { title: "Guide", adopt: "gd", html: function () { return '<div class="ios-slot" data-slot="gd-blk-list"></div>'; } },

@@ -1640,3 +1640,25 @@ html.noanim .ios-imp > .ob-body { animation: none; }
 .gd-in .gd-body > .gd-dots { margin: 4px 0 8px; }
 .gd-in .gd-ptile { margin-top: 0; }
 .gd-foot.gd-foot-in { position: static; margin-top: var(--ios-grp-gap); padding: 0 0 8px; background: var(--ios-clear); }
+
+/* Page « Exporter » de la sauvegarde (22 novembre 2026, mise en page B « Stockage iPhone » choisie par l'utilisateur) :
+   tuile de la taille totale avec barre partagée par couleur (aplats seulement, chiffres en noir), liste à pastilles,
+   interrupteur « Inclure les photos » dans son groupe, gros bouton Exporter. */
+.ios-bx .ios-bx-stor { padding: 18px var(--ios-pad) 16px; }
+.ios-bx-tot { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.ios-bx-tot b { font-size: 28px; font-weight: 700; letter-spacing: -0.4px; color: var(--ios-label); font-variant-numeric: tabular-nums; }
+.ios-bx-tot span { color: var(--ios-label-2); font-size: 15px; }
+.ios-bx-bar { display: flex; gap: 2px; height: 22px; margin: 12px 0 10px; border-radius: 7px; overflow: hidden; background: var(--ios-track); }
+.ios-bx-bar i { display: block; height: 100%; flex-basis: 0; min-width: 4px; }
+.ios-bx-leg { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--ios-label-2); }
+.ios-bx-leg span::before { content: ""; display: inline-block; width: 9px; height: 9px; margin-right: 5px; border-radius: 50%; background: var(--ios-bx-c); }
+.ios-bx-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--ios-bx-c); }
+.ios-bx .is-blue { --ios-bx-c: var(--ios-blue); } .ios-bx .is-purple { --ios-bx-c: var(--ios-purple); } .ios-bx .is-orange { --ios-bx-c: var(--ios-orange); }
+.ios-bx .is-pink { --ios-bx-c: var(--ios-pink); } .ios-bx .is-gray { --ios-bx-c: var(--ios-gray); } .ios-bx .is-teal { --ios-bx-c: var(--ios-teal); }
+.ios-bx-bar i { background: var(--ios-bx-c); }
+.ios-bx .ios-bx-row { gap: 12px; cursor: default; }
+.ios-bx .ios-bx-ph { margin-top: var(--ios-grp-gap); }
+.ios-bx .ios-bx-off .ios-row-l { color: var(--ios-label-2); }
+.ios-bx .ios-bx-btn { display: block; width: 100%; min-height: 52px; margin-top: var(--ios-grp-gap); border-radius: var(--ios-r-pill); font-size: 17px; font-weight: 600; }
+.ios-bx > .ios-grp-head { margin: 28px 4px 8px; }
+.ios-bx .ios-grp-foot:empty { display: none; }

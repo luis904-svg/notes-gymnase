@@ -194,7 +194,7 @@
       { t: "Photographie ton test", v: "photos", p: [
         "Dans le formulaire, <b>Photographier le test</b> ouvre l'appareil photo du téléphone : prends la page, puis touche <b>Utiliser la photo</b>. Pour un test de plusieurs pages, touche <b>Ajouter une page</b>. <b>Choisir une photo</b> passe par ta photothèque (plusieurs photos d'un coup).",
         "Ensuite, touche la note dans le détail de la branche pour revoir les pages en plein écran, en ajouter ou en supprimer.",
-        "<span class='note'>Les photos restent sur cet appareil : elles ne sont pas synchronisées. Pour les garder en changeant d'iPhone, active <b>Inclure les photos</b> dans Réglages → Sauvegarde avant d'exporter. La note, elle, est toujours tapée à la main.</span>"] },
+        "<span class='note'>Les photos restent sur cet appareil : elles ne sont pas synchronisées. Pour les garder en changeant d'iPhone : Réglages → Sauvegarde → <b>Exporter</b>, puis active <b>Inclure les photos</b>. La note, elle, est toujours tapée à la main.</span>"] },
       { t: "Corrige ou supprime", v: "edit", p: [
         "Dans <b>Dernières notes</b> ou dans le détail d'une branche, <b>touche la note</b> : une feuille propose <b>Modifier</b> (rouvre la note), <b>Voir les photos</b> et <b>Supprimer la note</b>. Supprimer demande une confirmation, car une note supprimée ne revient pas ; ses photos sont supprimées avec elle. Sur ordinateur, les liens Modifier et Supprimer sont à côté de chaque note."] }
     ] },
@@ -250,7 +250,7 @@
         "Indique la date de fin du semestre 1 de ton gymnase. Elle sépare les notes des boutons <b>Semestre 1</b> et <b>Semestre 2</b>."] },
       { t: "Sauvegarde", v: "backup", p: [
         "<b>Exporter</b> crée un fichier de toutes tes notes, TA et réglages (Fichiers, AirDrop). <b>Importer un fichier</b> remplace ce qu'il y a sur l'appareil.",
-        "<b>Supprimer l'icône efface les notes</b> : exporte régulièrement. Avec <b>Inclure les photos</b>, les photos des tests partent aussi (fichier .zip, plus lourd) ; <b>Importer un fichier</b> les remet.",
+        "<b>Supprimer l'icône efface les notes</b> : exporte régulièrement. <b>Exporter</b> montre ce que contient le fichier et sa taille (notes, TA, objectifs, examens, réglages). Active <b>Inclure les photos</b> pour emporter aussi les photos des tests (fichier .zip, plus lourd) ; <b>Importer un fichier</b> remet tout.",
         "En haut de Réglages, la tuile <b>Sauvegarde</b> montre depuis quand tu n'as pas exporté (orange après un mois), et la tuile <b>Synchronisation</b> si tout est à jour."] },
       { t: "Importer un tableur", v: "backup", p: [
         "Tu as déjà tes notes dans Excel, Google Sheets, un PDF ou une photo ? <b>Réglages → Importer depuis un tableur</b> te donne un <b>prompt</b> à copier : il contient tes branches, pour que l'IA (ChatGPT, Claude, Gemini…) range chaque note au bon endroit. Donne-lui ton fichier, réponds à ses questions, puis colle sa réponse dans l'app.",

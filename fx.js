@@ -247,7 +247,7 @@
 
   /* ---------- Sauvegarde : exporter / importer ---------- */
   function stamp() { var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
-  function say(t, bad) { var o = $("#bk-msg"); if (!o) return; o.textContent = t; o.style.color = bad ? "var(--crit)" : ""; }
+  function say(t, bad) { [].forEach.call(document.querySelectorAll("#bk-msg, #bx-msg"), function (o) { o.textContent = t; o.style.color = bad ? "var(--crit)" : ""; }); }
   // Date du dernier export (tuile « Sauvegarde » de Réglages, v58).
   var BK = "notes2m01.backupAt";
   function backupAt() { try { return +localStorage.getItem(BK) || 0; } catch (e) { return 0; } }
@@ -257,15 +257,20 @@
     var t = backupAt();
     o.textContent = t ? "Dernier export : " + new Date(t).toLocaleDateString("fr-CH", { day: "numeric", month: "long", year: "numeric" }) + "." : "Aucun export pour l'instant.";
   }
-  /* Sauvegarde avec les photos (22 novembre 2026, option B choisie par l'utilisateur : interrupteur « Inclure les photos »,
-     maquettes dans design/maquettes-sauvegarde/). Fichier .zip sans compression (les photos sont déjà en JPEG) :
-     notes-sauvegarde.json (même contenu que l'export simple, plus la liste des photos) et photos/0001.jpg…
-     Le choix est gardé dans notes2m01.bkPhotos. « Importer un fichier » lit le .zip et l'ancien .json. */
+  /* Sauvegarde avec les photos (22 novembre 2026). D'abord un interrupteur (option B), remplacé le même jour à la demande
+     de l'utilisateur : « Exporter » ouvre la sous-page « Exporter » de Réglages (exportHtml, rendue par ios-settings.js)
+     avec le contenu du fichier et l'interrupteur « Inclure les photos » (.json sans, .zip avec), puis le bouton Exporter.
+     Fichier .zip sans compression (les photos sont déjà en JPEG) : notes-sauvegarde.json (même contenu que l'export
+     simple, plus la liste des photos) et photos/0001.jpg… Le dernier choix est gardé dans notes2m01.bkPhotos.
+     « Importer un fichier » lit le .zip et l'ancien .json. */
   var PK = "notes2m01.bkPhotos", busy = false;
   function photosOn() { try { return localStorage.getItem(PK) === "on"; } catch (e) { return false; } }
   function photoPages() { return window.Photos && Photos.pages ? Photos.pages() : 0; }
   function sizeText(n) { return n < 1e6 ? "≈ " + Math.max(1, Math.round(n / 1e3)) + " Ko" : "≈ " + Math.max(1, Math.round(n / 1e6)) + " Mo"; }
-  function payload() { return { app: "notes2m01", version: 1, exported: new Date().toISOString(), state: window.NotesApp.get() }; }
+  // Examens et notes reprises de 3e (cert.js, clé notes2m01.exams) : dans la sauvegarde depuis le 22 novembre 2026.
+  var EK = "notes2m01.exams";
+  function examsData() { try { var d = JSON.parse(localStorage.getItem(EK) || "null"); return d && (Object.keys(d.exams || {}).length || Object.keys(d.carried || {}).length) ? d : null; } catch (e) { return null; } }
+  function payload() { var p = { app: "notes2m01", version: 1, exported: new Date().toISOString(), state: window.NotesApp.get() }, ex = examsData(); if (ex) p.exams = ex; return p; }
   var CRC = null;
   function crc32(u8) {
     if (!CRC) { CRC = new Uint32Array(256); for (var n = 0; n < 256; n++) { var k = n; for (var j = 0; j < 8; j++) k = k & 1 ? 0xEDB88320 ^ (k >>> 1) : k >>> 1; CRC[n] = k >>> 0; } }
@@ -322,9 +327,9 @@
     if (late && canShare) { haptic("success"); IOSSheet.confirm({ title: "Sauvegarde prête", message: info, ok: "Partager le fichier", danger: false }).then(function (ok) { if (ok) go(); else say(""); }); }
     else go();
   }
-  function exportData() {
+  function exportData(withPhotos) {
     if (!window.NotesApp || busy) return;
-    if (!photosOn() || !photoPages() || !window.Photos || !Photos.all) {
+    if (!withPhotos || !photoPages() || !window.Photos || !Photos.all) {
       deliver(new Blob([JSON.stringify(payload(), null, 2)], { type: "application/json" }), "notes-sauvegarde-" + stamp() + ".json");
       return;
     }
@@ -370,6 +375,7 @@
           : "Les notes de cet appareil sont remplacées par les " + n + " notes du fichier. Cette action ne s'annule pas.", ok: "Remplacer" }).then(function (ok) {
         if (!ok) return;
         window.NotesApp.replace(st);
+        if (obj.exams) { try { localStorage.setItem(EK, JSON.stringify(obj.exams)); } catch (x) {} if (window.Cert && Cert.reload) { Cert.reload(); window.NotesApp.redraw(); } if (window.Sync) Sync.changed(); }
         if (!P) { haptic("success"); say(n + " notes importées."); return; }
         say("Restauration des photos…");
         Photos.replaceAll(photos).then(function () { haptic("success"); say(n + " notes et " + P + " pages photo importées."); },
@@ -378,31 +384,82 @@
     };
     if (zip) r.readAsArrayBuffer(f); else r.readAsText(f);
   }
-  // Interrupteur et taille de l'export avec photos, redessinés à chaque changement de photos.
-  function paintPhotos() {
-    var row = $("#bk-photos-row"); if (!row) return;
-    var n = photoPages(), on = photosOn(), sz = $("#bk-size"), ft = $("#bk-pfoot");
-    row.hidden = !n; $("#bk-photos").checked = on;
-    if (ft) ft.textContent = n ? n + " page" + (n > 1 ? "s" : "") + " photo. Avec les photos, le fichier est un .zip." : "";
-    if (!sz) return;
-    if (!n || !on || !Photos.all) { sz.textContent = ""; return; }
-    Photos.all().then(function (l) { var b = 0; l.forEach(function (r) { b += r.blob.size || 0; }); if (photosOn()) sz.textContent = sizeText(b); }, function () { sz.textContent = ""; });
+  /* Page « Exporter » (Réglages → Sauvegarde → Exporter), mise en page B choisie par l'utilisateur le 22 novembre 2026
+     (maquettes : design/maquettes-sauvegarde/exporter-v2.html), comme Réglages → Général → Stockage iPhone : taille totale
+     en grand et barre partagée par couleur, puis une ligne par contenu (pastille, nombre, taille), puis l'interrupteur
+     « Inclure les photos » avec seulement le stockage en plus, et le bouton Exporter. */
+  var photoBytes = null;
+  function choice() { return photosOn() && photoPages() ? "zip" : "json"; }
+  function bytes(x) { try { return JSON.stringify(x, null, 2).length; } catch (e) { return 0; } }
+  function plural(n, one, many) { return n + " " + (n > 1 ? many : one); }
+  function parts() {
+    var st = window.NotesApp.get(), g = st.grades || [], cfg = st.cfg || {}, subs = cfg.subjects || {};
+    var notes = g.filter(function (r) { return r.kind !== "tadef" && !r.ta; }), tas = g.filter(function (r) { return r.kind === "tadef"; }), etas = g.filter(function (r) { return r.ta; });
+    var goals = {}; Object.keys(subs).forEach(function (k) { if (subs[k] && subs[k].goal) goals[k] = subs[k].goal; });
+    var ng = Object.keys(goals).length, ex = examsData(), list = [];
+    list.push({ k: "notes", c: "blue", name: "Notes", sub: notes.length ? plural(notes.length, "test ou TP", "tests et TP") : "Aucune note", b: bytes(notes) });
+    if (tas.length) list.push({ k: "ta", c: "purple", name: "Travaux assimilés", sub: plural(tas.length, "TA", "TA") + ", " + plural(etas.length, "ETA", "ETA"), b: bytes(tas) + bytes(etas) });
+    list.push({ k: "goal", c: "orange", name: "Objectifs", sub: ng ? plural(ng, "branche", "branches") : "Aucun objectif", b: bytes(goals) });
+    if (ex) { var ne = 0; (function walk(o) { for (var q in o) { if (typeof o[q] === "number") ne++; else if (o[q] && typeof o[q] === "object") walk(o[q]); } })(ex); list.push({ k: "exam", c: "pink", name: "Examens et notes reprises", sub: plural(ne, "note", "notes"), b: bytes(ex) }); }
+    var pr = cfg.profile || {}, nb = window.NotesApp.subjectsAll ? window.NotesApp.subjectsAll().filter(function (s) { return !s.part; }).length : 0;
+    list.push({ k: "set", c: "gray", name: "Profil et réglages", sub: [pr.classe, nb ? plural(nb, "branche", "branches") : ""].filter(Boolean).join(" · "), b: Math.max(0, bytes(cfg) - bytes(goals)) });
+    return list;
   }
+  function exportHtml() {
+    var n = photoPages(), on = choice() === "zip", list = parts(), json = bytes(payload()), pb = photoBytes || 0;
+    var total = json + (on ? pb : 0), segs = list.slice(), min = total * 0.025;
+    if (on && pb) segs.push({ c: "teal", name: "Photos", b: pb });
+    var bar = segs.map(function (s) { return '<i class="is-' + s.c + '" style="flex-grow:' + Math.max(s.b, min).toFixed(0) + '"></i>'; }).join("");
+    var leg = segs.map(function (s) { return '<span class="is-' + s.c + '">' + (s.k === "set" ? "Réglages" : s.k === "exam" ? "Examens" : s.k === "ta" ? "TA" : s.name) + '</span>'; }).join("");
+    var rows = list.map(function (s) {
+      return '<div class="ios-row ios-bx-row"><i class="ios-bx-dot is-' + s.c + '" aria-hidden="true"></i><span class="ios-row-l">' + s.name + (s.sub ? '<small class="ios-row-s">' + s.sub + '</small>' : "") + '</span><span class="ios-val">' + (s.b < 500 ? "&lt; 1 Ko" : sizeText(s.b).replace("≈ ", "")) + '</span></div>';
+    }).join("");
+    var photoRow = n
+      ? '<div class="ios-grp ios-bx-ph"><label class="ios-row"><span class="ios-row-l">Inclure les photos</span><span class="ios-val">' + (photoBytes == null ? "" : "+ " + sizeText(pb).replace("≈ ", "")) + '</span><input type="checkbox" switch data-bxp' + (on ? " checked" : "") + ' aria-label="Inclure les photos"></label></div>' +
+        '<p class="ios-grp-foot">' + plural(n, "page photo", "pages photo") + '. Avec les photos, le fichier devient un .zip. Elles ne sont pas synchronisées : c\'est le seul moyen de les garder en changeant de téléphone.</p>'
+      : '<div class="ios-grp ios-bx-ph"><div class="ios-row ios-bx-off"><span class="ios-row-l">Inclure les photos</span><span class="ios-val">Aucune photo</span></div></div>' +
+        '<p class="ios-grp-foot">Aucune photo de test sur cet appareil.</p>';
+    return '<div class="ios-grp ios-bx-stor"><div class="ios-bx-tot"><b>' + sizeText(total) + '</b><span>fichier ' + (on ? ".zip" : ".json") + '</span></div>' +
+      '<div class="ios-bx-bar" aria-hidden="true">' + bar + '</div><div class="ios-bx-leg" aria-hidden="true">' + leg + '</div></div>' +
+      '<p class="ios-grp-head">Contenu</p><div class="ios-grp">' + rows + '</div>' + photoRow +
+      '<button type="button" class="btn ios-bx-btn" data-bx="go">Exporter</button>' +
+      '<p class="ios-grp-foot" id="bx-msg" role="status"></p>';
+  }
+  function paintExport() {
+    var box = $(".ios-bx"); if (!box) return;
+    var msg = $("#bx-msg", box), keep = msg ? [msg.textContent, msg.style.color] : null;
+    box.innerHTML = exportHtml();
+    if (keep) { var m = $("#bx-msg", box); m.textContent = keep[0]; m.style.color = keep[1]; }
+  }
+  function measure() {
+    if (!photoPages() || !window.Photos || !Photos.all) { photoBytes = 0; paintExport(); return; }
+    Photos.all().then(function (l) { var b = 0; l.forEach(function (r) { b += r.blob.size || 0; }); photoBytes = b; paintExport(); }, function () {});
+  }
+  document.addEventListener("photos:changed", function () { photoBytes = null; if ($(".ios-bx")) measure(); });
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-bx]"); if (!b || b.disabled) return;
+    if (b.dataset.bx === "go") exportData(choice() === "zip");
+  });
+  // Interrupteur « Inclure les photos » : la taille totale et la barre suivent tout de suite.
+  document.addEventListener("change", function (e) {
+    if (!e.target.matches || !e.target.matches("[data-bxp]")) return;
+    try { localStorage.setItem(PK, e.target.checked ? "on" : "off"); } catch (x) {}
+    paintExport();
+  });
   function mountBackup() {
     var host = $("#set-block"); if (!host || $("#backup")) return;
     var div = document.createElement("div"); div.className = "backup"; div.id = "backup";
     var phone = window.matchMedia("all").matches;
-    var txt = "Tes notes restent sur ce téléphone. Exporte-les de temps en temps (Fichiers, AirDrop) pour ne rien perdre. Les photos des tests ne sont pas synchronisées : pour les garder en changeant d'iPhone, active « Inclure les photos » avant d'exporter.";
+    var txt = "Tes notes restent sur ce téléphone. Exporte-les de temps en temps (Fichiers, AirDrop) pour ne rien perdre. Les photos des tests ne sont pas synchronisées : pour les garder en changeant d'iPhone, touche Exporter et active « Inclure les photos ».";
     // Grand écran (session D) : même texte, pour un ordinateur.
-    if (window.matchMedia("(min-width: 701px)").matches) txt = "Tes notes restent dans ce navigateur. Exporte-les de temps en temps pour ne rien perdre. Les photos des tests ne sont pas synchronisées : pour les garder, active « Inclure les photos » avant d'exporter.";
+    if (window.matchMedia("(min-width: 701px)").matches) txt = "Tes notes restent dans ce navigateur. Exporte-les de temps en temps pour ne rien perdre. Les photos des tests ne sont pas synchronisées : pour les garder, touche Exporter et active « Inclure les photos ».";
     var hapRow = '<label class="row ios-bk-hap">Retours haptiques<input type="checkbox" switch id="bk-haptic"' + (hapticsOn ? " checked" : "") + '></label>';
     // Téléphone (v58, style C) : groupe de lignes iOS ; l'interrupteur haptique vit dans Réglages › Données (ios-settings.js).
     div.innerHTML = phone ?
       '<p class="ios-grp-head">Fichier de sauvegarde</p><div class="ios-grp">' +
-        '<label class="ios-row" id="bk-photos-row" hidden><span class="ios-row-l">Inclure les photos</span><input type="checkbox" switch id="bk-photos"></label>' +
-        '<button type="button" class="ios-row ios-act" id="bk-export"><span class="ios-row-l">Exporter</span><span class="ios-val" id="bk-size"></span></button>' +
+        '<button type="button" class="ios-row ios-act" id="bk-export">Exporter</button>' +
         '<button type="button" class="ios-row ios-act" id="bk-import">Importer un fichier</button><button type="button" class="ios-row ios-act" id="bk-sheet">Importer depuis un tableur</button></div>' +
-        '<p class="ios-grp-foot" id="bk-pfoot"></p><p class="ios-grp-foot" id="bk-last"></p><p class="ios-grp-foot">' + txt + '</p>' +
+        '<p class="ios-grp-foot" id="bk-last"></p><p class="ios-grp-foot">' + txt + '</p>' +
         '<input type="file" id="bk-file" accept="application/json,.json,application/zip,.zip"><p class="ok ios-grp-foot" id="bk-msg" role="status"></p>' + hapRow :
       '<h3>Sauvegarde</h3><p class="muted small">' + txt + '</p>' +
       '<div class="btns"><button type="button" class="btn" id="bk-export">Exporter</button>' +
@@ -410,12 +467,12 @@
       '<input type="file" id="bk-file" accept="application/json,.json,application/zip,.zip">' +
       '<p class="ok" id="bk-msg" role="status"></p>' + hapRow;
     host.appendChild(div);
-    $("#bk-export").addEventListener("click", exportData);
+    // Exporter : page « Exporter » (choix avec ou sans photos) ; hors de Réglages, export simple comme avant.
+    $("#bk-export").addEventListener("click", function () {
+      if (window.IOSSettings && IOSSettings.active()) { photoBytes = null; IOSSettings.push("export"); measure(); }
+      else exportData(false);
+    });
     lastLine();
-    var pt = $("#bk-photos");
-    if (pt) pt.addEventListener("change", function () { try { localStorage.setItem(PK, pt.checked ? "on" : "off"); } catch (x) {} paintPhotos(); });
-    document.addEventListener("photos:changed", paintPhotos);
-    paintPhotos();
     $("#bk-import").addEventListener("click", function () { $("#bk-file").click(); });
     // Import depuis un tableur (Excel…) via une IA : import.js n'est téléchargé qu'à cet instant.
     $("#bk-sheet").addEventListener("click", function () {
@@ -463,6 +520,7 @@
   /* ---------- Branchements ---------- */
   window.FX = {
     haptic: haptic,
+    exportHtml: exportHtml,
     rendered: function () {
       placeSeg(); pulsePill();
       document.dispatchEvent(new CustomEvent("ios:rendered"));   // barre du bas (ios-tabbar.js) : pastilles et verdict

@@ -1,6 +1,6 @@
 /* Notes : photos des tests. Chaque photo est une page rattachée à une note (ou à un ETA) par son identifiant.
    Stockage : IndexedDB, base à part (« notes2m01-photos »). Les photos restent sur l'appareil : elles ne passent ni par la
-   synchronisation ni par la sauvegarde JSON (sauf l'export « Inclure les photos » en .zip de fx.js, 22 novembre 2026). Elles sont réduites avant l'enregistrement (côté long 2400 px, JPEG 85 %,
+   synchronisation ni par la sauvegarde JSON (sauf l'export avec « Inclure les photos » en .zip de fx.js, 22 novembre 2026). Elles sont réduites avant l'enregistrement (côté long 2400 px, JPEG 85 %,
    environ 1 Mo par page, choix de l'utilisateur en v52 avec le retrait du scanner).
    Formulaire : « Photographier le test » ouvre l'appareil photo du téléphone (une page à la fois ; le bouton devient
    ensuite « Ajouter une page ») et « Choisir une photo » la photothèque (plusieurs à la fois). Les pages sont enregistrées
@@ -128,7 +128,7 @@
       }).join("");
       $("#ph-add .ios-ph-t", box).textContent = l.length || had ? "Ajouter une page" : "Photographier le test";
       $("#ph-info", box).textContent = (had ? had + " photo" + (had > 1 ? "s" : "") + " déjà jointe" + (had > 1 ? "s" : "") + " à cette note. " : "") +
-        "Les photos restent sur cet appareil : elles ne sont pas synchronisées. Pour les garder, active « Inclure les photos » dans Réglages → Sauvegarde avant d'exporter.";
+        "Les photos restent sur cet appareil : elles ne sont pas synchronisées. Pour les garder, Réglages → Sauvegarde → Exporter, puis « Inclure les photos ».";
     }, function () {});
   }
   if (form && msg) {
