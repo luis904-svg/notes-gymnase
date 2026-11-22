@@ -159,10 +159,10 @@
           '<span class="ios-prof-t"><span class="ios-dk">Profil</span><b>' + esc(name) + '</b><span>' + esc((gname ? gname + " · " : "") + (pr.year ? ORD[pr.year] + " année" : "")) + '</span></span>' + CHEV + '</button></div>';
         var tiles = '<div class="ios-stiles">' + syncTile() + backupTile() + '</div>';
         var an = [];
-        if (pr.year && pr.year < 3) an.push(row({ ic: "green", svg: "up", label: "Passer en " + ORD[pr.year + 1] + " année", act: "click:yp-next" }));
+        if (pr.year && pr.year < 3) an.push(row({ ic: "green", svg: "up", label: "Passer en " + ORD[pr.year + 1] + " année", act: "go:yearpass" }));
         // 3e année : notes de 2e reprises (chimie, physique, art), bloc #carriedset de cert.js.
         if (pr.year === 3 && app().subjectsAll().some(function (x) { return x.carried; })) an.push(row({ ic: "green", svg: "flask", label: G.isMat(pr) ? "Notes reprises de 2e" : "Notes reprises de 1re", act: "go:carried" }));
-        if (arch.length) an.push(row({ ic: "gray", svg: "archive", label: "Années précédentes", val: String(arch.length), act: "click:yp-hist" }));
+        if (arch.length) an.push(row({ ic: "gray", svg: "archive", label: "Années précédentes", val: String(arch.length), act: "go:history" }));
         var hap = document.getElementById("bk-haptic");
         var hapRow = '<label class="ios-row has-ic">' + icon("gray", "phone") + '<span class="ios-row-l">Retours haptiques</span><input type="checkbox" switch id="ios-haptic"' + (!hap || hap.checked ? " checked" : "") + '></label>';
         return '<h1 class="ios-large">Réglages</h1>' + prof + tiles +
@@ -171,7 +171,7 @@
           grp([row({ ic: "blue", svg: "sync", label: "Synchronisation", act: "go:sync" }), row({ ic: "gray", svg: "save", label: "Sauvegarde", act: "go:backup" }), row({ ic: "green", svg: "doc", label: "Importer depuis un tableur", act: "imp:open" }), hapRow], "Données") +
           appearanceGrp() +
           (an.length ? grp(an, "Année scolaire") : "") +
-          grp([row({ ic: "orange", svg: "book", label: "Guide d'utilisation", act: "click:gd-open" }),
+          grp([row({ ic: "orange", svg: "book", label: "Guide d'utilisation", act: "gdopen" }),
                row({ ic: "gray", svg: "calc", label: "Calcul des moyennes", act: "go:rules" }),
                row({ ic: "gray", svg: "info", label: "À propos", act: "go:about" })], "Aide") +
           '<p class="ios-copy">©louis mutter</p>';
@@ -290,6 +290,13 @@
     sync: { title: "Synchronisation", adopt: "sync", html: function () { return '<div class="ios-slot" data-slot="sync"></div>'; } },
     backup: { title: "Sauvegarde", adopt: "backup", html: function () { return '<div class="ios-slot" data-slot="backup"></div>'; } },
     carried: { title: function () { return window.Grid && !Grid.isMat(app().profile()) ? "Notes reprises de 1re" : "Notes reprises de 2e"; }, adopt: "carriedset", html: function () { return '<div class="ios-slot" data-slot="carriedset"></div>'; } },
+    // Guide d'utilisation (20 novembre 2026, comme l'import) : blocs gardés par guide.js.
+    guide: { title: "Guide", adopt: "gd", html: function () { return '<div class="ios-slot" data-slot="gd-blk-list"></div>'; } },
+    guidech: { title: function () { return window.Guide && Guide.pageTitle ? Guide.pageTitle() : "Guide"; }, adopt: "gd", html: function () { return '<div class="ios-slot" data-slot="gd-blk-step"></div>'; } },
+    // Passage d'année et années précédentes (20 novembre 2026, comme l'import) : contenu donné par year.js.
+    yearpass: { title: function () { var pr = app().profile() || {}; return pr.year && pr.year < 3 ? "Passer en " + ORD[pr.year + 1] + " année" : "Année scolaire"; },
+      html: function () { return '<div class="ios-sub-in">' + (window.YearPass ? YearPass.passHtml(true) : "") + '</div>'; } },
+    history: { title: "Années précédentes", html: function () { return '<div class="ios-sub-in">' + (window.YearPass ? YearPass.historyHtml(true) : "") + '</div>'; } },
     // Import depuis un tableur (choix A, 20 novembre 2026) : deux sous-pages, blocs gardés par import.js.
     import: { title: "Importer", adopt: "imp", html: function () { return '<div class="ios-slot" data-slot="imp-blk-start"></div>'; } },
     importp: { title: "Aperçu", adopt: "imp", html: function () { return '<div class="ios-slot" data-slot="imp-blk-prev"></div>'; } },
@@ -399,6 +406,9 @@
       } else pop();
     }
     else if (kind === "imp") { openImport(); }
+    else if (kind === "gdopen") { if (window.Guide && Guide.inline && Guide.inline()) push("guide"); else document.getElementById("gd-open").click(); }
+    else if (kind === "ypgo") { YearPass.doPass(); root(); }
+    else if (kind === "ypundo") { YearPass.undo().then(function (ok) { if (ok) root(); }); }
     else if (kind === "step") { if (window.Onboard) Onboard.open(true, a[1]); }
     else if (kind === "cal") { cal.m += a[1] === "next" ? 1 : -1; if (cal.m > 11) { cal.m = 0; cal.y++; } if (cal.m < 0) { cal.m = 11; cal.y--; } show(window.scrollY); }
     else if (kind === "day") { app().setS1End(a[1]); show(window.scrollY); }
@@ -498,6 +508,6 @@
   // Les autres modules montent leurs blocs dans #set-block pendant le chargement : on démarre une fois la page chargée.
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", sync); else sync();
 
-  window.IOSSettings = { push: push, pop: pop, root: root, openImport: openImport, active: function () { return active; }, current: function () { return active ? top().id : null; }, depth: function () { return active ? stack.length : 1; } };
+  window.IOSSettings = { push: push, pop: pop, root: root, openImport: openImport, retitle: function () { if (active && settingsVisible() && window.IOSTitle) IOSTitle.set(ctxFor(top())); }, active: function () { return active; }, current: function () { return active ? top().id : null; }, depth: function () { return active ? stack.length : 1; } };
   window.IOSIcons = { SVG: SVG, icon: icon, domain: domain };
 })();

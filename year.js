@@ -39,9 +39,14 @@
   }
 
   /* ---------- Passer à l'année suivante ---------- */
-  function openPass() {
+  /* Sous-pages de Réglages (20 novembre 2026, demande de l'utilisateur : « la même chose que l'import ») : depuis Réglages,
+     « Passer en … année » et « Années précédentes » sont des sous-pages (ios-settings.js, pages yearpass et history) :
+     barre « ‹ Réglages », balayage du bord gauche, barre du bas visible. passHtml(true) / historyHtml(true) donnent leur
+     contenu, sans la barre ni le bouton collé en bas ; les boutons portent data-act (« ypgo », « ypundo »), traités par
+     ios-settings.js. L'écran plein reste pour un appel hors de Réglages. */
+  function passHtml(inline) {
     var pr = app().profile();
-    if (!pr || pr.year >= 3 || root) return;
+    if (!pr || pr.year >= 3) return "";
     var next = pr.year + 1, v = app().verdict(), st = app().get(), yr = years(), n = st.grades.length;
     var art = pr.art === "mu" ? "la musique" : "les arts visuels";
     var vx = window.Grid && Grid.ext(pr);
@@ -58,19 +63,24 @@
     }
     var verdict = v.status === "none" ? "" :
       '<p class="ob-sub">Verdict actuel : <span class="pill ' + v.cls + '">' + esc(v.label) + '</span></p>';
-    show(
-      '<div class="ob-top ob-top-c"><button type="button" class="ob-round" data-yp-close aria-label="Annuler">' + (window.Icons ? Icons.svg("times") : "×") + '</button><b class="ob-bar-t">Année scolaire</b><span class="ob-round-sp"></span></div>' +
-      '<div class="ob-body"><h1 class="ob-title">Passer en ' + ORD[next] + ' année</h1>' + (verdict || '<p class="ob-sub">Ton année ' + yr.cur + ' est terminée ?</p>') +
+    return (inline ? "" : '<div class="ob-top ob-top-c"><button type="button" class="ob-round" data-yp-close aria-label="Annuler">' + (window.Icons ? Icons.svg("times") : "×") + '</button><b class="ob-bar-t">Année scolaire</b><span class="ob-round-sp"></span></div>') +
+      '<div class="ob-body">' + (inline ? "" : '<h1 class="ob-title">Passer en ' + ORD[next] + ' année</h1>') + (verdict || '<p class="ob-sub">Ton année ' + yr.cur + ' est terminée ?</p>') +
       '<div class="ob-list ob-recap">' + items.map(function (t) { return '<div class="ob-row ob-static"><span class="ob-txt"><span class="ob-n" style="font-weight:400">' + esc(t) + '</span></span></div>'; }).join("") + '</div>' +
       '<p class="ob-tip"><b>Tu peux annuler.</b> Réglages → « Annuler le dernier passage » remet tes notes de ' + yr.cur + ' dans le tableau de bord, même après le passage.</p>' +
       '<p class="ob-fine">Le verdict est indicatif et ne bloque pas le passage : seul ton bulletin fait foi.</p></div>' +
-      '<div class="ob-foot"><button type="button" class="btn ob-next" id="yp-go">Passer en ' + ORD[next] + ' année</button></div>',
-      function (e) {
-        if (!e.target.closest("#yp-go")) return;
-        app().passYear(next); hap("success"); close();
-        var stp = vx ? vx.afterPass(next) : next === 3 ? "oc" : null;
-        if (stp && window.Onboard) setTimeout(function () { Onboard.open(true, stp); }, 300);
-      });
+      '<div class="' + (inline ? "ios-imp-go" : "ob-foot") + '"><button type="button" class="btn ob-next" id="yp-go"' + (inline ? ' data-act="ypgo"' : "") + '>Passer en ' + ORD[next] + ' année</button></div>';
+  }
+  function doPass() {
+    var pr = app().profile(); if (!pr || pr.year >= 3) return;
+    var next = pr.year + 1, vx = window.Grid && Grid.ext(pr);
+    app().passYear(next); hap("success");
+    var stp = vx ? vx.afterPass(next) : next === 3 ? "oc" : null;
+    if (stp && window.Onboard) setTimeout(function () { Onboard.open(true, stp); }, 300);
+  }
+  function openPass() {
+    if (root) return;
+    var h = passHtml(false); if (!h) return;
+    show(h, function (e) { if (!e.target.closest("#yp-go")) return; close(); doPass(); });
   }
 
   /* ---------- Années précédentes ---------- */
@@ -84,20 +94,24 @@
       return '<li><span>' + fmtDate(g.date) + ' · ' + s + (g.type === "tp" ? ' · TP' : '') + (g.taBlock ? ' · TA (' + g.taBlock.etas.length + ' ETA)' : '') + (g.coef && g.coef !== 1 ? ' · coef ' + g.coef : '') + '</span><span class="mono ' + (g.value < 4 ? "crit" : "") + '">' + g.value + '</span></li>';
     }).join("") + '</ul></details>';
   }
-  function openHistory() {
+  function historyHtml(inline) {
     var arch = app().archive().slice().reverse();
-    if (!arch.length || root) return;
-    show('<div class="ob-top ob-top-c"><button type="button" class="ob-round" data-yp-close aria-label="Retour">' + (window.Icons ? Icons.svg("chevl") : "‹") + '</button><b class="ob-bar-t">Années précédentes</b><span class="ob-round-sp"></span></div>' +
-      '<div class="ob-body"><h1 class="ob-title">Années précédentes</h1><p class="ob-sub">Tes notes et tes moyennes de chaque année terminée.</p>' +
+    if (!arch.length) return "";
+    return (inline ? "" : '<div class="ob-top ob-top-c"><button type="button" class="ob-round" data-yp-close aria-label="Retour">' + (window.Icons ? Icons.svg("chevl") : "‹") + '</button><b class="ob-bar-t">Années précédentes</b><span class="ob-round-sp"></span></div>') +
+      '<div class="ob-body">' + (inline ? "" : '<h1 class="ob-title">Années précédentes</h1>') + '<p class="ob-sub">Tes notes et tes moyennes de chaque année terminée.</p>' +
       arch.map(function (e) {
         var rows = app().archiveStats(e), n = e.grades.length;
         return '<section class="yp-year"><h2>' + esc(e.label) + ' · ' + ORD[e.year] + ' année</h2>' +
           '<p class="muted small" style="margin:2px 0 10px">' + (e.verdict ? "Verdict en fin d'année : " + esc(e.verdict) + " · " : "") + n + " note" + (n > 1 ? "s" : "") + '</p>' +
           '<div class="ob-list">' + rows.map(function (r) { return rowHtml(e, r); }).join("") + '</div></section>';
       }).join("") +
-      '<div class="ios-grp ios-ob-acts"><button type="button" class="ios-row ios-act is-danger" id="yp-undo-h">Annuler le dernier passage…</button></div>' +
-      '<p class="ios-grp-foot">Remet les notes de ' + esc(arch[0].label) + ' dans le tableau de bord et revient en ' + ORD[arch[0].year] + ' année.</p></div>',
-      function (e) { if (e.target.closest("#yp-undo-h")) { var u = undo(); if (u) u.then(function (ok) { if (ok) close(); }); } });
+      '<div class="ios-grp ios-ob-acts"><button type="button" class="ios-row ios-act is-danger" id="yp-undo-h"' + (inline ? ' data-act="ypundo"' : "") + '>Annuler le dernier passage…</button></div>' +
+      '<p class="ios-grp-foot">Remet les notes de ' + esc(arch[0].label) + ' dans le tableau de bord et revient en ' + ORD[arch[0].year] + ' année.</p></div>';
+  }
+  function openHistory() {
+    if (root) return;
+    var h = historyHtml(false); if (!h) return;
+    show(h, function (e) { if (e.target.closest("#yp-undo-h")) { var u = undo(); if (u) u.then(function (ok) { if (ok) close(); }); } });
   }
 
   /* ---------- Annuler le dernier passage ---------- */
@@ -135,6 +149,6 @@
     refresh();
   }
 
-  window.YearPass = { refresh: refresh, openPass: openPass, openHistory: openHistory };
+  window.YearPass = { refresh: refresh, openPass: openPass, openHistory: openHistory, passHtml: passHtml, historyHtml: historyHtml, doPass: doPass, undo: undo };
   mount();
 })();

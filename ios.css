@@ -1603,24 +1603,33 @@ html.noanim .ios-shx-scrim, html.noanim .ios-shx-panel { transition: none; }
 #notes li.empty .ios-demo-row { margin: 10px -16px -10px -20px; border-top: var(--ios-hair) solid var(--ios-sep); }
 /* Import depuis un tableur, sous-pages de Réglages (choix A de l'utilisateur, 20 novembre 2026) : même groupes que les
    écrans .ob ; le bouton qui fait avancer est à la fin de la page (la barre du bas reste dessous). */
-.ios-imp-in .ob-body { padding: 0; }
-.ios-imp-in .ob-body > .ob-sub:first-child { margin: 0 4px 0; font-size: 15px; color: var(--ios-label-2); }
-.ios-imp-in .ios-grp { background: var(--ios-cell); border-radius: var(--ios-r-group); overflow: hidden; }
-.ios-imp-in .ios-grp-head { margin: 28px 4px 8px; font-size: var(--ios-sec-title); font-weight: 700; line-height: 1.25; color: var(--ios-label); }
-.ios-imp-in .ios-grp-foot { margin: 8px var(--ios-pad) 0; font-size: 13px; line-height: 1.4; color: var(--ios-label-2); }
-.ios-imp-in .ios-grp-foot:empty { display: none; }
-.ios-imp-in .ios-row { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: var(--ios-row-h); margin: 0; padding: 0 16px 0 var(--ios-pad); border: 0; border-radius: 0; background: var(--ios-clear); color: var(--ios-label); text-align: left; font: inherit; font-size: 17px; }
-.ios-imp-in button.ios-row { cursor: pointer; }
-.ios-imp-in button.ios-row:active { background-color: var(--ios-press-row); transform: none; }
-.ios-imp-in .ios-row + .ios-row { box-shadow: inset 0 var(--ios-hair) 0 var(--ios-sep); }
-.ios-imp-in .ios-row + .ios-row::before { content: none; }
-.ios-imp-in .ios-row-l { flex: 1; min-width: 0; }
-.ios-imp-in .ios-act { color: var(--ios-blue); }
+:is(.ios-imp-in, .ios-sub-in) .ob-body { padding: 0; }
+:is(.ios-imp-in, .ios-sub-in) .ob-body > .ob-sub:first-child { margin: 0 4px 8px; font-size: 15px; color: var(--ios-label-2); }
+:is(.ios-imp-in, .ios-sub-in) .ios-grp { background: var(--ios-cell); border-radius: var(--ios-r-group); overflow: hidden; }
+:is(.ios-imp-in, .ios-sub-in) .ios-grp-head { margin: 28px 4px 8px; font-size: var(--ios-sec-title); font-weight: 700; line-height: 1.25; color: var(--ios-label); }
+:is(.ios-imp-in, .ios-sub-in) .ios-grp-foot { margin: 8px var(--ios-pad) 0; font-size: 13px; line-height: 1.4; color: var(--ios-label-2); }
+:is(.ios-imp-in, .ios-sub-in) .ios-grp-foot:empty { display: none; }
+:is(.ios-imp-in, .ios-sub-in) .ios-row { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: var(--ios-row-h); margin: 0; padding: 0 16px 0 var(--ios-pad); border: 0; border-radius: 0; background: var(--ios-clear); color: var(--ios-label); text-align: left; font: inherit; font-size: 17px; }
+:is(.ios-imp-in, .ios-sub-in) button.ios-row { cursor: pointer; }
+:is(.ios-imp-in, .ios-sub-in) button.ios-row:active { background-color: var(--ios-press-row); transform: none; }
+:is(.ios-imp-in, .ios-sub-in) .ios-row + .ios-row { box-shadow: inset 0 var(--ios-hair) 0 var(--ios-sep); }
+:is(.ios-imp-in, .ios-sub-in) .ios-row + .ios-row::before { content: none; }
+:is(.ios-imp-in, .ios-sub-in) .ios-row-l { flex: 1; min-width: 0; }
+:is(.ios-imp-in, .ios-sub-in) .ios-act { color: var(--ios-blue); }
 .ios-imp-go { margin-top: var(--ios-grp-gap); padding-bottom: 8px; }
 .ios-imp-go > .btn { width: 100%; min-height: 52px; font-size: var(--ios-title-inline); font-weight: var(--ios-title-inline-weight); border-radius: var(--ios-r-pill); }
-.ios-imp-in .ob-hero { padding-top: 24px; }
+:is(.ios-imp-in, .ios-sub-in) .ob-hero { padding-top: 24px; }
 /* Écran plein (depuis Bienvenue) : le passage entre « Importer » et « Aperçu » glisse comme une sous-page. */
 .ios-imp.ios-imp-fwd > .ob-body { animation: iosNavPush var(--ios-dur-nav) var(--ios-spring) both; }
 .ios-imp.ios-imp-bwd > .ob-body { animation: iosNavPop var(--ios-dur-nav) var(--ios-spring) both; }
 html.noanim .ios-imp > .ob-body { animation: none; }
 @media (prefers-reduced-motion: reduce) { .ios-imp > .ob-body { animation: none; } }
+/* Passage d'année et années précédentes en sous-pages (20 novembre 2026) : le premier titre d'année colle au haut de la page. */
+.ios-sub-in .yp-year h2 { margin-top: var(--ios-grp-gap); font-size: var(--ios-sec-title); }
+.ios-sub-in .ob-tip { margin-top: var(--ios-grp-gap); }
+:is(.ios-imp-in, .ios-sub-in) .ios-act.is-danger { color: var(--ios-red-text); }
+/* Guide d'utilisation en sous-pages de Réglages (20 novembre 2026) : boutons à la fin de la page, au-dessus de la barre du bas. */
+.gd-in .gd-body { padding: 0; }
+.gd-in .gd-body > .gd-dots { margin: 4px 0 8px; }
+.gd-in .gd-ptile { margin-top: 0; }
+.gd-foot.gd-foot-in { position: static; margin-top: var(--ios-grp-gap); padding: 0 0 8px; background: var(--ios-clear); }

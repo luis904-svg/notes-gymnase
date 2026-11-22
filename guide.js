@@ -278,21 +278,35 @@
 
   /* ---------- Affichage ---------- */
   var root = null, view = "list", c = 0, s = 0, dir = 1, onClose = null;
+  /* Sous-pages de Réglages (20 novembre 2026, demande de l'utilisateur : « la même chose que l'import ») : depuis Réglages,
+     la liste des chapitres est la sous-page « Guide » et un chapitre la sous-page « Chapitre n » (ios-settings.js, pages
+     guide et guidech, blocs gardés #gd-blk-list et #gd-blk-step) : barre « ‹ », balayage du bord gauche, barre du bas
+     visible ; Suivant / Précédent restent dans la page. L'écran plein reste pour la première configuration. */
+  var inline = false;
+  function blk(k) {
+    var id = k === "list" ? "gd-blk-list" : "gd-blk-step", n = document.getElementById(id);
+    if (!n) {
+      n = document.createElement("div"); n.id = id; n.className = "gd-in";
+      (document.getElementById("set-block") || document.body).appendChild(n);
+      n.addEventListener("click", onClick);
+    }
+    return n;
+  }
   var CLOSE = window.Icons ? Icons.svg("times") : "×";   // rond Fermer (v58, comme les sous-pages)
 
   function allDone() { return CH.every(function (_, i) { return st.done.indexOf(i) >= 0; }); }
   function doneCount() { return CH.filter(function (_, i) { return st.done.indexOf(i) >= 0; }).length; }
   function haptic(k) { if (window.FX) window.FX.haptic(k); }
 
-  function paint() {
-    var h = "", b;
+  function html(view) {
+    var h = "";
     if (view === "list") {
       var n = doneCount(), resume = st.last && !allDone();
       // v58 (style C du canvas) : barre « Guide » avec rond Fermer, tuile de progression à anneau vert, titre de section,
       // chapitres en lignes à carré numéroté (coche verte quand c'est fait), bouton « Continuer : … ».
       var C = 2 * Math.PI * 30, frac = n / CH.length, nextI = resume ? st.last.c : CH.map(function (_, i) { return i; }).filter(function (i) { return st.done.indexOf(i) < 0; })[0];
       var cta = allDone() ? "Revoir depuis le début" : nextI != null && CH[nextI] ? (resume ? "Reprendre : " : n ? "Continuer : " : "Commencer : ") + CH[nextI].t : "Commencer";
-      h = "<div class='gd-top gd-top-c'><button type='button' class='gd-x' data-gd='close' aria-label='Fermer le guide'>" + CLOSE + "</button><b class='gd-bar-t'>Guide</b><span class='gd-x-sp'></span></div>" +
+      h = (inline ? "" : "<div class='gd-top gd-top-c'><button type='button' class='gd-x' data-gd='close' aria-label='Fermer le guide'>" + CLOSE + "</button><b class='gd-bar-t'>Guide</b><span class='gd-x-sp'></span></div>") +
         "<div class='gd-body'><section class='gd-ptile'><svg class='gd-ring' viewBox='0 0 80 80' role='img' aria-label='" + n + " chapitre" + (n > 1 ? "s" : "") + " sur " + CH.length + " terminés'>" +
         "<circle cx='40' cy='40' r='30' class='gd-ring-bg'/>" + (n ? "<circle cx='40' cy='40' r='30' class='gd-ring-fg' stroke-dasharray='" + (frac * C).toFixed(1) + " " + C.toFixed(1) + "' transform='rotate(-90 40 40)'/>" : "") +
         "<text x='40' y='46' text-anchor='middle'>" + n + "/" + CH.length + "</text></svg>" +
@@ -304,31 +318,41 @@
           return "<button type='button' class='gd-chr" + (d ? " is-ok" : "") + "' data-gd='chapter' data-i='" + i + "'><span class='gd-num'>" + (d ? IC.check : i + 1) + "</span>" +
             "<span class='ob-txt'><span class='ob-n'>" + ch.t + "</span><small>" + ch.s.length + " étapes · " + ch.d + (d ? " · terminé" : "") + "</small></span><span class='gd-go'>›</span></button>";
         }).join("") + "</div></div>" +
-        "<div class='gd-foot'><button type='button' class='btn' data-gd='start'>" + cta + "</button></div>";
+        foot("<button type='button' class='btn' data-gd='start'>" + cta + "</button>");
     } else if (view === "step") {
       var ch = CH[c], stp = ch.s[s], last = s === ch.s.length - 1;
-      h = "<div class='gd-top'><button type='button' class='link' data-gd='list'>‹ Chapitres</button>" +
-        "<div class='gd-dots' aria-hidden='true'>" + ch.s.map(function (_, i) { return "<i class='" + (i === s ? "on" : i < s ? "past" : "") + "'></i>"; }).join("") + "</div>" +
-        "<button type='button' class='gd-x' data-gd='close' aria-label='Fermer le guide'>" + CLOSE + "</button></div>" +
-        "<div class='gd-body'><p class='gd-kick'>Chapitre " + (c + 1) + " · " + ch.t + " · Étape " + (s + 1) + " sur " + ch.s.length + "</p>" +
+      var dots = "<div class='gd-dots' aria-hidden='true'>" + ch.s.map(function (_, i) { return "<i class='" + (i === s ? "on" : i < s ? "past" : "") + "'></i>"; }).join("") + "</div>";
+      h = (inline ? "" : "<div class='gd-top'><button type='button' class='link' data-gd='list'>‹ Chapitres</button>" + dots +
+        "<button type='button' class='gd-x' data-gd='close' aria-label='Fermer le guide'>" + CLOSE + "</button></div>") +
+        "<div class='gd-body'>" + (inline ? dots : "") + "<p class='gd-kick'>Chapitre " + (c + 1) + " · " + ch.t + " · Étape " + (s + 1) + " sur " + ch.s.length + "</p>" +
         "<div class='gd-vis' aria-hidden='true'>" + V[stp.v.split(":")[0]](stp.v.split(":")[1]) + "</div>" +
         "<h1 class='gd-title'>" + stp.t + "</h1><div class='gd-text'>" + (typeof stp.p === "function" ? stp.p() : stp.p).map(function (t) { return t.indexOf("<span class='note'>") === 0 ? "<p class='note'>" + t.replace(/^<span class='note'>|<\/span>$/g, "") + "</p>" : "<p>" + t + "</p>"; }).join("") + "</div></div>" +
-        "<div class='gd-foot'>" + (s > 0 || c > 0 ? "<button type='button' class='btn-ghost' data-gd='prev'>Précédent</button>" : "") +
-        "<button type='button' class='btn' data-gd='next'>" + (last ? "Terminer le chapitre" : "Suivant") + "</button></div>";
+        foot((s > 0 || c > 0 ? "<button type='button' class='btn-ghost' data-gd='prev'>Précédent</button>" : "") +
+        "<button type='button' class='btn' data-gd='next'>" + (last ? "Terminer le chapitre" : "Suivant") + "</button>");
       st.last = { c: c, s: s }; save();
     } else {
       var lastCh = c === CH.length - 1;
-      h = "<div class='gd-top'><span></span><button type='button' class='gd-x' data-gd='close' aria-label='Fermer le guide'>" + CLOSE + "</button></div>" +
+      h = (inline ? "" : "<div class='gd-top'><span></span><button type='button' class='gd-x' data-gd='close' aria-label='Fermer le guide'>" + CLOSE + "</button></div>") +
         "<div class='gd-body'><div class='gd-done'>" + lu("done") + "" +
         "<h1 class='gd-title'>" + (allDone() ? "Formation terminée" : "Chapitre terminé") + "</h1>" +
         "<p class='ob-sub'>" + (allDone() ? "Tu connais maintenant toutes les fonctions de l'app. Tu peux rouvrir ce guide quand tu veux dans Réglages." : "« " + CH[c].t + " » est fait. " + (lastCh ? "" : "Suite : « " + CH[c + 1].t + " ».")) + "</p></div></div>" +
-        "<div class='gd-foot'>" + (allDone() ? "<button type='button' class='btn' data-gd='close'>Terminer</button>" :
+        foot(allDone() ? "<button type='button' class='btn' data-gd='close'>Terminer</button>" :
           (lastCh ? "<button type='button' class='btn' data-gd='list'>Retour à la liste</button>" :
-            "<button type='button' class='btn-ghost' data-gd='list'>Liste</button><button type='button' class='btn' data-gd='nextch'>Chapitre suivant</button>")) + "</div>";
+            "<button type='button' class='btn-ghost' data-gd='list'>Liste</button><button type='button' class='btn' data-gd='nextch'>Chapitre suivant</button>"));
     }
-    root.innerHTML = h;
-    root.scrollTop = 0;
-    b = $(".gd-body", root);
+    return h;
+  }
+  // Boutons du bas : collés en bas dans l'écran plein ; à la fin de la page dans Réglages (la barre du bas reste dessous).
+  function foot(btns) { return "<div class='gd-foot" + (inline ? " gd-foot-in" : "") + "'>" + btns + "</div>"; }
+  function paint(quiet) {
+    var b, el = inline ? blk(view === "list" ? "list" : "step") : root;
+    el.innerHTML = html(view);
+    if (inline) {
+      if (view !== "list") blk("list").innerHTML = html("list");   // la page du dessous reste à jour
+      window.scrollTo(0, 0); refreshEntry();
+    } else el.scrollTop = 0;
+    b = $(".gd-body", el);
+    if (quiet) return;
     if (canAnim() && b) {
       A(b, { opacity: [0, 1], x: [dir * 34, 0] }, { type: "spring", stiffness: 340, damping: 30 });
       var kids = $$(".gd-vis > *, .gd-chr, .gd-done > *", b);
@@ -336,7 +360,15 @@
     }
   }
 
-  function go(v, d) { view = v; dir = d || 1; paint(); }
+  function go(v, d) {
+    view = v; dir = d || 1;
+    if (!inline) return paint();
+    var S = window.IOSSettings;
+    if (v === "list") { paint(true); if (S && S.current() === "guidech") S.pop(); return; }
+    // Depuis la liste (même après un retour par le chevron ou le bord) : la sous-page est poussée, son glissement suffit.
+    if (S && S.current() !== "guidech") { paint(true); S.push("guidech"); return; }
+    paint(); if (S && S.retitle) S.retitle();
+  }
 
   /* v72 : textes propres à la voie. Le module de la voie (Grid.ext(profil).guide) donne { titre d'étape : [paragraphes] } ;
      les textes d'origine (maturité) sont gardés pour les remettre. */
@@ -355,6 +387,7 @@
   }
   function open(opts) {
     if (root) return;
+    inline = false;
     opts = opts || {}; gdProfile = opts.profile || null;
     adaptVoie();
     onClose = opts.onClose || null;
@@ -362,10 +395,18 @@
     root.className = "gd"; root.setAttribute("role", "dialog"); root.setAttribute("aria-modal", "true"); root.setAttribute("aria-label", "Guide d'utilisation");
     document.body.appendChild(root);
     document.body.classList.add("gd-open");
-    root.addEventListener("click", function (e) {
+    root.addEventListener("click", onClick);
+    A(root, { opacity: [0, 1], y: [24, 0] }, { type: "spring", stiffness: 320, damping: 30 });
+    if (opts.start) {
+      var l = st.last && !allDone() ? st.last : { c: 0, s: 0 };
+      c = Math.min(CH.length - 1, l.c); s = Math.min(CH[c].s.length - 1, l.s); view = "step";
+    } else view = "list";
+    dir = 1; paint();
+  }
+  function onClick(e) {
       var t = e.target.closest("[data-gd]"); if (!t) return;
       var a = t.dataset.gd;
-      if (a === "close") return close();
+      if (a === "close") { if (inline) { view = "list"; paint(true); if (window.IOSSettings) IOSSettings.root(); return; } return close(); }
       if (a === "list") return go("list", -1);
       if (a === "chapter") { c = parseInt(t.dataset.i, 10); s = 0; return go("step", 1); }
       if (a === "start") {
@@ -381,14 +422,14 @@
         return go("done", 1);
       }
       if (a === "nextch") { c++; s = 0; return go("step", 1); }
-    });
-    A(root, { opacity: [0, 1], y: [24, 0] }, { type: "spring", stiffness: 320, damping: 30 });
-    if (opts.start) {
-      var l = st.last && !allDone() ? st.last : { c: 0, s: 0 };
-      c = Math.min(CH.length - 1, l.c); s = Math.min(CH[c].s.length - 1, l.s); view = "step";
-    } else view = "list";
-    dir = 1; paint();
   }
+  // Depuis Réglages : prépare la liste des chapitres ; ios-settings.js pousse ensuite la sous-page « Guide ».
+  function openInline() {
+    if (root) return false;
+    gdProfile = null; adaptVoie(); onClose = null; inline = true; view = "list"; dir = 1;
+    paint(true); return true;
+  }
+  function pageTitle() { return view === "list" ? "Guide" : "Chapitre " + (c + 1); }
 
   function close() {
     var el = root; if (!el) return;
@@ -429,6 +470,6 @@
     refreshEntry();
   }
 
-  window.Guide = { open: open, allDone: allDone, disclaimer: DISCLAIMER, progress: doneCount };
+  window.Guide = { open: open, inline: openInline, pageTitle: pageTitle, allDone: allDone, disclaimer: DISCLAIMER, progress: doneCount };
   mountSettings();
 })();
