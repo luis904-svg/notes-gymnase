@@ -463,9 +463,12 @@
         "<p class='muted small'><b>Tes données.</b> Tes notes, tes TA et ton profil restent sur ton téléphone : l'app n'a pas de compte et ne collecte aucune donnée personnelle. Si tu supprimes l'icône, ils sont effacés, pense donc à exporter une sauvegarde.</p>" +
         "<p class='muted small'><b>Photos des tests.</b> Elles restent sur l'appareil qui les a prises : elles ne sont pas synchronisées, et partent dans la sauvegarde seulement avec « Inclure les photos ».</p>" +
         "<p class='muted small'><b>Synchronisation et notifications.</b> Elles sont facultatives. La synchronisation envoie une copie chiffrée avec ton code, que personne d'autre ne peut lire ; les notifications passent par le même serveur, chiffrées avec le même code, puis par le service de notifications d'Apple ou de Google. La copie est stockée chez Cloudflare. Le site est hébergé par GitHub, qui peut enregistrer des données techniques de connexion comme tout site web.</p>" +
+        "<p class='muted small'><b>Comptage anonyme.</b> Une fois par semaine, l'app dit au serveur « un appareil de plus utilise Notes », sans identifiant, sans note ni profil. Ça sert seulement à savoir combien d'élèves l'utilisent.</p>" +
+        "<label class='ios-row ios-ab-count'><span class='ios-row-l'>Compter cet appareil</span><input type='checkbox' switch id='ab-count'" + (!window.NotesCount || NotesCount.on() ? " checked" : "") + "></label>" +
         "<p class='muted small'><b>Icônes.</b> Icônes Lucide (licence ISC).</p>" +
         "<p class='gd-copy'>©louis mutter</p>";
       host.appendChild(d);
+      d.addEventListener("change", function (e) { if (e.target.id === "ab-count" && window.NotesCount) NotesCount.set(e.target.checked); });
     }
     refreshEntry();
   }

@@ -1221,6 +1221,9 @@ body.ios-find-open { overflow: hidden; }
 @media all {
   /* À propos, notes reprises de 2e : leur contenu reste une carte blanche (les blocs Synchronisation et Sauvegarde sont en lignes) */
   .ios-slot #about, .ios-slot #carriedset { padding: var(--ios-pad); border-radius: var(--ios-r-group); background: var(--ios-cell); gap: 12px; }
+  /* v81 : interrupteur « Compter cet appareil » : une ligne de groupe entre deux filets, d'un bord à l'autre de la carte */
+  #about .ios-ab-count { padding-right: 16px; border-top: 1px solid var(--ios-sep); border-bottom: 1px solid var(--ios-sep); }
+  .ios-slot #about .ios-ab-count { width: auto; margin: 0 calc(-1 * var(--ios-pad)); }
 }
 /* Années précédentes : titre d'année en section, note de bulletin comme dans les listes (noire, centrée) */
 .yp-year h2 { margin: 0 4px 8px; font-size: var(--ios-sec-title); font-weight: 700; }
