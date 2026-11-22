@@ -70,8 +70,13 @@
   --ios-avatar: 56px;
   --ios-hair: 1px;
   /* Slider de l'objectif (Réglages → Branches → une branche) */
+  /* 22 novembre 2026 (demande de l'utilisateur) : curseur comme sur iOS 26/27, bouton en pilule blanche plus large que haute,
+     qui grossit un peu pendant qu'on le tient ; piste fine et arrondie. */
   --ios-range-h: 6px;
-  --ios-range-thumb: 28px;
+  --ios-range-thumb: 24px;          /* hauteur du bouton */
+  --ios-range-thumb-w: 38px;        /* largeur du bouton (pilule) */
+  --ios-range-shadow: 0 2px 6px rgba(0, 0, 0, 0.14), 0 0 0 0.5px rgba(0, 0, 0, 0.06);
+  --ios-range-press: 1.12;          /* bouton tenu */
   --ios-tab-h: 56px;
   /* Barre du bas : pilule flottante opaque (style Instagram), pastille active qui glisse */
   --ios-pill: var(--ios-bg);
@@ -501,11 +506,13 @@ html.noanim *, html.noanim *::before, html.noanim *::after {
   .ios-page .ios-row input.ios-goal-in { width: 84px; min-width: 0; margin-left: auto; padding: 0 12px; border: 0; border-radius: 18px; background: var(--ios-fill); box-shadow: 0 0 0 2px var(--ios-blue); outline: none; text-align: center; }
   .ios-goal-sl { display: flex; align-items: center; gap: 12px; padding: 4px var(--ios-pad) 18px; color: var(--ios-label-2); font-size: 15px; }
   .ios-range { -webkit-appearance: none; appearance: none; flex: 1; min-width: 0; height: var(--ios-range-thumb); margin: 0; padding: 0; border: 0; background: var(--ios-clear); touch-action: pan-y; }
-  .ios-range::-webkit-slider-runnable-track { height: var(--ios-range-h); border-radius: var(--ios-range-h); background: linear-gradient(to right, var(--ios-blue) var(--ios-fillp, 50%), var(--ios-fill) var(--ios-fillp, 50%)); }
+  .ios-range::-webkit-slider-runnable-track { height: var(--ios-range-h); border-radius: var(--ios-range-h); --ios-fillx: calc(var(--ios-range-thumb-w) / 2 + (100% - var(--ios-range-thumb-w)) * var(--ios-fillf, 0.5)); background: linear-gradient(to right, var(--ios-blue) var(--ios-fillx), var(--ios-fill) var(--ios-fillx)); }
   .ios-range::-moz-range-track { height: var(--ios-range-h); border-radius: var(--ios-range-h); background: var(--ios-fill); }
   .ios-range::-moz-range-progress { height: var(--ios-range-h); border-radius: var(--ios-range-h); background: var(--ios-blue); }
-  .ios-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: var(--ios-range-thumb); height: var(--ios-range-thumb); margin-top: calc((var(--ios-range-h) - var(--ios-range-thumb)) / 2); border: 0; border-radius: 50%; background: var(--ios-white); box-shadow: 0 1px 4px var(--ios-press-row), 0 0 0 var(--ios-hair) var(--ios-sep); }
-  .ios-range::-moz-range-thumb { width: var(--ios-range-thumb); height: var(--ios-range-thumb); border: 0; border-radius: 50%; background: var(--ios-white); box-shadow: 0 1px 4px var(--ios-press-row), 0 0 0 var(--ios-hair) var(--ios-sep); }
+  .ios-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: var(--ios-range-thumb-w); height: var(--ios-range-thumb); margin-top: calc((var(--ios-range-h) - var(--ios-range-thumb)) / 2); border: 0; border-radius: var(--ios-r-pill); background: var(--ios-white); box-shadow: var(--ios-range-shadow); transition: transform var(--ios-dur-seg) var(--ios-ease-out); }
+  .ios-range:active::-webkit-slider-thumb { transform: scale(var(--ios-range-press)); }
+  .ios-range::-moz-range-thumb { width: var(--ios-range-thumb-w); height: var(--ios-range-thumb); border: 0; border-radius: var(--ios-r-pill); background: var(--ios-white); box-shadow: var(--ios-range-shadow); transition: transform var(--ios-dur-seg) var(--ios-ease-out); }
+  .ios-range:active::-moz-range-thumb { transform: scale(var(--ios-range-press)); }
   .ios-goal-clear { color: var(--ios-red-text); }
   .ios-row > input[switch] { flex: none; }
   .ios-copy { margin: 32px 0 0; text-align: center; font-size: 13px; color: var(--muted); }

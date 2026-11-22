@@ -239,7 +239,7 @@
         "Tes notes de l'année sont <b>classées dans « Années précédentes »</b> (rien n'est supprimé), les moyennes repartent de zéro et les dates de semestre avancent d'un an. En passant en 3e, tu choisis ton option complémentaire, et les notes de 2e de chimie, physique et arts sont reprises pour le certificat.",
         "<b>Annuler le dernier passage</b> remet tout comme avant."] },
       { t: "Objectif", v: "settings:goal", p: [
-        "Dans <b>Réglages → Branches</b>, touche une branche, puis règle son <b>Objectif</b> : fais glisser le curseur de 1 à 6, ou touche le nombre pour le taper au clavier. <b>Retirer l'objectif</b> l'efface. Sur l'Accueil, un trait noir marque l'objectif sur la barre de chaque branche et sur le graphique <b>Toutes les moyennes</b>.",
+        "Dans <b>Réglages → Branches</b>, touche une branche, puis règle son <b>Objectif</b> : fais glisser le curseur de 1 à 6 (il avance de demi-point en demi-point), ou touche le nombre pour le taper au clavier. <b>Retirer l'objectif</b> l'efface. Sur l'Accueil, le graphique <b>Toutes les moyennes</b> montre l'objectif en gris clair derrière le bâton de chaque branche.",
         "Le tableau de bord et le détail de la branche affichent alors ton écart, et une alerte apparaît si tu es nettement en dessous."] },
       { t: "Part des TP et périodes", v: "settings:tp", p: [
         "<b>Part des TP (%)</b> : 25 par défaut ; mets la valeur de ton prof, ou 0 pour que les TP comptent comme des notes ordinaires.",

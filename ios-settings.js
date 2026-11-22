@@ -263,7 +263,7 @@
         var g = s.goal ? +s.goal : null;
         var goal = '<div class="ios-grp ios-goal" data-goal-id="' + esc(s.id) + '"><div class="ios-row has-ic">' + icon("orange", "target") + '<span class="ios-row-l">Objectif</span>' +
           '<button type="button" class="ios-goal-val" data-goal-edit aria-label="Objectif, modifier au clavier">' + (g ? fmtNum(g) : "–") + '</button></div>' +
-          '<div class="ios-goal-sl"><span aria-hidden="true">1</span><input type="range" class="ios-range" min="1" max="6" step="0.1" value="' + (g || 4) + '" style="--ios-fillp:' + (((g || 4) - 1) / 5 * 100).toFixed(1) + '%" data-goal-range aria-label="Objectif de ' + esc(s.name) + '"><span aria-hidden="true">6</span></div>' +
+          '<div class="ios-goal-sl"><span aria-hidden="true">1</span><input type="range" class="ios-range" min="1" max="6" step="0.5" value="' + halfGoal(g || 4) + '" style="--ios-fillf:' + ((halfGoal(g || 4) - 1) / 5).toFixed(3) + '" data-goal-range aria-label="Objectif de ' + esc(s.name) + '"><span aria-hidden="true">6</span></div>' +
           (g ? '<button type="button" class="ios-row ios-goal-clear" data-act="goalclear:' + esc(s.id) + '"><span class="ios-row-l">Retirer l\'objectif</span></button>' : "") + '</div>';
         return grp(rows.slice(0, 1), null, "") + goal + grp(rows.slice(1), null, s.verify ? "À vérifier avec ton horaire : modifie une valeur pour confirmer." : "") + promo;
       }
@@ -416,13 +416,15 @@
   function openImport() {
     Grid.script("import.js").then(function () { if (Import.inline()) push("import"); }, function () { IOSSheet.notice({ title: "Connexion nécessaire", message: "L'import se charge à la première utilisation : connecte-toi à Internet, puis réessaie." }); });
   }
-  /* Objectif : slider de 1 à 6 (pas 0,1) ; toucher la valeur ouvre le clavier numérique, ancienne valeur sélectionnée
+  /* Objectif : slider de 1 à 6 (pas 0,5) ; toucher la valeur ouvre le clavier numérique, ancienne valeur sélectionnée
      (la première touche l'efface). Le réglage est enregistré au relâchement ou à la validation, jamais pendant le glissement. */
   function clampGoal(v) { return Math.min(6, Math.max(1, Math.round(v * 100) / 100)); }
+  // Curseur : de 0,5 en 0,5 (22 novembre 2026, demande de l'utilisateur) ; la saisie au clavier garde le centième.
+  function halfGoal(v) { return Math.min(6, Math.max(1, Math.round(v * 2) / 2)); }
   function goalBox(el) { return el.closest(".ios-goal"); }
   function goalShow(box, g) {
     var v = box.querySelector(".ios-goal-val"); if (v) v.textContent = g == null ? "–" : fmtNum(g);
-    var r = box.querySelector(".ios-range"); if (r && g != null) { r.value = g; r.style.setProperty("--ios-fillp", ((g - 1) / 5 * 100).toFixed(1) + "%"); }
+    var r = box.querySelector(".ios-range"); if (r && g != null) { r.value = halfGoal(g); r.style.setProperty("--ios-fillf", ((halfGoal(g) - 1) / 5).toFixed(3)); }
   }
   function goalSave(box, g) { app().setSubj(box.dataset.goalId, "goal", g); goalShow(box, g); }
   function goalEdit(box) {
@@ -447,13 +449,13 @@
   container.addEventListener("click", function (ev) { var b = ev.target.closest && ev.target.closest("[data-goal-edit]"); if (b) goalEdit(goalBox(b)); });
   container.addEventListener("input", function (ev) {
     var t = ev.target; if (!t.matches || !t.matches("[data-goal-range]")) return;
-    var box = goalBox(t), g = clampGoal(parseFloat(t.value)), last = box._tick;
+    var box = goalBox(t), g = halfGoal(parseFloat(t.value)), last = box._tick;
     goalShow(box, g);
     if (last !== g.toFixed(1)) { box._tick = g.toFixed(1); hap("tap"); }
   });
   container.addEventListener("change", function (ev) {
     var t = ev.target; if (!t.matches || !t.matches("[data-goal-range]")) return;
-    var box = goalBox(t); goalSave(box, clampGoal(parseFloat(t.value))); show(window.scrollY);
+    var box = goalBox(t); goalSave(box, halfGoal(parseFloat(t.value))); show(window.scrollY);
   });
   container.addEventListener("change", function (ev) {
     var t = ev.target;
