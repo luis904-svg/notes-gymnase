@@ -1,6 +1,6 @@
 /* Notes : photos des tests. Chaque photo est une page rattachée à une note (ou à un ETA) par son identifiant.
    Stockage : IndexedDB, base à part (« notes2m01-photos »). Les photos restent sur l'appareil : elles ne passent ni par la
-   synchronisation ni par la sauvegarde JSON. Elles sont réduites avant l'enregistrement (côté long 2400 px, JPEG 85 %,
+   synchronisation ni par la sauvegarde JSON (sauf l'export « Inclure les photos » en .zip de fx.js, 22 novembre 2026). Elles sont réduites avant l'enregistrement (côté long 2400 px, JPEG 85 %,
    environ 1 Mo par page, choix de l'utilisateur en v52 avec le retrait du scanner).
    Formulaire : « Photographier le test » ouvre l'appareil photo du téléphone (une page à la fois ; le bouton devient
    ensuite « Ajouter une page ») et « Choisir une photo » la photothèque (plusieurs à la fois). Les pages sont enregistrées
@@ -45,11 +45,11 @@
   }
   function add(note, blob) {
     return tx("readwrite", function (s) { return s.add({ note: note, n: Date.now(), blob: blob, at: Date.now() }); }).then(function (id) {
-      counts[note] = (counts[note] || 0) + 1; return id;
+      counts[note] = (counts[note] || 0) + 1; changed(); return id;
     });
   }
   function delPage(id, note) {
-    return tx("readwrite", function (s) { s.delete(id); }).then(function () { counts[note] = Math.max(0, (counts[note] || 1) - 1); });
+    return tx("readwrite", function (s) { s.delete(id); }).then(function () { counts[note] = Math.max(0, (counts[note] || 1) - 1); changed(); });
   }
   function drop(notes) {
     notes = (notes || []).filter(function (n) { return counts[n]; });
@@ -59,7 +59,22 @@
       notes.forEach(function (n) {
         s.index("note").openKeyCursor(IDBKeyRange.only(n)).onsuccess = function (e) { var c = e.target.result; if (c) { s.delete(c.primaryKey); c.continue(); } };
       });
-    }).catch(function () {});
+    }).then(changed).catch(function () {});
+  }
+  // Sauvegarde (fx.js) : le nombre de pages et la taille de l'export avec photos suivent chaque changement.
+  function changed() { try { document.dispatchEvent(new Event("photos:changed")); } catch (e) {} }
+  // Toutes les pages rattachées à une note (pas celles en attente du formulaire), dans l'ordre.
+  function all() {
+    return tx("readonly", function (s) { return s.getAll(); }).then(function (l) {
+      return (l || []).filter(function (r) { return r.note !== PENDING && r.blob; }).sort(function (a, b) { return a.n - b.n || a.id - b.id; });
+    });
+  }
+  // Restauration d'une sauvegarde avec photos : les pages du fichier remplacent toutes celles de l'appareil.
+  function replaceAll(list) {
+    return tx("readwrite", function (s) {
+      s.clear();
+      (list || []).forEach(function (r) { s.add({ note: r.note, n: r.n || Date.now(), blob: r.blob, at: r.at || Date.now() }); });
+    }).then(loadCounts).then(function () { changed(); if (window.NotesApp) NotesApp.redraw(); });
   }
   function loadCounts() {
     return tx("readonly", function (s) {
@@ -113,7 +128,7 @@
       }).join("");
       $("#ph-add .ios-ph-t", box).textContent = l.length || had ? "Ajouter une page" : "Photographier le test";
       $("#ph-info", box).textContent = (had ? had + " photo" + (had > 1 ? "s" : "") + " déjà jointe" + (had > 1 ? "s" : "") + " à cette note. " : "") +
-        "Les photos restent sur cet appareil : elles ne sont ni synchronisées ni dans la sauvegarde.";
+        "Les photos restent sur cet appareil : elles ne sont pas synchronisées. Pour les garder, active « Inclure les photos » dans Réglages → Sauvegarde avant d'exporter.";
     }, function () {});
   }
   if (form && msg) {
@@ -307,14 +322,18 @@
       var n = counts[PENDING]; delete counts[PENDING]; counts[note] = (counts[note] || 0) + n;
       tx("readwrite", function (s) {
         s.index("note").openCursor(IDBKeyRange.only(PENDING)).onsuccess = function (e) { var c = e.target.result; if (c) { var v = c.value; v.note = note; c.update(v); c.continue(); } };
-      }).then(null, function () { counts[note] = Math.max(0, counts[note] - n); IOSSheet.notice({ title: "Photo non enregistrée", message: FULL }); }).then(function () { if (window.NotesApp) NotesApp.redraw(); });
+      }).then(changed, function () { counts[note] = Math.max(0, counts[note] - n); IOSSheet.notice({ title: "Photo non enregistrée", message: FULL }); }).then(function () { if (window.NotesApp) NotesApp.redraw(); });
     },
     drop: drop,
+    all: all,
+    replaceAll: replaceAll,
+    // Nombre de pages rattachées à une note (sans celles en attente).
+    pages: function () { var n = 0; for (var k in counts) if (k !== PENDING) n += counts[k]; return n; },
     open: openView
   };
 
   // Au démarrage : pages abandonnées retirées, puis compteurs chargés et liste redessinée.
   loadCounts().then(function () { return counts[PENDING] ? drop([PENDING]) : null; }).then(function () {
-    drawPending(); if (window.NotesApp && Object.keys(counts).length) NotesApp.redraw();
+    drawPending(); changed(); if (window.NotesApp && Object.keys(counts).length) NotesApp.redraw();
   }, function () { drawPending(); });
 })();

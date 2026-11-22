@@ -194,7 +194,7 @@
       { t: "Photographie ton test", v: "photos", p: [
         "Dans le formulaire, <b>Photographier le test</b> ouvre l'appareil photo du téléphone : prends la page, puis touche <b>Utiliser la photo</b>. Pour un test de plusieurs pages, touche <b>Ajouter une page</b>. <b>Choisir une photo</b> passe par ta photothèque (plusieurs photos d'un coup).",
         "Ensuite, touche la note dans le détail de la branche pour revoir les pages en plein écran, en ajouter ou en supprimer.",
-        "<span class='note'>Les photos restent sur cet appareil : elles ne sont ni synchronisées ni dans la sauvegarde. Changer d'iPhone ou supprimer l'icône de l'app les fait perdre. La note, elle, est toujours tapée à la main.</span>"] },
+        "<span class='note'>Les photos restent sur cet appareil : elles ne sont pas synchronisées. Pour les garder en changeant d'iPhone, active <b>Inclure les photos</b> dans Réglages → Sauvegarde avant d'exporter. La note, elle, est toujours tapée à la main.</span>"] },
       { t: "Corrige ou supprime", v: "edit", p: [
         "Dans <b>Dernières notes</b> ou dans le détail d'une branche, <b>touche la note</b> : une feuille propose <b>Modifier</b> (rouvre la note), <b>Voir les photos</b> et <b>Supprimer la note</b>. Supprimer demande une confirmation, car une note supprimée ne revient pas ; ses photos sont supprimées avec elle. Sur ordinateur, les liens Modifier et Supprimer sont à côté de chaque note."] }
     ] },
@@ -250,7 +250,7 @@
         "Indique la date de fin du semestre 1 de ton gymnase. Elle sépare les notes des boutons <b>Semestre 1</b> et <b>Semestre 2</b>."] },
       { t: "Sauvegarde", v: "backup", p: [
         "<b>Exporter</b> crée un fichier de toutes tes notes, TA et réglages (Fichiers, AirDrop). <b>Importer un fichier</b> remplace ce qu'il y a sur l'appareil.",
-        "<b>Supprimer l'icône efface les notes</b> : exporte régulièrement. Les photos des tests ne sont pas dans la sauvegarde.",
+        "<b>Supprimer l'icône efface les notes</b> : exporte régulièrement. Avec <b>Inclure les photos</b>, les photos des tests partent aussi (fichier .zip, plus lourd) ; <b>Importer un fichier</b> les remet.",
         "En haut de Réglages, la tuile <b>Sauvegarde</b> montre depuis quand tu n'as pas exporté (orange après un mois), et la tuile <b>Synchronisation</b> si tout est à jour."] },
       { t: "Importer un tableur", v: "backup", p: [
         "Tu as déjà tes notes dans Excel, Google Sheets, un PDF ou une photo ? <b>Réglages → Importer depuis un tableur</b> te donne un <b>prompt</b> à copier : il contient tes branches, pour que l'IA (ChatGPT, Claude, Gemini…) range chaque note au bon endroit. Donne-lui ton fichier, réponds à ses questions, puis colle sa réponse dans l'app.",
@@ -461,7 +461,7 @@
       d.innerHTML = "<h3>À propos</h3>" +
         "<p class='muted small'><b>" + DISCLAIMER.split(". ")[0] + ".</b> " + DISCLAIMER.split(". ")[1] + "</p>" +
         "<p class='muted small'><b>Tes données.</b> Tes notes, tes TA et ton profil restent sur ton téléphone : l'app n'a pas de compte et ne collecte aucune donnée personnelle. Si tu supprimes l'icône, ils sont effacés, pense donc à exporter une sauvegarde.</p>" +
-        "<p class='muted small'><b>Photos des tests.</b> Elles restent sur l'appareil qui les a prises : elles ne sont ni synchronisées ni dans la sauvegarde.</p>" +
+        "<p class='muted small'><b>Photos des tests.</b> Elles restent sur l'appareil qui les a prises : elles ne sont pas synchronisées, et partent dans la sauvegarde seulement avec « Inclure les photos ».</p>" +
         "<p class='muted small'><b>Synchronisation et notifications.</b> Elles sont facultatives. La synchronisation envoie une copie chiffrée avec ton code, que personne d'autre ne peut lire ; les notifications passent par le même serveur, chiffrées avec le même code, puis par le service de notifications d'Apple ou de Google. La copie est stockée chez Cloudflare. Le site est hébergé par GitHub, qui peut enregistrer des données techniques de connexion comme tout site web.</p>" +
         "<p class='muted small'><b>Icônes.</b> Icônes Lucide (licence ISC).</p>" +
         "<p class='gd-copy'>©louis mutter</p>";
