@@ -263,8 +263,8 @@
 })();
 
 /* Comptage anonyme (v81) : une fois par semaine, « un appareil de plus utilise Notes » (POST /v1/hello du serveur de
-   synchronisation). Rien d'autre n'est envoyé : ni identifiant, ni note, ni profil ; seulement « app installée ou
-   navigateur » et « premier envoi de cet appareil ». Coupé par l'interrupteur « Compter cet appareil » de À propos
+   synchronisation). Rien d'autre n'est envoyé : ni identifiant, ni note, ni profil ; seulement « premier envoi de cet
+   appareil ». Depuis la v82, seulement depuis l'app installée (jamais depuis un navigateur). Coupé par l'interrupteur « Compter cet appareil » de À propos
    (guide.js, clé notes2m01.count = "off"). Seulement depuis le site publié (jamais en local). */
 (function () {
   "use strict";
@@ -279,9 +279,11 @@
   }
   function send() {
     if (get(OFF) === "off" || !/\.github\.io$/.test(location.hostname) || !navigator.onLine) return;
+    // v82 (choix A de l'utilisateur) : seule l'app installée compte ; dans un navigateur, rien n'est envoyé.
+    var app = navigator.standalone === true || !!(window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
+    if (!app) return;
     var week = isoWeek(Date.now()), last = get(KEY);
     if (last === week) return;
-    var app = navigator.standalone === true || !!(window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
     fetch(URL_ + "/v1/hello", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ app: app, first: !last }), credentials: "omit", cache: "no-store" })
       .then(function (r) { if (r.ok) try { localStorage.setItem(KEY, week); } catch (e) {} })
       .catch(function () {});
