@@ -13,20 +13,26 @@
   var p = {}, step = 0, firstStep = 0, editing = false, root = null, dir = 1, guideTouched = false, allowVoie = false, loading = false, loadErr = false;
   function mat() { return G.isMat(p); }
   function ecg() { return G.voieOf(p) === "ecg" && !!G.ext(p); }
+  // Cantons (23 novembre 2026) : un module de canton (canton-ge.js) donne ses champs dans l'ordre (fields), leurs titres (stepText),
+  // leurs listes (Grid.list) et ses règles de cohérence (blocked, valid, sanitize).
+  function X() { return G.ext(p); }
+  function fx(f) { var x = X(); return !!(x && x.fields && x.fields(p).indexOf(f) >= 0); }
   var STEPS = [
     { id: "welcome" },
-    // La voie se choisit d'abord (v72) ; en modification, seulement depuis « Changer de voie ».
+    // Le canton puis la voie se choisissent d'abord ; en modification, seulement depuis « Canton » ou « Voie » du profil.
+    { id: "canton", title: "Ton canton", sub: "Chaque canton a ses propres règles de promotion.", when: function () { return !editing || allowVoie; } },
     { id: "voie", title: "Ta voie", sub: "Les règles de calcul changent d'une voie à l'autre.", when: function () { return !editing || allowVoie; } },
     { id: "guide", when: function () { return !editing; } },
     { id: "gymnase", title: "Ton gymnase", sub: "Il s'affichera en haut de ton tableau de bord." },
     { id: "year", title: "Ton année", sub: "Les branches et leurs périodes changent d'une année à l'autre." },
     { id: "l2", title: "Deuxième langue (L2)", sub: "La langue nationale que tu suis au gymnase." },
-    { id: "domaine", title: "Domaine professionnel", sub: "Choisi à la fin de la 1re année.", when: function () { return ecg() && p.year >= 2; } },
-    { id: "l3", title: "Troisième langue (L3)", when: mat },
-    { id: "os", title: "Option spécifique", sub: "Ton option principale, suivie pendant les trois ans.", when: mat },
-    { id: "math", title: "Mathématiques", sub: "Le niveau choisi à l'inscription.", when: mat },
-    { id: "art", title: "Discipline artistique", sub: "Suivie en 1re et en 2e année.", when: function () { return mat() || (ecg() && G.ext(p).needArt(p)); } },
-    { id: "oc", title: "Option complémentaire", sub: "Suivie en 3e année seulement.", when: function () { return mat() && p.year === 3; } },
+    { id: "domaine", title: "Domaine professionnel", sub: "Choisi à la fin de la 1re année.", when: function () { return (ecg() && p.year >= 2) || fx("domaine"); } },
+    { id: "l3", title: "Troisième langue (L3)", when: function () { return mat() || fx("l3"); } },
+    { id: "os", title: "Option spécifique", sub: "Ton option principale, suivie pendant les trois ans.", when: function () { return mat() || fx("os"); } },
+    { id: "math", title: "Mathématiques", sub: "Le niveau choisi à l'inscription.", when: function () { return mat() || fx("math"); } },
+    { id: "sci", title: "Science à choix", when: function () { return fx("sci"); } },
+    { id: "art", title: "Discipline artistique", sub: "Suivie en 1re et en 2e année.", when: function () { return mat() || (ecg() && G.ext(p).needArt(p)) || fx("art"); } },
+    { id: "oc", title: "Option complémentaire", sub: "Suivie en 3e année seulement.", when: function () { return (mat() && p.year === 3) || fx("oc"); } },
     { id: "recap", title: "Tes branches" }
   ];
   // « Pour les parents » (20 novembre 2026, choix de l'utilisateur) : depuis Bienvenue, une page à part pour entrer le code de l'enfant.
@@ -48,13 +54,15 @@
   }
 
   function valid(s) {
+    if (fx(s.id) && X().valid) return X().valid(s.id, p);
     switch (s.id) {
       case "welcome": return true;
       case "parent": return codeOk(pcode) && !pbusy;
+      case "canton": return !!p.canton && !G.find(G.CANTONS, p.canton).soon;
       case "voie": return !!p.voie && !loading && !loadErr;
+      case "year": return !!p.year && p.year <= G.years(p);
       case "domaine": return !!p.domaine && !G.ext(p).blocked("domaine", p.domaine, p);
       case "gymnase": return !!p.gymnase;
-      case "year": return !!p.year;
       case "l2": return !!p.l2;
       case "l3": return !!p.l3;
       case "os": return !!p.os && !G.osBlock(p.os, p);
@@ -74,11 +82,27 @@
   }
 
   // Changer de voie repart d'un profil neuf (gymnase, classe et année gardés) ; le fichier de la voie est chargé à la demande.
+  function chooseCanton(c) {
+    if (p.canton === c) return;
+    p = { v: 1, canton: c, classe: "", year: p.year || null };
+    loading = false; loadErr = false;
+    // 24 novembre 2026 : les règles du canton se chargent dès son choix, pour que « Étape n sur N » compte ses questions
+    // (sinon le total passait de 11 à 7, puis remontait au choix de la voie). En cas d'échec, « Ta voie » réessaie.
+    if (!G.isMat(p) && !G.ext(p)) G.load(G.voieOf(p)).then(counter, function () {});
+  }
+  function counter() {
+    if (!root) return;
+    var vs = visible(), s = vs[step], t = $(".ob-bar-t", root), bar = $(".ob-prog i", root);
+    if (!s || s.id === "welcome" || s.id === "parent" || !t) return;
+    t.textContent = "Étape " + step + " sur " + (vs.length - 1);
+    if (bar) bar.style.width = Math.round((step / (vs.length - 1)) * 100) + "%";
+  }
   function chooseVoie(v) {
-    if (G.voieOf(p) === v) { p.voie = v; return; }
-    p = { v: 1, voie: v, gymnase: p.gymnase || null, classe: "", year: p.year || null };
+    var c = G.cantonOf(p);
+    if ((p.voie || "mat") !== v) p = { v: 1, canton: p.canton || c, voie: v, gymnase: c === "vd" ? p.gymnase || null : null, classe: "", year: p.year || null };
+    p.voie = v;
     loadErr = false; loading = !G.ext(p) && !G.isMat(p);
-    if (loading) G.load(v).then(function () { loading = false; refreshNext(); }, function () { loading = false; loadErr = true; if (root) render(); });
+    if (loading) G.load(G.voieOf(p)).then(function () { loading = false; refreshNext(); }, function () { loading = false; loadErr = true; if (root) render(); });
   }
   function refreshNext() { var n = root && $(".ob-next", root), s = root && visible()[step]; if (n && s) n.disabled = !valid(s); }
 
@@ -86,7 +110,7 @@
     if (s.id === "welcome") {
       return '<div class="ob-hero"><img src="icon-180.png" alt="" class="ob-icon"><h1>Bienvenue</h1>' +
         '<p>Tes notes, tes moyennes et ta promotion, calculées pour toi. Réponds à quelques questions sur ton cursus : tout reste sur cet appareil.</p>' +
-        '<p class="ob-fine">Écoles vaudoises · règles 2026-2027</p>' +
+        '<p class="ob-fine">Vaud et Genève · règles 2026-2027</p>' +
         '<p class="ob-fine ob-disc">' + esc(window.Guide ? Guide.disclaimer : "Application non officielle. Résultats indicatifs : seul ton bulletin fait foi.") + '</p>' +
         // Session B : lignes d'action en texte bleu dans un groupe (comme Réglages → Synchronisation).
         // Les parents ont leur bouton « Pour les parents » sous « Commencer » (20 novembre 2026) : plus de petite ligne ici.
@@ -106,9 +130,15 @@
         '<p class="ob-fine">Tu peux la suivre maintenant ou plus tard, dans Réglages → Guide d\'utilisation.</p></div>';
     }
     var sb = s.id === "art" && ecg() ? "Au choix en travail social, en 2e et en 3e année." : s.sub;
-    var h = '<h1 class="ob-title">' + esc(s.title) + '</h1>' + (sb ? '<p class="ob-sub">' + esc(sb) + '</p>' : "");
+    var stx = X() && X().stepText ? X().stepText(s.id, p) : null, ttl = stx ? stx.title : s.title; if (stx) sb = stx.sub;
+    var h = '<h1 class="ob-title">' + esc(ttl) + '</h1>' + (sb ? '<p class="ob-sub">' + esc(sb) + '</p>' : "");
+    if (s.id === "canton") {
+      h += '<div class="ob-list" role="radiogroup">' + G.CANTONS.map(function (c) {
+        return row(c.name, c.sub, c.id, "canton", c.soon ? c.sub : null);
+      }).join("") + '</div>';
+    }
     if (s.id === "voie") {
-      h += '<div class="ob-list" role="radiogroup">' + G.VOIES.map(function (v) {
+      h += '<div class="ob-list" role="radiogroup">' + G.voies(G.cantonOf(p)).map(function (v) {
         return row(v.name, v.sub, v.id, "voie", v.soon ? v.sub : null);
       }).join("") + '</div>';
       if (loadErr) h += '<p class="ob-warn">Cette voie se charge à la première utilisation : connecte-toi à Internet, puis réessaie.</p>';
@@ -119,31 +149,35 @@
       if (dw) h += '<p class="ob-warn">' + esc(dw) + '</p>';
     }
     if (s.id === "gymnase") {
-      h += list(G.GYMNASES, "gymnase");
-      var g = G.find(G.GYMNASES, p.gymnase);
+      h += list(G.list("gymnase", p), "gymnase");
+      var g = G.find(G.list("gymnase", p), p.gymnase);
       if (g && g.warn) h += '<p class="ob-warn">' + esc(g.warn) + '</p>';
     }
     if (s.id === "year") {
-      h += list([{ id: 1, name: "1re année" }, { id: 2, name: "2e année" }, { id: 3, name: "3e année", sub: ecg() ? "avec le certificat ECG et les examens" : "avec le certificat de maturité et les examens" }], "year");
+      var ny = G.years(p), yl = [];
+      for (var yi = 1; yi <= ny; yi++) yl.push({ id: yi, name: yi + (yi === 1 ? "re" : "e") + " année", sub: yi === ny ? (X() && X().lastYearSub ? X().lastYearSub(p) : ecg() ? "avec le certificat ECG et les examens" : "avec le certificat de maturité et les examens") : "" });
+      h += list(yl, "year");
       h += '<label class="ob-field"><span>Nom de ta classe (facultatif)</span><input id="ob-classe" type="text" maxlength="12" autocomplete="off" placeholder="2M01" value="' + esc(p.classe || "") + '"></label>';
     }
-    if (s.id === "l2") h += list(G.list("l2", p), "l2", ecg() ? function (id) { return G.ext(p).blocked("l2", id, p); } : null);
-    if (s.id === "l3") h += list(G.L3, "l3");
-    if (s.id === "os") h += list(G.OS, "os", G.osBlock);
-    if (s.id === "math") h += list(G.MATH, "math", G.mathBlock);
-    if (s.id === "art") h += list(G.list("art", p), "art");
-    if (s.id === "oc") h += list(G.OC, "oc", G.ocBlock);
+    var gb = fx(s.id) ? function (id) { return X().blocked(s.id, id, p); } : null;
+    if (s.id === "l2") h += list(G.list("l2", p), "l2", ecg() ? function (id) { return G.ext(p).blocked("l2", id, p); } : gb);
+    if (s.id === "l3") h += list(G.list("l3", p), "l3", gb);
+    if (s.id === "os") h += list(G.list("os", p), "os", gb || G.osBlock);
+    if (s.id === "math") h += list(G.list("math", p), "math", gb || G.mathBlock);
+    if (s.id === "sci") h += list(G.list("sci", p), "sci", gb);
+    if (s.id === "art") h += list(G.list("art", p), "art", gb);
+    if (s.id === "oc") h += list(G.list("oc", p), "oc", gb || G.ocBlock);
     if (s.id === "recap") {
       var subs = G.build(p), gname = G.gymnaseName(p.gymnase);
       h = '<h1 class="ob-title">' + esc(s.title) + '</h1><p class="ob-sub">' + esc((gname ? gname + " · " : "") + p.year + (p.year === 1 ? "re" : "e") + " année" + (p.classe ? " · " + p.classe : "")) + '</p>';
       h += '<div class="ob-list ob-recap">' + subs.filter(function (x) { return !x.part && !x.carried; }).map(function (x) {
-        var parts = x.parts ? subs.filter(function (c) { return x.parts.indexOf(c.id) >= 0; }).map(function (c) { return c.name + " " + fmtP(c.periods) + (c.tpShare ? " (TP " + Math.round(c.tpShare * 100) + " %)" : ""); }).join(" + ") : "";
+        var parts = x.parts ? subs.filter(function (c) { return x.parts.indexOf(c.id) >= 0; }).map(function (c) { return c.name + " " + fmtP(c.periods) + (c.tpShare ? " (" + G.tpLabel(p) + " " + Math.round(c.tpShare * 100) + " %)" : ""); }).join(" + ") : "";
         return '<div class="ob-row ob-static"><span class="ob-txt"><span class="ob-n">' + esc(x.name) + '</span><span class="ob-s">' +
-          fmtP(x.periods) + " par semaine" + (x.tpShare ? " · TP " + Math.round(x.tpShare * 100) + " %" : "") + (parts ? " · " + esc(parts) : "") + (x.counts ? "" : " · ne compte pas pour la promotion") + '</span></span></div>';
+          fmtP(x.periods) + " par semaine" + (x.tpShare ? " · " + G.tpLabel(p) + " " + Math.round(x.tpShare * 100) + " %" : "") + (parts ? " · " + esc(parts) : "") + (x.counts ? "" : " · ne compte pas pour la promotion") + '</span></span></div>';
       }).join("") + '</div>';
-      h += ecg() ? '<p class="ob-tip"><b>Disciplines intégrées.</b> Plusieurs disciplines forment une seule note de bulletin (par exemple les sciences expérimentales) : leur moyenne est pondérée par les périodes. Les TP comptent selon la grille (tu peux changer ce pourcentage branche par branche dans Réglages).</p>'
+      h += X() && X().recapTip ? '<p class="ob-tip">' + X().recapTip(p) + '</p>' : ecg() ? '<p class="ob-tip"><b>Disciplines intégrées.</b> Plusieurs disciplines forment une seule note de bulletin (par exemple les sciences expérimentales) : leur moyenne est pondérée par les périodes. Les TP comptent selon la grille (tu peux changer ce pourcentage branche par branche dans Réglages).</p>'
         : '<p class="ob-tip"><b>TP à 25 %.</b> Dans les branches avec des travaux pratiques, les TP comptent pour 25 % de la moyenne et les tests pour 75 %. Si ton prof compte autrement, tu peux changer ce pourcentage pour chaque branche dans Réglages.</p>';
-      h += '<p class="ob-fine">Tes choix, tes objectifs et les périodes restent modifiables dans Réglages → Profil et Réglages → Branches. Vérifie les règles avec le vade-mecum de ton gymnase.</p>';
+      h += '<p class="ob-fine">Tes choix, tes objectifs et les périodes restent modifiables dans Réglages → Profil et Réglages → Branches. Vérifie les règles avec le ' + (G.cantonOf(p) === "ge" ? "mémento de ton école" : "vade-mecum de ton gymnase") + '.</p>';
     }
     return h;
   }
@@ -197,7 +231,7 @@
     if (cur0 && p.year !== cur0.year && nn)
       ask({ title: "Changer d'année sans classer tes notes ?", message: "Elles seront comptées dans les moyennes de la nouvelle année. Pour les classer dans « Années précédentes », annule puis utilise « Passer à l'année suivante » dans Réglages.", ok: "Changer quand même", danger: false });
     var voie = !!(cur0 && G.voieOf(cur0) !== G.voieOf(p) && nn);
-    if (voie) ask({ title: "Changer de voie ?", message: "Tes " + nn + " note" + (nn > 1 ? "s" : "") + " actuelle" + (nn > 1 ? "s" : "") + " (et leurs photos) seront supprimée" + (nn > 1 ? "s" : "") + " : les branches ne sont pas les mêmes. Exporte une sauvegarde avant si tu veux les garder.", ok: "Supprimer et changer de voie" });
+    if (voie) ask({ title: G.cantonOf(cur0) !== G.cantonOf(p) ? "Changer de canton ?" : "Changer de voie ?", message: "Tes " + nn + " note" + (nn > 1 ? "s" : "") + " actuelle" + (nn > 1 ? "s" : "") + " (et leurs photos) seront supprimée" + (nn > 1 ? "s" : "") + " : les branches ne sont pas les mêmes. Exporte une sauvegarde avant si tu veux les garder.", ok: "Supprimer et changer de voie" });
     chain.then(function (ok) {
       if (!ok) return;
       if (voie) window.NotesApp.remove(window.NotesApp.grades().map(function (g) { return g.id; }));
@@ -246,9 +280,10 @@
   function open(edit, startId) {
     if (root) return;
     parentMode = false; pcode = ""; pbusy = false;
-    editing = !!edit; allowVoie = startId === "voie"; loading = false; loadErr = false;
+    editing = !!edit; allowVoie = startId === "voie" || startId === "canton"; loading = false; loadErr = false;
     var cur = window.NotesApp.profile();
     p = cur ? JSON.parse(JSON.stringify(cur)) : {};
+    if (cur && !p.canton) p.canton = "vd";
     step = editing ? 1 : 0; dir = 1;
     if (startId) { var vs0 = visible(); for (var i0 = 0; i0 < vs0.length; i0++) if (vs0[i0].id === startId) step = i0; } guideTouched = false;
     firstStep = step;
@@ -284,6 +319,7 @@
       if (r && !r.disabled) {
         var f = r.dataset.f, v = r.dataset.v;
         if (f === "voie") { chooseVoie(v); }
+        else if (f === "canton") { chooseCanton(v); }
         else p[f] = f === "year" ? parseInt(v, 10) : v;
         sanitize(); hap("select");
         A(r.querySelector(".ob-chk"), { scale: [0.3, 1] }, { type: "spring", stiffness: 500, damping: 15 });
@@ -295,7 +331,7 @@
           if (dw) { w2 = document.createElement("p"); w2.className = "ob-warn"; w2.textContent = dw; root.querySelector(".ob-list").after(w2); }
         }
         if (s.id === "gymnase") {
-          var g = G.find(G.GYMNASES, p.gymnase), w = root.querySelector(".ob-warn");
+          var g = G.find(G.list("gymnase", p), p.gymnase), w = root.querySelector(".ob-warn");
           if (w) w.remove();
           if (g && g.warn) { w = document.createElement("p"); w.className = "ob-warn"; w.textContent = g.warn; root.querySelector(".ob-list").after(w); }
         }
@@ -347,6 +383,10 @@
   // Android : démo pour Chrome seulement (Samsung Internet, Firefox, Edge… gardent la liste : leurs menus diffèrent).
   var andrChrome = isAndroid && /Chrome\//.test(ua) && !/SamsungBrowser|Firefox|EdgA|OPR|UCBrowser|YaBrowser|wv\)/.test(ua);
   var inApp = detectInApp(ua, isIOS, standalone());
+  // Instagram (25 novembre 2026) : Meta bloque x-safari-https:// dans ses navigateurs intégrés ; instagram://extbrowser/ ouvre encore
+  // le navigateur. Lien réservé aux bios Instagram : ?ig (si l'agent utilisateur ne dit pas « Instagram »), seulement dans un
+  // navigateur intégré qui n'est pas celui d'une autre app connue (jamais dans Safari, Chrome ou Firefox).
+  var isInsta = /Instagram/.test(ua) || (inApp && /(^|[?&])ig(=|&|$)/.test(location.search) && !/FBAN|FBAV|Snapchat|TikTok|musical_ly|LinkedInApp|MoodleMobile/i.test(ua));
   var deferredPrompt = null;
   window.addEventListener("beforeinstallprompt", function (e) {
     e.preventDefault(); deferredPrompt = e;
@@ -407,7 +447,7 @@
   // Adresse qui ouvre la page dans Safari (iOS 17+) ou dans Chrome (Android) depuis un navigateur intégré.
   function openURL() {
     var u = location.origin + location.pathname;
-    if (isIOS) return "x-safari-" + u;
+    if (isIOS) return isInsta ? "instagram://extbrowser/?url=" + encodeURIComponent(u) : "x-safari-" + u;
     return "intent://" + location.host + location.pathname + "#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=" + encodeURIComponent(u) + ";end";
   }
 
@@ -422,8 +462,12 @@
     var bar18 = '<div class="ios-sc-bar18"><span class="ios-sc-addr">' + host + '</span><div class="ios-sc-tools"><span>' + I("chevl") + '</span><span>' + I("chevr") + '</span><span data-t="share">' + I("share") + '</span><span>' + I("book") + '</span><span>' + I("copy") + '</span></div></div>';
     var atop = '<div class="ios-sc-atop"><span class="ios-sc-addr">' + host + '</span><span class="ios-sc-c ios-sc-kebab" data-t="more">' + I("dots") + '</span></div>';
     // Navigateur intégré (Moodle…) : la page de Notes avec son gros bouton, puis Safari ou Chrome qui s'ouvre par-dessus.
+    // Instagram sur iPhone (plan B, choix de l'utilisateur le 25 novembre 2026) : ✕, adresse, ••• et son menu « Ouvrir dans le navigateur externe ».
+    var igB = isInsta && isIOS;
     if (kind === "inapp") return top +
-      '<div class="ios-sc-inbar"><span class="ios-sc-blue">' + (isIOS ? "Terminé" : I("times")) + '</span><b>' + (isMoodle ? "Moodle" : host) + '</b><span></span></div>' +
+      (igB ? '<div class="ios-sc-inbar"><span>' + I("times") + '</span><b>' + host + '</b><span class="ios-sc-igm" data-t="igmore">' + I("dots") + '</span></div>' +
+        '<div class="ios-sc-menu ios-sc-igmenu">' + li("Copier le lien", "copy") + li("Ouvrir dans le navigateur externe", "globe", "extbrowser") + li("Signaler", "info") + '</div>'
+      : '<div class="ios-sc-inbar"><span class="ios-sc-blue">' + (isIOS ? "Terminé" : I("times")) + '</span><b>' + (isMoodle ? "Moodle" : host) + '</b><span></span></div>') +
       '<div class="ios-sc-ipage"><img src="icon-180.png" alt=""><b>Ouvre Notes dans ' + target() + '</b><span class="ios-sc-btn" data-t="open">Ouvrir dans ' + target() + '</span></div>' +
       '<div class="ios-sc-saf">' + top + (isIOS ? page() + (safariV >= 26 ? bar26 : bar18) : atop + page("ios-sc-apage")) + '</div><div class="ios-sc-dot"></div>';
     // Chrome sur Android : barre d'adresse en haut avec ⋮, menu qui descend, boîte « Installer l'application ».
@@ -511,7 +555,7 @@
     // État de la scène au moment où l'étape i commence (doigt posé sur la cible en mode fixe).
     function state(i) {
       var id = STEPS[i][0], k = ["more", "share", "addhome", "ok", "icon"].indexOf(id);
-      var menuOn = andr ? id === "addhome" : safariV >= 26 && !pad && id === "share";
+      var menuOn = inapp ? id === "extbrowser" : andr ? id === "addhome" : safariV >= 26 && !pad && id === "share";
       put(L.menu, { opacity: menuOn ? 1 : 0, scale: menuOn ? 1 : 0.4 });
       put(L.sheet, popSheet ? { opacity: k === 2 ? 1 : 0, scale: k === 2 ? 1 : 0.9 } : { y: k === 2 ? "0%" : "105%" });
       put(L.inner, { y: k === 2 ? -SC_SCROLL : 0 });
@@ -572,7 +616,8 @@
         }
         await wait(250); await moveTo(at(id)); if (!alive(g)) return;
         await wait(180); await press(id); if (!alive(g)) return;
-        if (id === "more") await A(L.menu, { opacity: [0, 1], scale: [0.4, 1] }, SP_POP);
+        if (id === "more" || id === "igmore") await A(L.menu, { opacity: [0, 1], scale: [0.4, 1] }, SP_POP);
+        else if (id === "extbrowser") { A(L.dot, { opacity: [1, 0] }, { duration: 0.2 }); A(L.menu, { opacity: [1, 0] }, { duration: 0.2 }); await A(L.saf, { opacity: [0, 1], scale: [1.06, 1] }, SP_IN); }
         else if (id === "open") { A(L.dot, { opacity: [1, 0] }, { duration: 0.2 }); await A(L.saf, { opacity: [0, 1], scale: [1.06, 1] }, SP_IN); }
         else if (id === "share") { A(L.menu, { opacity: [1, 0] }, { duration: 0.2 }); await (popSheet ? popIn(L.sheet) : A(L.sheet, { y: ["105%", "0%"] }, SP_IN)); }
         else if (id === "addhome" && popAdd) { A(andr ? L.menu : L.sheet, { opacity: [1, 0] }, { duration: 0.2 }); await popIn(L.add); }
@@ -613,7 +658,17 @@
       hap("select");
       setTimeout(function () {
         if (document.hidden || !el.isConnected) return;
-        gen++; state(0); op.hidden = true; cp.hidden = false; window.dispatchEvent(new Event("resize"));
+        op.hidden = true; cp.hidden = false;
+        if (isInsta && isIOS) {
+          // Plan B : la démo montre ••• puis « Ouvrir dans le navigateur externe » ; « Copier le lien » reste dessous, en gris.
+          STEPS = [["igmore", "Ça ne s'est pas ouvert ? Touche ••• en haut à droite"], ["extbrowser", "Touche « Ouvrir dans le navigateur externe »"], ["safari", "Safari s'ouvre : suis les étapes pour installer Notes"]];
+          el.querySelector(".ios-inst-dots").innerHTML = STEPS.map(function () { return "<i></i>"; }).join("");
+          dots = el.querySelectorAll(".ios-inst-dots i");
+          cp.classList.add("ios-inst-alt"); window.dispatchEvent(new Event("resize"));
+          if (live) run(++gen); else show(0);
+          return;
+        }
+        gen++; state(0); window.dispatchEvent(new Event("resize"));
         num.textContent = "Ça ne s'est pas ouvert ?"; cap.textContent = "Copie le lien, puis colle-le dans " + target();
       }, 1500);
     });

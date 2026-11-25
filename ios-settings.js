@@ -20,7 +20,7 @@
   function app() { return window.NotesApp; }
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function $(s, r) { return (r || document).querySelector(s); }
-  var ORD = { 1: "1re", 2: "2e", 3: "3e" };
+  var ORD = { 1: "1re", 2: "2e", 3: "3e", 4: "4e" };
   var MONTHS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
   var cal = null;   // mois affiché dans le calendrier de la page « Fin du semestre 1 »
   function fmtDate(iso) { var p = String(iso || "").split("-"); return p.length === 3 ? p[2] + "." + p[1] + "." + p[0] : "–"; }
@@ -62,8 +62,8 @@
   var BY = { fr: "lang", l2: "lang", l3: "lang", phi: "hum", art: "art", tm: "other", de: "lang", it: "lang", itdeb: "lang", en: "lang", la: "lang", gr: "lang", es: "lang",
     ma: "math", appl: "math", am: "math", ph: "sci", bi: "sci", ch: "sci", osphy: "sci", osbio: "sci", oschi: "sci",
     hi: "hum", ge: "hum", ed: "hum", osphilo: "hum", ospsy: "hum", hsr: "hum", ar: "art", av: "art", mu: "art", in: "info", info: "info" };
-  var OSDOM = { AV: "art", BC: "sci", ED: "hum", ES: "lang", GR: "lang", IT: "lang", LA: "lang", MU: "art", PP: "hum", PAM: "math" };
-  var OCDOM = { AM: "math", AV: "art", BIO: "sci", CH: "sci", ED: "hum", GEO: "hum", HIST: "hum", HSR: "hum", INFO: "info", MU: "art", PHYS: "sci" };
+  var OSDOM = { AV: "art", BC: "sci", ED: "hum", ES: "lang", GR: "lang", IT: "lang", LA: "lang", MU: "art", PP: "hum", PAM: "math", DE: "lang", EN: "lang" };
+  var OCDOM = { AM: "math", AV: "art", BIO: "sci", CH: "sci", ED: "hum", GEO: "hum", HIST: "hum", HSR: "hum", INFO: "info", MU: "art", PHYS: "sci", PHILO: "hum" };
   function domain(id) {
     var k = BY[id], pr = app().profile() || {};
     if (!k && id === "os") k = OSDOM[pr.os];
@@ -76,15 +76,22 @@
      l'identifiant de branche « l2 », « os »… reste le même d'un choix à l'autre, les notes ne doivent pas changer de matière). */
   var pending = null;
   var FIELDS = {
-    gymnase: { title: "Gymnase", list: function () { return Grid.GYMNASES; } },
+    gymnase: { title: "Gymnase", list: function () { return Grid.list("gymnase", app().profile()); } },
     domaine: { title: "Domaine professionnel", list: function () { return Grid.list("domaine", app().profile()); }, foot: "Changer de domaine masque les notes des branches qui n'existent pas dans le nouveau domaine : elles reviennent si tu reprends l'ancien." },
     l2: { title: "Deuxième langue (L2)", list: function () { return Grid.list("l2", app().profile()); }, drop: "l2" },
-    l3: { title: "Troisième langue (L3)", list: function () { return Grid.L3; }, drop: "l3" },
-    os: { title: "Option spécifique", list: function () { return Grid.OS; }, drop: "os", foot: "L'option physique et applications des maths impose les maths renforcées : le niveau est ajusté automatiquement." },
-    math: { title: "Mathématiques", list: function () { return Grid.MATH; }, foot: "Changer de niveau garde tes notes de mathématiques." },
+    l3: { title: "Troisième langue (L3)", list: function () { return Grid.list("l3", app().profile()); }, drop: "l3" },
+    sci: { title: "Science à choix", list: function () { return Grid.list("sci", app().profile()); }, drop: "sci" },
+    os: { title: "Option spécifique", list: function () { return Grid.list("os", app().profile()); }, drop: "os", foot: "L'option physique et applications des maths impose les maths renforcées : le niveau est ajusté automatiquement." },
+    math: { title: "Mathématiques", list: function () { return Grid.list("math", app().profile()); }, foot: "Changer de niveau garde tes notes de mathématiques." },
     art: { title: "Discipline artistique", list: function () { return Grid.list("art", app().profile()); }, drop: "art" },
-    oc: { title: "Option complémentaire", list: function () { return Grid.OC; }, drop: "oc" }
+    oc: { title: "Option complémentaire", list: function () { return Grid.list("oc", app().profile()); }, drop: "oc" }
   };
+  // Titre d'un champ : celui du module de canton s'il en donne un (« Langue seconde 1 », « Ton collège »…).
+  function ftitle(f) {
+    var pr = app().profile(), vx = pr && window.Grid.ext(pr), st = vx && vx.stepText ? vx.stepText(f, pr) : null;
+    if (st && f === "gymnase") { var t = st.title.replace(/^Ton /, ""); return t.charAt(0).toUpperCase() + t.slice(1); }   // « Ton collège » → « Collège »
+    return st ? st.title : FIELDS[f] ? FIELDS[f].title : "Profil";
+  }
   // Profil obtenu en choisissant `id` pour le champ `f` (l'OS PAM impose les maths renforcées).
   function withChoice(f, id) {
     var np = Object.assign({}, app().profile()); np[f] = id;
@@ -152,16 +159,16 @@
       // v58 (style C du canvas) : tuile Profil, deux tuiles d'état (synchronisation, sauvegarde), puis des sections titrées.
       html: function () {
         var pr = app().profile() || {}, G = window.Grid, c = cfg(), arch = app().archive();
-        var sfx = G && !G.isMat(pr) ? "C" : "M";
+        var vxm = G && G.ext(pr), sfx = vxm && vxm.classSfx ? vxm.classSfx : G && !G.isMat(pr) ? "C" : "M", ny = G ? G.years(pr) : 3;
         var gname = G && pr.gymnase ? G.gymnaseName(pr.gymnase) : "", name = "Notes " + (pr.classe || (pr.year ? pr.year + sfx : ""));
         var initials = esc((pr.classe || (pr.year ? pr.year + sfx : "N")).slice(0, 2));
         var prof = '<div class="ios-grp"><button type="button" class="ios-row ios-prof" data-act="go:profil"><span class="ios-avatar">' + initials + '</span>' +
           '<span class="ios-prof-t"><span class="ios-dk">Profil</span><b>' + esc(name) + '</b><span>' + esc((gname ? gname + " · " : "") + (pr.year ? ORD[pr.year] + " année" : "")) + '</span></span>' + CHEV + '</button></div>';
         var tiles = '<div class="ios-stiles">' + syncTile() + backupTile() + '</div>';
         var an = [];
-        if (pr.year && pr.year < 3) an.push(row({ ic: "green", svg: "up", label: "Passer en " + ORD[pr.year + 1] + " année", act: "go:yearpass" }));
+        if (pr.year && pr.year < ny) an.push(row({ ic: "green", svg: "up", label: "Passer en " + ORD[pr.year + 1] + " année", act: "go:yearpass" }));
         // 3e année : notes de 2e reprises (chimie, physique, art), bloc #carriedset de cert.js.
-        if (pr.year === 3 && app().subjectsAll().some(function (x) { return x.carried; })) an.push(row({ ic: "green", svg: "flask", label: G.isMat(pr) ? "Notes reprises de 2e" : "Notes reprises de 1re", act: "go:carried" }));
+        if (pr.year === ny && app().subjectsAll().some(function (x) { return x.carried; })) an.push(row({ ic: "green", svg: "flask", label: vxm && vxm.carriedTitle ? vxm.carriedTitle : G.isMat(pr) ? "Notes reprises de 2e" : "Notes reprises de 1re", act: "go:carried" }));
         if (arch.length) an.push(row({ ic: "gray", svg: "archive", label: "Années précédentes", val: String(arch.length), act: "go:history" }));
         var hap = document.getElementById("bk-haptic");
         var hapRow = '<label class="ios-row has-ic">' + icon("gray", "phone") + '<span class="ios-row-l">Retours haptiques</span><input type="checkbox" switch id="ios-haptic"' + (!hap || hap.checked ? " checked" : "") + '></label>';
@@ -182,13 +189,18 @@
       html: function () {
         var pr = app().profile() || {}, G = window.Grid;
         function nm(list, id) { var it = G.find(list, id); return it ? it.name : "–"; }
-        var vx = G.ext(pr), vn = G.VOIES.filter(function (v) { return v.id === G.voieOf(pr); })[0];
+        var vx = G.ext(pr), vn = G.voies(G.cantonOf(pr)).filter(function (v) { return v.id === (pr.voie || "mat"); })[0], cn = G.find(G.CANTONS, G.cantonOf(pr));
         var rows = [
+          row({ ic: "gray", svg: "globe", label: "Canton", val: cn ? cn.name : "", act: "step:canton" }),
           row({ ic: "gray", svg: "list", label: "Voie", val: vn ? vn.name : "", act: "step:voie" }),
-          row({ ic: "blue", svg: "building", label: "Gymnase", val: G.gymnaseName(pr.gymnase) || "Autre", act: "go:choix:gymnase" }),
+          row({ ic: "blue", svg: "building", label: vx && vx.stepText ? ftitle("gymnase") : "Gymnase", val: G.gymnaseName(pr.gymnase) || "Autre", act: "go:choix:gymnase" }),
           '<div class="ios-row has-ic">' + icon("orange", "calendar") + '<span class="ios-row-l">Année</span><span class="ios-val">' + (pr.year ? ORD[pr.year] : "–") + '</span></div>',
           row({ ic: "gray", svg: "people", label: "Classe", val: pr.classe || "–", act: "go:classe" }),
-          ].concat(vx ? [
+          ].concat(vx && vx.fields ? vx.fields(pr).map(function (f) {
+            var ic = { l2: ["blue", "bubble"], l3: ["blue", "bubble"], os: ["green", "star"], math: ["orange", "plusminus"], art: ["red", "palette"], oc: ["gray", "star"], domaine: ["green", "star"], sci: ["green", "flask"] }[f] || ["gray", "list"];
+            var it = G.find(G.list(f, pr), pr[f]);
+            return row({ ic: ic[0], svg: ic[1], label: ftitle(f), val: it ? it.name : "–", act: "go:choix:" + f });
+          }) : vx ? [
           row({ ic: "blue", svg: "bubble", label: "Deuxième langue (L2)", val: nm(G.list("l2", pr), pr.l2), act: "go:choix:l2" })
         ].concat(pr.year >= 2 ? [row({ ic: "green", svg: "star", label: "Domaine professionnel", val: nm(G.list("domaine", pr), pr.domaine), act: "go:choix:domaine" })] : [])
           .concat(vx.needArt(pr) ? [row({ ic: "red", svg: "palette", label: "Discipline artistique", val: nm(G.list("art", pr), pr.art), act: "go:choix:art" })] : []) : [
@@ -204,7 +216,7 @@
     },
     /* Un choix du profil : la liste des possibilités, la valeur actuelle cochée ; toucher enregistre tout de suite. */
     choix: {
-      title: function (f) { return FIELDS[f] ? FIELDS[f].title : "Profil"; },
+      title: function (f) { return ftitle(f); },
       html: function (f) {
         var F = FIELDS[f], pr = app().profile() || {}; if (!F) return "";
         var rows = F.list().map(function (o) {
@@ -220,7 +232,7 @@
       title: "Classe",
       html: function () {
         var pr = app().profile() || {};
-        return '<div class="ios-grp"><label class="ios-row"><span class="ios-row-l">Classe</span><input type="text" id="ios-classe" class="ios-input" maxlength="8" autocapitalize="characters" autocomplete="off" value="' + esc(pr.classe || "") + '" placeholder="' + (pr.year || 1) + (window.Grid && !Grid.isMat(pr) ? "C01" : "M01") + '"></label></div>' +
+        return '<div class="ios-grp"><label class="ios-row"><span class="ios-row-l">Classe</span><input type="text" id="ios-classe" class="ios-input" maxlength="8" autocapitalize="characters" autocomplete="off" value="' + esc(pr.classe || "") + '" placeholder="' + (pr.year || 1) + (window.Grid && Grid.ext(pr) && Grid.ext(pr).classSfx ? Grid.ext(pr).classSfx + "01" : window.Grid && !Grid.isMat(pr) ? "C01" : "M01") + '"></label></div>' +
           '<p class="ios-grp-foot">Le nom de ta classe apparaît en haut de l\'Accueil. Il s\'enregistre quand tu quittes le champ. Son premier chiffre suit l\'année au passage d\'année.</p>';
       }
     },
@@ -229,7 +241,7 @@
       title: "Supprimer des notes ?",
       html: function () {
         var q = pending; if (!q) return "";
-        return '<p class="ios-grp-head">' + esc(FIELDS[q.field].title) + '</p><div class="ios-grp ios-warn"><p>Ce changement retire la branche <b>' + esc(q.name) + '</b> et supprime ' +
+        return '<p class="ios-grp-head">' + esc(ftitle(q.field)) + '</p><div class="ios-grp ios-warn"><p>Ce changement retire la branche <b>' + esc(q.name) + '</b> et supprime ' +
           (q.n > 1 ? 'ses <b>' + q.n + ' notes</b>' : 'sa <b>note</b>') + ', avec leurs TA et leurs photos. Les autres branches gardent leurs notes.</p></div>' +
           '<p class="ios-grp-foot">Pour garder une trace, exporte une sauvegarde avant de supprimer.</p>' +
           grp([row({ ic: "green", svg: "save", label: "Exporter une sauvegarde", act: "click:bk-export" })]) +
@@ -256,7 +268,7 @@
         }
         var rows = [
           num("Périodes", "periods", s.periods, 'inputmode="numeric" min="1" max="10" step="1"', "blue", "clock"),
-          num("Part des TP (%)", "tp", Math.round((s.tpShare || 0) * 100), 'inputmode="numeric" min="0" max="100" step="5"', "green", "flask")
+          num(Grid.tpLabel(app().profile()) === "TP" ? "Part des TP (%)" : "Part de l'" + Grid.tpLabel(app().profile()) + " (%)", "tp", Math.round((s.tpShare || 0) * 100), 'inputmode="numeric" min="0" max="100" step="5"', "green", "flask")
         ];
         var promo = s.part ? '<div class="ios-grp"><div class="ios-row has-ic">' + icon("gray", "check") + '<span class="ios-row-l">Compte pour la promotion</span><span class="ios-val">via l\'option spécifique</span></div></div>'
           : '<div class="ios-grp"><label class="ios-row has-ic">' + icon("gray", "check") + '<span class="ios-row-l">Compte pour la promotion</span><input type="checkbox" switch data-k="counts" data-id="' + esc(s.id) + '"' + (s.counts ? " checked" : "") + ' aria-label="Compte pour la promotion"></label></div>';
@@ -291,12 +303,12 @@
     backup: { title: "Sauvegarde", adopt: "backup", html: function () { return '<div class="ios-slot" data-slot="backup"></div>'; } },
     // Exporter (22 novembre 2026, demande de l'utilisateur) : contenu du fichier façon Stockage iPhone et interrupteur « Inclure les photos », contenu donné par fx.js.
     export: { title: "Exporter", html: function () { return '<div class="ios-bx">' + (window.FX && FX.exportHtml ? FX.exportHtml() : "") + '</div>'; } },
-    carried: { title: function () { return window.Grid && !Grid.isMat(app().profile()) ? "Notes reprises de 1re" : "Notes reprises de 2e"; }, adopt: "carriedset", html: function () { return '<div class="ios-slot" data-slot="carriedset"></div>'; } },
+    carried: { title: function () { var pr = app().profile(), vx = window.Grid && Grid.ext(pr); return vx && vx.carriedTitle ? vx.carriedTitle : window.Grid && !Grid.isMat(pr) ? "Notes reprises de 1re" : "Notes reprises de 2e"; }, adopt: "carriedset", html: function () { return '<div class="ios-slot" data-slot="carriedset"></div>'; } },
     // Guide d'utilisation (20 novembre 2026, comme l'import) : blocs gardés par guide.js.
     guide: { title: "Guide", adopt: "gd", html: function () { return '<div class="ios-slot" data-slot="gd-blk-list"></div>'; } },
     guidech: { title: function () { return window.Guide && Guide.pageTitle ? Guide.pageTitle() : "Guide"; }, adopt: "gd", html: function () { return '<div class="ios-slot" data-slot="gd-blk-step"></div>'; } },
     // Passage d'année et années précédentes (20 novembre 2026, comme l'import) : contenu donné par year.js.
-    yearpass: { title: function () { var pr = app().profile() || {}; return pr.year && pr.year < 3 ? "Passer en " + ORD[pr.year + 1] + " année" : "Année scolaire"; },
+    yearpass: { title: function () { var pr = app().profile() || {}; return pr.year && pr.year < (window.Grid ? Grid.years(pr) : 3) ? "Passer en " + ORD[pr.year + 1] + " année" : "Année scolaire"; },
       html: function () { return '<div class="ios-sub-in">' + (window.YearPass ? YearPass.passHtml(true) : "") + '</div>'; } },
     history: { title: "Années précédentes", html: function () { return '<div class="ios-sub-in">' + (window.YearPass ? YearPass.historyHtml(true) : "") + '</div>'; } },
     // Import depuis un tableur (choix A, 20 novembre 2026) : deux sous-pages, blocs gardés par import.js.

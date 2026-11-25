@@ -17,7 +17,8 @@
   function hap(k) { if (window.FX) FX.haptic(k); }
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function app() { return window.NotesApp; }
-  function roundHalf(x) { return x == null ? null : Math.floor(x * 2 + 0.5 + 1e-9) / 2; }
+  // Note de bulletin : demi-point à Vaud, dixième à Genève (le moteur décide : NotesApp.bulletin).
+  function roundHalf(x) { return x == null ? null : window.Grid && window.NotesApp && NotesApp.bulletin && NotesApp.profile() && Grid.cantonOf(NotesApp.profile()) !== "vd" ? NotesApp.bulletin(x) : Math.floor(x * 2 + 0.5 + 1e-9) / 2; }
   function fmt(v) { return v == null ? "–" : (Math.round(v * 100) / 100).toFixed(2); }
   function tab(name) { return bar.querySelector('[data-tab="' + name + '"]'); }
   function view() { var b = bar.querySelector('[aria-current="page"]'); return b ? b.dataset.tab : "dash"; }

@@ -1371,6 +1371,10 @@ body.ios-find-open { overflow: hidden; }
 .ios-sc-ipage b { font-size: 1.3em; }
 .ios-sc-btn { margin-top: 14px; padding: 9px 18px; border-radius: var(--ios-r-pill); background: var(--ios-blue); color: var(--ios-white); font-weight: 600; }
 .ios-sc-saf { position: absolute; inset: 0; background: var(--ios-inst-screen); opacity: 0; z-index: 6; }
+/* Instagram (plan B, 25 novembre 2026) : ••• en haut à droite, menu qui descend, « Copier le lien » en bouton gris */
+.ios-sc-igm { justify-self: end; display: flex; }
+.ios-sc-igmenu { top: 54px; bottom: auto; width: 172px; transform-origin: 95% 0; }
+.ios-inst-go.ios-inst-alt { background: var(--ios-back-bg); color: var(--ios-blue); }
 /* Écrans bas (iPhone SE) : moins d'air autour de la scène */
 @media (max-height: 700px) { .ios-inst-head h1 { font-size: 28px; } .ios-inst-stage { min-height: 240px; padding: 4px 0; } .ios-inst-foot .ob-fine { display: none; } }
 

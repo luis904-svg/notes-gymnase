@@ -23,7 +23,7 @@
   function icon(n) { return window.Icons ? Icons.svg(n) : ""; }
   function txt(root, sel) { var e = root.querySelector(sel); return e ? e.textContent.trim() : ""; }
   function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
-  function half(v) { return Math.round(v * 2) / 2; }
+  function half(v) { return window.Grid && window.NotesApp && NotesApp.bulletin && NotesApp.profile() && Grid.cantonOf(NotesApp.profile()) !== "vd" ? NotesApp.bulletin(v) : Math.round(v * 2) / 2; }   // note de bulletin : dixième à Genève
   function toneOf(v) { if (v == null) return "none"; var b = half(v); return b < 4 ? "crit" : b < 4.5 ? "warn" : "ok"; }
   function dateShort(iso) { try { return new Date(iso + "T12:00:00").toLocaleDateString("fr-CH", { day: "numeric", month: "short" }); } catch (e) { return iso; } }
 
@@ -75,7 +75,8 @@
     if (!n || !spk) return tile("Moyenne générale", '<span class="ios-dspark"></span>', "–", "", "aucune note");
     var vals = pts.map(function (p) { return p.avg; }), last = vals[n - 1], d = last - vals[0];
     var foot = n === 1 ? "1re note" : (Math.abs(d) < 0.005 ? "stable" : (d > 0 ? "▲ " : "▼ ") + Math.abs(d).toFixed(2)) + " depuis le " + dateShort(pts[0].date);
-    return tile("Moyenne générale", spk(vals, 120, 56, toneOf(last), "ios-dspark"), last.toFixed(2), "", foot, "Moyenne générale : " + last.toFixed(2) + ", " + foot);
+    var shown = window.Grid && A.profile && A.profile() && Grid.cantonOf(A.profile()) !== "vd" && A.bulletin ? A.bulletin(last).toFixed(1) : last.toFixed(2);   // Genève : au dixième, comme le bulletin
+    return tile("Moyenne générale", spk(vals, 120, 56, toneOf(last), "ios-dspark"), shown, "", foot, "Moyenne générale : " + shown + ", " + foot);
   }
   function top() {
     var promo = document.getElementById("promo"); if (!promo) return;

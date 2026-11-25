@@ -53,7 +53,7 @@
   var range = "year", cur = null;   // période choisie (remise à « Année » à l'ouverture d'une branche) et données du panneau
   function fmt2(v) { return v == null ? "–" : v.toFixed(2); }
   function fmtN(v) { return String(Math.round(v * 100) / 100); }
-  function roundHalf(x) { return x == null ? null : Math.floor(x * 2 + 0.5 + 1e-9) / 2; }
+  function roundHalf(x) { return x == null ? null : window.Grid && window.NotesApp && NotesApp.bulletin && NotesApp.profile() && Grid.cantonOf(NotesApp.profile()) !== "vd" ? NotesApp.bulletin(x) : Math.floor(x * 2 + 0.5 + 1e-9) / 2; }   // dixième à Genève
   function fmtDay(iso) { return parseInt(iso.slice(8, 10), 10) + " " + MONTHS[parseInt(iso.slice(5, 7), 10) - 1]; }
   function toneV(v) { return v == null ? "none" : v < 4 ? "crit" : v < 4.5 ? "warn" : "good"; }
   function subjOf(id) { return window.NotesApp.subjectsAll().filter(function (x) { return x.id === id; })[0] || null; }

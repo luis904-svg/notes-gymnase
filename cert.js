@@ -148,7 +148,7 @@
   function inp(attr, v) { return '<input type="number" inputmode="decimal" min="1" max="6" step="0.5" ' + attr + ' value="' + (v != null ? v : "") + '" placeholder="–">'; }
   function detail(id) {
     var pr = app() && app().profile();
-    if (pr && pr.year === 3 && !window.Grid.isMat(pr)) { var vx = window.Grid.ext(pr); return vx && vx.detail ? vx.detail(id) : ""; }
+    if (pr && !window.Grid.isMat(pr)) { var vx = window.Grid.ext(pr); return vx && vx.detail ? vx.detail(id) : ""; }   // chaque voie décide de son année de certificat
     if (!pr || pr.year !== 3 || !window.Grid.isMat(pr)) return "";
     if (isCarried(id)) {
       var info = carriedInfo(id), tail = "Cette branche n'est plus enseignée en 3e : pour corriger la note, va dans <b>Réglages → Notes reprises de 2e</b>.";
@@ -210,5 +210,6 @@
   window.Cert = { render: render, reload: function () { data = load(); }, compute: compute, minimum: minimum, detail: detail, carriedValue: function (id) { var pr = app() && app().profile(), vx = pr && window.Grid.ext(pr); return vx && vx.carriedValue ? vx.carriedValue(id) : carriedInfo(id).v; },
     data: function () { return data; }, save: save };
   // Le tableau de bord a déjà été dessiné une fois avant ce script : on le redessine pour y mettre les notes reprises.
-  try { var pr0 = app().profile(); if (pr0 && pr0.year === 3 && window.Grid.isMat(pr0)) app().redraw(); } catch (e) {}
+  // Une voie ou un canton à certificat (ECG, Genève) lit aussi ses examens et notes reprises ici : même redessin.
+  try { var pr0 = app().profile(); if (pr0 && (window.Grid.isMat(pr0) ? pr0.year === 3 : !!window.Grid.ext(pr0))) app().redraw(); } catch (e) {}
 })();

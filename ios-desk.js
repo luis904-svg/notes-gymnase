@@ -18,7 +18,7 @@
   var mq = window.matchMedia("(min-width: 701px)");
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function ic(n) { return window.Icons ? Icons.svg(n) : ""; }
-  function half(v) { return v == null ? null : Math.floor(v * 2 + 0.5 + 1e-9) / 2; }
+  function half(v) { return v == null ? null : window.Grid && window.NotesApp && NotesApp.bulletin && NotesApp.profile() && Grid.cantonOf(NotesApp.profile()) !== "vd" ? NotesApp.bulletin(v) : Math.floor(v * 2 + 0.5 + 1e-9) / 2; }   // dixième à Genève
   function fmtB(b) { return b == null ? "–" : b % 1 === 0 ? String(b) : b.toFixed(1); }
   function norm(s) { return (s.normalize ? s.normalize("NFD").replace(/[̀-ͯ]/g, "") : s).toLowerCase(); }
   function view() { var b = tabbar.querySelector('[aria-current="page"]'); return b ? b.dataset.tab : "dash"; }

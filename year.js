@@ -8,7 +8,8 @@
   function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function hap(k) { if (window.FX) FX.haptic(k); }
   function app() { return window.NotesApp; }
-  var ORD = { 1: "1re", 2: "2e", 3: "3e" };
+  var ORD = { 1: "1re", 2: "2e", 3: "3e", 4: "4e" };
+  function ny(pr) { return window.Grid ? Grid.years(pr) : 3; }
   // Fondu d'entrée (remis en v44) : rien avec ?noanim=1 ou « Réduire les animations ».
   function A(t, kf, o) { return window.IOSMotion ? window.IOSMotion.animate(t, kf, o) : Promise.resolve(); }
   var root = null;
@@ -46,7 +47,7 @@
      ios-settings.js. L'écran plein reste pour un appel hors de Réglages. */
   function passHtml(inline) {
     var pr = app().profile();
-    if (!pr || pr.year >= 3) return "";
+    if (!pr || pr.year >= ny(pr)) return "";
     var next = pr.year + 1, v = app().verdict(), st = app().get(), yr = years(), n = st.grades.length;
     var art = pr.art === "mu" ? "la musique" : "les arts visuels";
     var vx = window.Grid && Grid.ext(pr);
@@ -71,7 +72,7 @@
       '<div class="' + (inline ? "ios-imp-go" : "ob-foot") + '"><button type="button" class="btn ob-next" id="yp-go"' + (inline ? ' data-act="ypgo"' : "") + '>Passer en ' + ORD[next] + ' année</button></div>';
   }
   function doPass() {
-    var pr = app().profile(); if (!pr || pr.year >= 3) return;
+    var pr = app().profile(); if (!pr || pr.year >= ny(pr)) return;
     var next = pr.year + 1, vx = window.Grid && Grid.ext(pr);
     app().passYear(next); hap("success");
     var stp = vx ? vx.afterPass(next) : next === 3 ? "oc" : null;
@@ -91,7 +92,7 @@
     if (!notes.length) return '<div class="yp-br yp-empty"><div class="yp-sum">' + head + '</div></div>';
     return '<details class="yp-br"><summary class="yp-sum">' + head + '</summary><ul class="yp-notes">' + notes.map(function (g) {
       var s = (g.label && g.label !== "Exemple" ? esc(g.label) : "note");
-      return '<li><span>' + fmtDate(g.date) + ' · ' + s + (g.type === "tp" ? ' · TP' : '') + (g.taBlock ? ' · TA (' + g.taBlock.etas.length + ' ETA)' : '') + (g.coef && g.coef !== 1 ? ' · coef ' + g.coef : '') + '</span><span class="mono ' + (g.value < 4 ? "crit" : "") + '">' + g.value + '</span></li>';
+      return '<li><span>' + fmtDate(g.date) + ' · ' + s + (g.type === "tp" ? ' · ' + (window.Grid ? Grid.tpLabel(app().profile()) : 'TP') : '') + (g.taBlock ? ' · TA (' + g.taBlock.etas.length + ' ETA)' : '') + (g.coef && g.coef !== 1 ? ' · coef ' + g.coef : '') + '</span><span class="mono ' + (g.value < 4 ? "crit" : "") + '">' + g.value + '</span></li>';
     }).join("") + '</ul></details>';
   }
   function historyHtml(inline) {
@@ -130,8 +131,8 @@
     var d = $("#yearpass"), pr = app() && app().profile();
     if (!d || !pr) return;
     var arch = app().archive(), html = '<h3>Année scolaire</h3><p class="muted small">' +
-      (pr.year < 3 ? "Quand ton année est terminée, passe à la suivante : tes notes sont classées dans l'historique et les moyennes repartent de zéro." : "Tu es en dernière année : le certificat " + (window.Grid && !Grid.isMat(pr) ? "ECG" : "de maturité") + " s'affiche en haut du tableau de bord.") + '</p><div class="btns">' +
-      (pr.year < 3 ? '<button type="button" class="btn-ghost" id="yp-next">Passer en ' + ORD[pr.year + 1] + ' année</button>' : "") +
+      (pr.year < ny(pr) ? "Quand ton année est terminée, passe à la suivante : tes notes sont classées dans l'historique et les moyennes repartent de zéro." : "Tu es en dernière année : le " + (window.Grid && Grid.ext(pr) && Grid.ext(pr).certName ? Grid.ext(pr).certName(pr) : "certificat " + (window.Grid && !Grid.isMat(pr) ? "ECG" : "de maturité")) + " s'affiche en haut du tableau de bord.") + '</p><div class="btns">' +
+      (pr.year < ny(pr) ? '<button type="button" class="btn-ghost" id="yp-next">Passer en ' + ORD[pr.year + 1] + ' année</button>' : "") +
       (arch.length ? '<button type="button" class="btn-ghost" id="yp-hist">Années précédentes (' + arch.length + ')</button>' : "") + '</div>' +
       (arch.length ? '<button type="button" class="link danger" id="yp-undo" style="padding-left:0;align-self:flex-start">Annuler le dernier passage…</button>' : "");
     if (html !== last) { d.innerHTML = html; last = html; }

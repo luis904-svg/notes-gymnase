@@ -25,7 +25,13 @@
   var seg = document.createElement("div"); seg.className = "ios-tseg"; seg.setAttribute("role", "group"); seg.setAttribute("aria-label", "Type");
   seg.innerHTML = [].map.call(typeSel.options, function (o) { return '<button type="button" data-type="' + o.value + '">' + o.textContent + '</button>'; }).join("");
   typeSel.after(seg);
-  function paintSeg() { [].forEach.call(seg.children, function (b) { b.setAttribute("aria-pressed", String(b.dataset.type === typeSel.value)); }); }
+  // Nom de la place « TP » selon le canton (ER, épreuve regroupée, ou EFA, épreuve de fin d'année, à Genève).
+  function relabel() {
+    var pr = window.NotesApp && NotesApp.profile(), t = window.Grid && pr ? Grid.tpLabel(pr) : "TP";
+    [].forEach.call(seg.children, function (b) { if (b.dataset.type === "tp" && b.textContent !== t) b.textContent = t; });
+    [].forEach.call(typeSel.options, function (o) { if (o.value === "tp" && o.textContent !== t) o.textContent = t; });
+  }
+  function paintSeg() { relabel(); [].forEach.call(seg.children, function (b) { b.setAttribute("aria-pressed", String(b.dataset.type === typeSel.value)); }); }
   seg.addEventListener("click", function (e) {
     var b = e.target.closest("[data-type]"); if (!b || b.dataset.type === typeSel.value) return;
     typeSel.value = b.dataset.type; typeSel.dispatchEvent(new Event("change", { bubbles: true }));

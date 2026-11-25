@@ -90,9 +90,30 @@
     { id: "ecg", name: "Culture générale", sub: "École de culture générale (ECG), certificat ECG" },
     { id: "com", name: "Commerce", sub: "École de commerce : bientôt disponible", soon: true }
   ];
-  var FILES = { ecg: "voie-ecg.js" };
+  /* Cantons (23 novembre 2026, choix A de l'utilisateur : étape « Ton canton » avant « Ta voie »). Un profil sans `canton` est vaudois.
+     Hors de Vaud, la clé d'un module est « canton-voie » (ge-mat, ge-ecg) : un seul fichier par canton (canton-ge.js), chargé
+     seulement pour un élève de ce canton, comme voie-ecg.js. */
+  var CANTONS = [
+    { id: "vd", name: "Vaud", sub: "Gymnases vaudois" },
+    { id: "ge", name: "Genève", sub: "Collège de Genève, ECG" },
+    { id: "fr", name: "Fribourg", sub: "Bientôt disponible", soon: true },
+    { id: "ne", name: "Neuchâtel", sub: "Bientôt disponible", soon: true },
+    { id: "vs", name: "Valais", sub: "Bientôt disponible", soon: true },
+    { id: "ju", name: "Jura et Berne francophone", sub: "Bientôt disponible", soon: true }
+  ];
+  var VOIES_GE = [
+    { id: "mat", name: "Maturité gymnasiale", sub: "Collège de Genève, 4 ans" },
+    { id: "ecg", name: "Culture générale", sub: "École de culture générale (ECG), certificat ECG" },
+    { id: "com", name: "Commerce", sub: "École de commerce : bientôt disponible", soon: true }
+  ];
+  var FILES = { ecg: "voie-ecg.js", "ge-mat": "canton-ge.js", "ge-ecg": "canton-ge.js" };
   var ext = {};
-  function voieOf(p) { return p && FILES[p.voie] ? p.voie : "mat"; }
+  function cantonOf(p) { return p && p.canton === "ge" ? "ge" : "vd"; }
+  function voieOf(p) {
+    if (cantonOf(p) === "ge") return "ge-" + (p.voie === "ecg" ? "ecg" : "mat");
+    return p && FILES[p.voie] ? p.voie : "mat";
+  }
+  function voies(c) { return c === "ge" ? VOIES_GE : VOIES; }
   function extOf(p) { var v = voieOf(p); return v !== "mat" ? ext[v] || null : null; }
   function register(id, mod) { ext[id] = mod; }
   function load(id) {
@@ -167,11 +188,22 @@
     return out;
   }
 
-  function gymnaseName(id) { var g = find(GYMNASES, id); return g && g.id !== "autre" ? g.name : ""; }
+  function gymnaseName(id) {
+    var g = find(GYMNASES, id);
+    Object.keys(ext).forEach(function (k) { if (!g && ext[k].lists && ext[k].lists.gymnase) g = find(ext[k].lists.gymnase, id); });
+    return g && g.id !== "autre" ? g.name : "";
+  }
+  // Nombre d'années de la voie (4 au Collège de Genève), arrondi de la note de bulletin (demi-point à Vaud, dixième à Genève),
+  // nom de la place « TP » du formulaire (ER, EFA à Genève).
+  function years(p) { var x = extOf(p); return x && x.years ? x.years(p) : 3; }
+  function roundHalf(x) { return x == null ? null : Math.floor(x * 2 + 0.5 + 1e-9) / 2; }
+  function bulletin(v, p) { var x = extOf(p); return x && x.bulletin ? x.bulletin(v) : roundHalf(v); }
+  function tpLabel(p, long) { var x = extOf(p), t = x && x.tpLabel ? x.tpLabel(p) : null; return t ? (long ? t[1] : t[0]) : (long ? "Travaux pratiques" : "TP"); }
 
   /* Ce qui dépend de la voie : listes de choix, règles de verdict, textes (une voie sans module : valeurs de la maturité). */
   function list(field, p) {
     var x = extOf(p), l = x && x.lists && x.lists[field];
+    if (typeof l === "function") l = l(p);
     if (l) return l;
     return { gymnase: GYMNASES, l2: L2, l3: L3, math: MATH, art: ART, os: OS, oc: OC }[field] || [];
   }
@@ -196,7 +228,8 @@
 
   window.Grid = {
     afterRender: afterRender,
-    GYMNASES: GYMNASES, L2: L2, L3: L3, MATH: MATH, ART: ART, OS: OS, OC: OC, VOIES: VOIES,
+    GYMNASES: GYMNASES, L2: L2, L3: L3, MATH: MATH, ART: ART, OS: OS, OC: OC, VOIES: VOIES, CANTONS: CANTONS,
+    cantonOf: cantonOf, voies: voies, years: years, bulletin: bulletin, tpLabel: tpLabel,
     osBlock: osBlock, mathBlock: mathBlock, ocBlock: ocBlock, build: build, find: find, gymnaseName: gymnaseName,
     voieOf: voieOf, ext: extOf, register: register, load: load, script: script, list: list, rules: rules, head: head,
     isMat: function (p) { return voieOf(p) === "mat"; }

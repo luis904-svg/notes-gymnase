@@ -551,6 +551,8 @@ td input[type="date"] { width: auto; }
   function fmtAvg(x) { return x == null ? "–" : x.toFixed(2); }
   function fmtB(b) { return b == null ? "–" : (Number.isInteger(b) ? String(b) : b.toFixed(1)); }
   function roundHalf(x) { return x == null ? null : Math.floor(x * 2 + 0.5 + 1e-9) / 2; }
+  function gR() { return window.Grid && Grid.rules && state && state.cfg.profile ? Grid.rules(state.cfg.profile) : null; }
+  function bull(x) { var R = gR(); return x == null ? null : R && R.bulletin ? R.bulletin(x) : roundHalf(x); }
 
   var state = normalize(null);
   var ui = { period: "year", chartSubj: "__all", demo: false, editing: null, confirmDel: null, showAll: false, detail: null, view: "dash", flash: null, busy: false };
@@ -598,6 +600,7 @@ td input[type="date"] { width: auto; }
     return { avg: avg, n: mine.length, prov: prov };
   }
   function subjAvg(id, notes) {
+    var R0 = gR(); if (R0 && R0.subjAvg) return R0.subjAvg(id, notes, { sub: sub, wavg: wavg, s1End: state.cfg.s1End });
     var s = sub(id);
     if (s.parts) {
       var w = 0, t = 0, n = 0, prov = false;
@@ -673,7 +676,7 @@ td input[type="date"] { width: auto; }
   }
   function promotion(notes) {
     var bm = {}, rows = state.cfg.subjects.filter(function (s) { return s.counts && !s.part; });
-    rows.forEach(function (s) { bm[s.id] = roundHalf(subjAvg(s.id, notes).avg); });
+    rows.forEach(function (s) { bm[s.id] = bull(subjAvg(s.id, notes).avg); });
     var r = evalBulletins(bm);
     r.bm = bm;
     if (!r.nb) { r.status = "none"; return r; }
@@ -687,7 +690,7 @@ td input[type="date"] { width: auto; }
     var limit = false;
     rows.forEach(function (s) {
       if (bm[s.id] == null || bm[s.id] >= 6) return;
-      var c = Object.assign({}, bm); c[s.id] = bm[s.id] + 0.5;
+      var c = Object.assign({}, bm); c[s.id] = bm[s.id] + ((gR() || {}).step || 0.5);
       if (!evalBulletins(c).fails.length) limit = true;
     });
     r.status = limit ? "limit" : "danger";
@@ -697,7 +700,7 @@ td input[type="date"] { width: auto; }
     for (var v = 1; v <= 6.0001; v += 0.25) {
       var hyp = notes.concat([{ subject: id, value: v, coef: 1, type: "test", date: "9999-12-31" }]);
       var a = subjAvg(id, hyp).avg;
-      if (a != null && a >= 3.75 - 1e-9) return v;
+      if (a != null && bull(a) >= 4) return v;
     }
     return null;
   }
@@ -783,8 +786,8 @@ td input[type="date"] { width: auto; }
     state.cfg.subjects.filter(function (s) { return s.counts && !s.part; }).forEach(function (s) {
       var a = subjAvg(s.id, notes);
       if (a.avg == null) return;
-      var b = roundHalf(a.avg), need = (s.parts || s.carried) ? null : needFor(s.id, notes);
-      var needTxt = need != null && a.avg < 3.75 ? " Il faudrait au moins " + need.toFixed(2).replace(/0$/, "") + " au prochain test (coef 1) pour passer à 4." : "";
+      var b = bull(a.avg), need = (s.parts || s.carried) ? null : needFor(s.id, notes);
+      var needTxt = need != null && bull(a.avg) < 4 ? " Il faudrait au moins " + need.toFixed(2).replace(/0$/, "") + " au prochain test (coef 1) pour passer à 4." : "";
       if (b < 4) items.push(["t-crit", 0, "<b>" + esc(s.name) + "</b> : " + fmtB(b) + " au bulletin (moy. " + fmtAvg(a.avg) + ")." + needTxt]);
       else if (a.avg < 4.25) items.push(["t-warn", 1, "<b>" + esc(s.name) + "</b> : moy. " + fmtAvg(a.avg) + ", proche du seuil de 4 (bulletin " + fmtB(b) + ")."]);
       if (s.goal && a.avg < s.goal - 0.25 && b >= 4) items.push(["t-none", 2, "<b>" + esc(s.name) + "</b> : objectif " + s.goal + ", moy. actuelle " + fmtAvg(a.avg) + "."]);
@@ -797,11 +800,11 @@ td input[type="date"] { width: auto; }
   function renderSubjects(notes) {
     var all = currentGrades();
     var html = state.cfg.subjects.filter(function (s) { return !s.part; }).map(function (s) {
-      var a = subjAvg(s.id, notes), b = roundHalf(a.avg), t = tone(b);
+      var a = subjAvg(s.id, notes), b = bull(a.avg), t = tone(b);
       var minN = s.parts ? null : Math.ceil(s.periods) + 1;
       var vals = subjSeries(s.id, notes).map(function (p) { return p.avg; }).filter(function (v) { return v != null; });
       var lines = '<span>moy. exacte <span class="mono">' + fmtAvg(a.avg) + '</span>' + (a.prov ? " · sans TP ou sans test" : "") + '</span>';
-      lines += s.carried ? '<span>note de ' + (Grid.isMat(state.cfg.profile) ? '2e' : '1re') + ' reprise</span>' : '<span>' + a.n + ' note' + (a.n > 1 ? "s" : "") + (minN ? ' sur ' + minN + ' min.' : "") + '</span>';
+      lines += s.carried ? '<span>note de ' + (s.from ? s.from + 'e' : Grid.isMat(state.cfg.profile) ? '2e' : '1re') + ' reprise</span>' : '<span>' + a.n + ' note' + (a.n > 1 ? "s" : "") + (minN ? ' sur ' + minN + ' min.' : "") + '</span>';
       if (s.goal && a.avg != null) { var dl = a.avg - s.goal; lines += '<span>objectif ' + s.goal + ' · <span class="mono">' + (dl >= 0 ? "+" : "−") + Math.abs(dl).toFixed(2) + '</span></span>'; }
       if (s.counts === false) lines += '<span>ne compte pas pour la promotion</span>';
       var parts = "";
@@ -812,7 +815,7 @@ td input[type="date"] { width: auto; }
         }).join("") + '</div>';
       }
       var need = "";
-      if (!s.parts && !s.carried && a.avg != null && a.avg < 3.75) { var nf = needFor(s.id, notes); need = '<div class="need">' + (nf != null ? "Prochain test : au moins " + nf.toFixed(2).replace(/0$/, "") + " pour atteindre 4." : "4 n'est plus atteignable avec un seul test.") + '</div>'; }
+      if (!s.parts && !s.carried && a.avg != null && bull(a.avg) < 4) { var nf = needFor(s.id, notes); need = '<div class="need">' + (nf != null ? "Prochain test : au moins " + nf.toFixed(2).replace(/0$/, "") + " pour atteindre 4." : "4 n'est plus atteignable avec un seul test.") + '</div>'; }
       return '<article class="card ' + (t === "crit" ? "t-crit" : "") + (ui.flash === s.id ? " flash" : "") + '" data-subj="' + s.id + '" tabindex="0" role="button" aria-label="Voir le détail : ' + esc(s.name) + '"><div class="card-head"><h3>' + esc(s.name) + '</h3><span class="per">' + s.periods + ' pér.' + (s.verify ? " · à vérifier" : "") + '</span></div>' +
         '<div class="card-body"><div><div class="big ' + t + '" title="Note de bulletin">' + fmtB(b) + '</div></div>' + spark(vals) + '</div>' +
         '<div class="lines">' + lines + '</div>' + need + parts + '<span class="more">Voir le détail ›</span></article>';
@@ -840,7 +843,7 @@ td input[type="date"] { width: auto; }
     for (v = 1; v <= 6; v++) g += '<line class="grid" x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v).toFixed(1) + '" y2="' + Y(v).toFixed(1) + '"/><text x="' + (L - 6) + '" y="' + (Y(v) + 4).toFixed(1) + '" text-anchor="end">' + v + '</text>';
     var hasGoal = false;
     var bars = rows.map(function (s, i) {
-      var a = subjAvg(s.id, notes), b = roundHalf(a.avg), cx = L + slot * (i + 0.5), t = tone(b);
+      var a = subjAvg(s.id, notes), b = bull(a.avg), cx = L + slot * (i + 0.5), t = tone(b);
       var h = b == null ? 0 : Y(1) - Y(b);
       var name = esc(s.name) + " : " + (b == null ? "pas de note" : fmtB(b) + " (exacte " + fmtAvg(a.avg) + ")");
       var gw = bw, goalRect = s.goal ? '<rect class="goalbar" x="' + (cx - gw / 2).toFixed(1) + '" y="' + Y(s.goal).toFixed(1) + '" width="' + gw.toFixed(1) + '" height="' + (Y(1) - Y(s.goal)).toFixed(1) + '" rx="6"/>' : "";
@@ -918,7 +921,7 @@ td input[type="date"] { width: auto; }
     var conf = ui.confirmDel === g.id;
     return '<li' + phAttr(g.id) + '><span class="v ' + (g.value < 4 ? "crit" : "") + '">' + g.value + '</span><span class="what">' + esc(s ? s.name : g.subject) + (g.label && g.label !== "Exemple" ? " · " + esc(g.label) : "") + '</span>' +
       '<span class="acts">' + (ui.demo ? "" : '<button class="link" data-edit="' + g.id + '">Modifier</button><button class="link danger" data-del="' + g.id + '">' + (conf ? "Confirmer ?" : "Supprimer") + '</button>') + '</span>' +
-      '<span class="meta">' + fmtDate(g.date) + " · coef " + fmtCoef(g.coef) + (g.type === "tp" ? " · TP" : "") + phBadge(g.id) + '</span></li>';
+      '<span class="meta">' + fmtDate(g.date) + " · coef " + fmtCoef(g.coef) + (g.type === "tp" ? " · " + Grid.tpLabel(state.cfg.profile) : "") + phBadge(g.id) + '</span></li>';
   }
 
   function renderNotes(notes) {
@@ -937,7 +940,7 @@ td input[type="date"] { width: auto; }
     if (!s) { ui.detail = null; if (window.IOSDetail && IOSDetail.close()) return; el.hidden = true; document.body.style.overflow = ""; return; }
     var all = currentGrades(), ids = s.parts || [s.id];
     if (s.carried) {
-      $("#sheet-box").innerHTML = '<div class="grab" aria-hidden="true"></div><div class="sheet-head"><div><h2 id="sheet-title">' + esc(s.name) + '</h2><p>Note de ' + (Grid.isMat(state.cfg.profile) ? '2e' : '1re') + ' reprise</p></div><button type="button" class="btn-ghost" data-close id="sheet-close">Fermer</button></div>' +
+      $("#sheet-box").innerHTML = '<div class="grab" aria-hidden="true"></div><div class="sheet-head"><div><h2 id="sheet-title">' + esc(s.name) + '</h2><p>Note de ' + (s.from ? s.from + 'e' : Grid.isMat(state.cfg.profile) ? '2e' : '1re') + ' reprise</p></div><button type="button" class="btn-ghost" data-close id="sheet-close">Fermer</button></div>' +
         (window.Cert && Cert.detail ? Cert.detail(s.id) : "");
       if (!dragging) { $("#sheet-box").style.transform = ""; $("#sheet-box").style.transition = ""; }
       if (window.IOSDetail && IOSDetail.open()) { /* page entière (téléphone) */ } else { el.hidden = false; document.body.style.overflow = "hidden"; }
@@ -945,7 +948,7 @@ td input[type="date"] { width: auto; }
     }
     var mine = all.filter(function (g) { return ids.indexOf(g.subject) >= 0; }).sort(function (a, b) { if (a.date !== b.date) return a.date < b.date ? 1 : -1; var x = String(a.sortKey || a.id), y = String(b.sortKey || b.id); return x < y ? 1 : x > y ? -1 : 0; });
     var tiles = [["year", "Année"], ["s1", "Semestre 1"], ["s2", "Semestre 2"]].map(function (p) {
-      var a = subjAvg(s.id, periodNotes(all, p[0])), b = roundHalf(a.avg);
+      var a = subjAvg(s.id, periodNotes(all, p[0])), b = bull(a.avg);
       return '<div class="tile"><span class="lbl">' + p[1] + '</span><span class="num ' + tone(b) + '">' + fmtB(b) + '</span><span class="sub">' + (a.avg != null ? "exacte " + fmtAvg(a.avg) + " · " : "") + a.n + " note" + (a.n > 1 ? "s" : "") + '</span></div>';
     }).join("");
     var ya = subjAvg(s.id, all), brk = "";
@@ -965,7 +968,7 @@ td input[type="date"] { width: auto; }
     if (s.goal) info += '<div><span>Objectif</span><span class="mono">' + s.goal + (ya.avg != null ? " (" + (ya.avg - s.goal >= 0 ? "+" : "−") + Math.abs(ya.avg - s.goal).toFixed(2) + ")" : "") + '</span></div>';
     info += brk + '</div>';
     var need = "";
-    if (!s.parts && ya.avg != null && ya.avg < 3.75) { var nf = needFor(s.id, all); need = '<div class="need">' + (nf != null ? "Prochain test : au moins " + nf.toFixed(2).replace(/0$/, "") + " pour atteindre 4." : "4 n'est plus atteignable avec un seul test.") + '</div>'; }
+    if (!s.parts && ya.avg != null && bull(ya.avg) < 4) { var nf = needFor(s.id, all); need = '<div class="need">' + (nf != null ? "Prochain test : au moins " + nf.toFixed(2).replace(/0$/, "") + " pour atteindre 4." : "4 n'est plus atteignable avec un seul test.") + '</div>'; }
     $("#sheet-box").innerHTML =
       '<div class="grab" aria-hidden="true"></div><div class="sheet-head"><div><h2 id="sheet-title">' + esc(s.name) + '</h2><p>' + s.periods + ' périodes' + (s.counts === false ? " · ne compte pas pour la promotion" : "") + '</p></div><button type="button" class="btn-ghost" data-close id="sheet-close">Fermer</button></div>' +
       '<div class="tiles">' + tiles + '</div>' + need + (window.Cert && Cert.detail ? Cert.detail(s.id) : "") + info +
@@ -984,7 +987,7 @@ td input[type="date"] { width: auto; }
   }
 
   function setSummary(s) {
-    return s.periods + " pér." + (s.goal ? " · objectif " + s.goal : "") + (s.tpShare ? " · TP " + Math.round(s.tpShare * 100) + " %" : "") + (s.part ? " · via OS" : s.counts ? "" : " · hors promotion") + (s.verify ? " · à vérifier" : "");
+    return s.periods + " pér." + (s.goal ? " · objectif " + s.goal : "") + (s.tpShare ? " · " + Grid.tpLabel(state.cfg.profile) + " " + Math.round(s.tpShare * 100) + " %" : "") + (s.part ? " · via OS" : s.counts ? "" : " · hors promotion") + (s.verify ? " · à vérifier" : "");
   }
   function renderSettings() {
     var rows = state.cfg.subjects.filter(function (s) { return !s.carried; }).map(function (s) {
@@ -1181,6 +1184,7 @@ td input[type="date"] { width: auto; }
     grades: function () { return state.grades.slice(); },
     subjectsAll: function () { return state.cfg.subjects.slice(); },
     annualAvg: function (id) { return sub(id) ? subjAvg(id, live()).avg : null; },
+    bulletin: function (x) { return bull(x); },
     // TA (ta.js)
     records: function () { return state.grades.slice(); },
     collapse: function (list) { return collapse(list || []); },
@@ -1225,7 +1229,7 @@ td input[type="date"] { width: auto; }
         var all = collapse(e.grades.filter(function (g) { return !!sub(g.subject); }));
         return e.subjects.filter(function (s) { return !s.part; }).map(function (s) {
           var a = subjAvg(s.id, all);
-          return { id: s.id, ids: s.parts || [s.id], name: s.name, avg: a.avg, bulletin: a.avg == null ? null : roundHalf(a.avg), n: a.n, counts: s.counts !== false };
+          return { id: s.id, ids: s.parts || [s.id], name: s.name, avg: a.avg, bulletin: bull(a.avg), n: a.n, counts: s.counts !== false };
         });
       } finally { state.cfg.subjects = keep; }
     },

@@ -65,7 +65,7 @@
     return "EXAMENS (3e année) : fr, l2, l3, ma, os (écrit et oral) ; oc (oral seulement).\n";
   }
   function profileSummary(pr) {
-    var v = G.voieOf(pr), out = ["Voie : " + (v === "ecg" ? "École de culture générale (ECG)" : "Maturité gymnasiale"), "Année : " + pr.year + (pr.year === 1 ? "re" : "e")];
+    var v = G.voieOf(pr), ge = G.cantonOf(pr) === "ge", out = ["Canton : " + (ge ? "Genève" : "Vaud"), "Voie : " + (pr.voie === "ecg" ? "École de culture générale (ECG)" : ge ? "Maturité gymnasiale (Collège de Genève)" : "Maturité gymnasiale"), "Année : " + pr.year + (pr.year === 1 ? "re" : "e")];
     if (pr.gymnase) out.push("Gymnase : " + (G.gymnaseName(pr.gymnase) || pr.gymnase));
     if (pr.classe) out.push("Classe : " + pr.classe);
     if (pr.domaine) out.push("Domaine : " + pr.domaine);
