@@ -1,7 +1,7 @@
 /* Hors-ligne : la page vient du réseau si possible, sinon du cache ; le reste du cache d'abord.
    voie-ecg.js, canton-ge.js et import.js ne sont volontairement pas dans ASSETS : chargés (et gardés en cache à la première utilisation) seulement si l'élève choisit cette voie ou utilise l'import. */
-var V = "notes2m01-v84";
-var ASSETS = ["./", "index.html", "fx.css", "ios.css", "fx.js", "ios-nav.js", "ios-motion.js", "ios-sheets.js", "ios-tabbar.js", "ios-home.js", "ios-dash.js", "ios-desk.js", "ios-add.js", "ios-title.js", "ios-settings.js", "ios-detail.js", "ios-anim.js", "icons.js", "NOTICE-Lucide.txt", "grid.js", "ta.js", "photos.js", "cert.js", "year.js", "notify.js", "sync.js", "onboard.js", "guide.js", "hello.js", "motion.js", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
+var V = "notes2m01-v85";
+var ASSETS = ["./", "index.html", "fx.css", "ios.css", "fx.js", "ios-nav.js", "ios-motion.js", "ios-sheets.js", "ios-tabbar.js", "ios-home.js", "ios-dash.js", "ios-desk.js", "ios-add.js", "ios-title.js", "ios-settings.js", "ios-detail.js", "ios-anim.js", "icons.js", "NOTICE-Lucide.txt", "grid.js", "ta.js", "photos.js", "cert.js", "year.js", "notify.js", "sync.js", "onboard.js", "guide.js", "hello.js", "motion.js", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png", "icon-maskable-512.png", "icon.svg"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(V).then(function (c) { return c.addAll(ASSETS.map(function (u) { return new Request(u, { cache: "reload" }); })); }).then(function () { return self.skipWaiting(); }));
 });
@@ -49,9 +49,9 @@ function pushOpen(b64) {
     .then(function (pt) { return JSON.parse(new TextDecoder().decode(pt)); });
 }
 self.addEventListener("push", function (e) {
-  var plain = { title: "Notes", body: "Nouvelle note" };
+  var plain = { title: "Nouvelle note", body: "" };   // le nom de l'app (Sur6) est déjà affiché par le téléphone
   var p = Promise.resolve().then(function () { return pushOpen(e.data.json().d); }).then(function (m) {
-    return { title: String(m.title || "Notes").slice(0, 80), body: String(m.body || "Nouvelle note").slice(0, 200), tag: m.t === "verdict" ? "verdict" : undefined };
+    return { title: String(m.title || "Nouvelle note").slice(0, 80), body: String(m.body || "").slice(0, 200), tag: m.t === "verdict" ? "verdict" : undefined };
   }, function () { return plain; }).then(function (n) {
     return self.registration.showNotification(n.title, { body: n.body, icon: "icon-192.png", badge: "icon-192.png", tag: n.tag });
   });

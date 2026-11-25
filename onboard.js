@@ -108,7 +108,7 @@
 
   function body(s) {
     if (s.id === "welcome") {
-      return '<div class="ob-hero"><img src="icon-180.png" alt="" class="ob-icon"><h1>Bienvenue</h1>' +
+      return '<div class="ob-hero"><img src="icon-180.png" alt="" class="ob-icon"><h1>Bienvenue dans Sur6</h1>' +
         '<p>Tes notes, tes moyennes et ta promotion, calculées pour toi. Réponds à quelques questions sur ton cursus : tout reste sur cet appareil.</p>' +
         '<p class="ob-fine">Vaud et Genève · règles 2026-2027</p>' +
         '<p class="ob-fine ob-disc">' + esc(window.Guide ? Guide.disclaimer : "Application non officielle. Résultats indicatifs : seul ton bulletin fait foi.") + '</p>' +
@@ -403,12 +403,12 @@
     if (isIOS) return [
       [ICON_SHARE, "Touche le bouton Partager", isIPhone ? "En bas du navigateur, ou en haut à droite dans Chrome. Si tu ne le vois pas, touche d'abord ⋯." : "En haut à droite du navigateur. Si tu ne le vois pas, touche d'abord ⋯."],
       [ICON_ADD, "Choisis « Sur l'écran d'accueil »", "Fais défiler la liste si besoin, puis touche « Ajouter »."],
-      [ICON_HOME, "Ouvre Notes depuis ton écran d'accueil", "La configuration commencera dans l'app."]
+      [ICON_HOME, "Ouvre Sur6 depuis ton écran d'accueil", "La configuration commencera dans l'app."]
     ];
     return [
       [ICON_DOTS, "Ouvre le menu du navigateur", "Le bouton ⋮ en haut à droite."],
       [ICON_ADD, "Touche « Installer l'application »", "Ou « Ajouter à l'écran d'accueil »."],
-      [ICON_HOME, "Ouvre Notes depuis ton écran d'accueil", "La configuration commencera dans l'app."]
+      [ICON_HOME, "Ouvre Sur6 depuis ton écran d'accueil", "La configuration commencera dans l'app."]
     ];
   }
 
@@ -436,9 +436,9 @@
   var SC_SCROLL = 70; // défilement de la feuille de partage, en px de la scène
   var SKIP_DELAY = 6000;
   function demoSteps(kind) {
-    var tail = [["addhome", "Fais défiler, puis touche « Sur l'écran d'accueil »"], ["ok", "Touche « Ajouter »"], ["icon", "Ouvre Notes depuis ton écran d'accueil"]];
-    if (kind === "inapp") return [["open", "Touche « Ouvrir dans " + target() + " »"], ["safari", target() + " s'ouvre : suis les étapes pour installer Notes"]];
-    if (kind === "android") return [["more", "Touche ⋮ en haut à droite de Chrome"], ["addhome", "Touche « Ajouter à l'écran d'accueil »"], ["ok", "Touche « Installer »"], ["icon", "Ouvre Notes depuis ton écran d'accueil"]];
+    var tail = [["addhome", "Fais défiler, puis touche « Sur l'écran d'accueil »"], ["ok", "Touche « Ajouter »"], ["icon", "Ouvre Sur6 depuis ton écran d'accueil"]];
+    if (kind === "inapp") return [["open", "Touche « Ouvrir dans " + target() + " »"], ["safari", target() + " s'ouvre : suis les étapes pour installer Sur6"]];
+    if (kind === "android") return [["more", "Touche ⋮ en haut à droite de Chrome"], ["addhome", "Touche « Ajouter à l'écran d'accueil »"], ["ok", "Touche « Installer »"], ["icon", "Ouvre Sur6 depuis ton écran d'accueil"]];
     if (kind === "ipad") return [["share", "Touche Partager, en haut à droite de Safari"]].concat(tail);
     return (safariV >= 26 ? [["more", "Touche ••• en bas à droite de Safari"], ["share", "Touche « Partager »"]]
       : [["share", "Touche Partager, en bas au milieu de Safari"]]).concat(tail);
@@ -455,7 +455,7 @@
     var I = function (n) { return window.Icons.svg(n); }, host = esc(location.hostname || "notes");
     var li = function (t, ic, id) { return '<div class="ios-sc-li"' + (id ? ' data-t="' + id + '"' : "") + '><span>' + t + '</span>' + I(ic) + '</div>'; };
     var page = function (c) { return '<div class="ios-sc-page' + (c ? " " + c : "") + '"><img src="icon-180.png" alt=""><i class="t"></i><i></i><i class="s"></i><i></i></div>'; };
-    var home = '<div class="ios-sc-home">' + new Array(11).join("<i></i>") + '<img src="icon-180.png" alt="" data-t="icon"><b class="ios-sc-name">Notes</b></div>' +
+    var home = '<div class="ios-sc-home">' + new Array(11).join("<i></i>") + '<img src="icon-180.png" alt="" data-t="icon"><b class="ios-sc-name">Sur6</b></div>' +
       '<div class="ios-sc-launch"></div><div class="ios-sc-dot"></div>';
     var top = isIOS ? '<div class="ios-sc-island"></div><div class="ios-sc-status"><span>9:41</span></div>' : '<div class="ios-sc-status ios-sc-astatus"><span>9:41</span></div>';
     var bar26 = '<div class="ios-sc-bar26"><span class="ios-sc-c">' + I("chevl") + '</span><span class="ios-sc-addr">' + host + '</span><span class="ios-sc-c" data-t="more">' + I("dots") + '</span></div>';
@@ -468,20 +468,20 @@
       (igB ? '<div class="ios-sc-inbar"><span>' + I("times") + '</span><b>' + host + '</b><span class="ios-sc-igm" data-t="igmore">' + I("dots") + '</span></div>' +
         '<div class="ios-sc-menu ios-sc-igmenu">' + li("Copier le lien", "copy") + li("Ouvrir dans le navigateur externe", "globe", "extbrowser") + li("Signaler", "info") + '</div>'
       : '<div class="ios-sc-inbar"><span class="ios-sc-blue">' + (isIOS ? "Terminé" : I("times")) + '</span><b>' + (isMoodle ? "Moodle" : host) + '</b><span></span></div>') +
-      '<div class="ios-sc-ipage"><img src="icon-180.png" alt=""><b>Ouvre Notes dans ' + target() + '</b><span class="ios-sc-btn" data-t="open">Ouvrir dans ' + target() + '</span></div>' +
+      '<div class="ios-sc-ipage"><img src="icon-180.png" alt=""><b>Ouvre Sur6 dans ' + target() + '</b><span class="ios-sc-btn" data-t="open">Ouvrir dans ' + target() + '</span></div>' +
       '<div class="ios-sc-saf">' + top + (isIOS ? page() + (safariV >= 26 ? bar26 : bar18) : atop + page("ios-sc-apage")) + '</div><div class="ios-sc-dot"></div>';
     // Chrome sur Android : barre d'adresse en haut avec ⋮, menu qui descend, boîte « Installer l'application ».
     if (kind === "android") return top + atop + page("ios-sc-apage") +
       '<div class="ios-sc-menu ios-sc-amenu">' + li("Nouvel onglet", "add") + li("Historique", "clock") + li("Favoris", "star") + li("Partager…", "share") +
       li("Ajouter à l'écran d'accueil", "addhome", "addhome") + li("Paramètres", "settings") + '</div>' +
-      '<div class="ios-sc-add ios-sc-dlg"><b>Installer l\'application</b><div class="ios-sc-card"><img src="icon-180.png" alt=""><span><b>Notes</b><small>' + host + '</small></span></div>' +
+      '<div class="ios-sc-add ios-sc-dlg"><b>Installer l\'application</b><div class="ios-sc-card"><img src="icon-180.png" alt=""><span><b>Sur6</b><small>' + host + '</small></span></div>' +
       '<div class="ios-sc-dlgb"><span class="ios-sc-blue">Annuler</span><span class="ios-sc-blue ios-sc-ok" data-t="ok">Installer</span></div></div>' + home;
-    var sheet = '<div class="ios-sc-sheet"><div class="ios-sc-sheet-in"><div class="ios-sc-head"><img src="icon-180.png" alt=""><span><b>Notes</b><small>' + host + '</small></span></div>' +
+    var sheet = '<div class="ios-sc-sheet"><div class="ios-sc-sheet-in"><div class="ios-sc-head"><img src="icon-180.png" alt=""><span><b>Sur6</b><small>' + host + '</small></span></div>' +
       '<div class="ios-sc-round"><i></i><i></i><i></i><i></i><i></i></div><div class="ios-sc-round ios-sc-apps"><i></i><i></i><i></i><i></i><i></i></div>' +
       '<div class="ios-sc-list">' + li("Copier", "copy") + li("Ajouter à la liste de lecture", "list") + li("Ajouter aux signets", "book") + li("Ajouter aux favoris", "star") +
       li("Rechercher dans la page", "search") + li("Sur l'écran d'accueil", "addhome", "addhome") + li("Imprimer", "doc") + '</div></div></div>' +
       '<div class="ios-sc-add"><div class="ios-sc-addh"><span class="ios-sc-blue">Annuler</span><b>Ajouter à l\'écran d\'accueil</b><span class="ios-sc-blue ios-sc-ok" data-t="ok">Ajouter</span></div>' +
-      '<div class="ios-sc-card"><img src="icon-180.png" alt=""><span><b>Notes</b><small>' + host + '</small></span></div>' +
+      '<div class="ios-sc-card"><img src="icon-180.png" alt=""><span><b>Sur6</b><small>' + host + '</small></span></div>' +
       '<div class="ios-sc-card ios-sc-tg"><span>Ouvrir comme app web</span><i></i></div></div>';
     // Safari sur iPad : barre en haut, Partager à droite, la feuille s'ouvre en bulle sous le bouton.
     if (kind === "ipad") return '<div class="ios-sc-status"><span>9:41</span></div>' +
@@ -498,8 +498,8 @@
     var el = document.createElement("div");
     el.className = "ob ob-install ios-inst"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Installer l'app");
     el.innerHTML =
-      (inapp ? '<div class="ios-inst-head"><h1>Ouvre Notes dans ' + target() + '</h1><p>' + (inApp ? "Ici, Notes ne peut pas s'installer." : "Notes s'installe depuis " + target() + ".") + '</p></div>'
-        : '<div class="ios-inst-head"><h1>Installe Notes</h1><p>Regarde, puis fais pareil dans ' + nav + '.</p></div>') +
+      (inapp ? '<div class="ios-inst-head"><h1>Ouvre Sur6 dans ' + target() + '</h1><p>' + (inApp ? "Ici, Sur6 ne peut pas s'installer." : "Sur6 s'installe depuis " + target() + ".") + '</p></div>'
+        : '<div class="ios-inst-head"><h1>Installe Sur6</h1><p>Regarde, puis fais pareil dans ' + nav + '.</p></div>') +
       '<div class="ios-inst-stage"><div class="ios-inst-ph" aria-hidden="true"><div class="ios-inst-sc ios-inst-' + kind + (isIOS ? "" : " ios-inst-andr") + '">' + sceneHTML(kind) + '</div></div></div>' +
       '<div class="ios-inst-cap" aria-live="polite"><span class="ios-inst-n"></span><b class="ios-inst-t"></b></div>' +
       '<div class="ios-inst-nav">' + (live ? "" : '<button type="button" class="ob-round" id="inst-prev" aria-label="Étape précédente">' + window.Icons.svg("chevl") + '</button>') +
@@ -507,12 +507,12 @@
       (live ? "" : '<button type="button" class="ob-round" id="inst-next" aria-label="Étape suivante">' + window.Icons.svg("chevr") + '</button>') + '</div>' +
       '<div class="ios-inst-foot">' +
       // Un seul gros bouton quand une action directe existe : installer (Chrome) ou ouvrir le bon navigateur (navigateur intégré).
-      (andr ? '<button type="button" class="btn ob-next ios-inst-go" id="inst-btn"' + (deferredPrompt ? "" : " hidden") + '>Installer Notes</button>' : "") +
+      (andr ? '<button type="button" class="btn ob-next ios-inst-go" id="inst-btn"' + (deferredPrompt ? "" : " hidden") + '>Installer Sur6</button>' : "") +
       (inapp ? '<a class="btn ob-next ios-inst-go" id="inst-open" href="' + esc(openURL()) + '">Ouvrir dans ' + target() + '</a>' +
         '<button type="button" class="btn ob-next ios-inst-go" id="inst-copy" hidden>Copier le lien</button>' : "") +
-      '<p class="ob-fine">' + (andr ? "Notes s\'ouvrira en plein écran, comme une vraie app, et marchera sans connexion."
+      '<p class="ob-fine">' + (andr ? "Sur6 s\'ouvrira en plein écran, comme une vraie app, et marchera sans connexion."
         : inapp ? "Si rien ne s\'ouvre, copie le lien et colle-le dans la barre d\'adresse de " + target() + "."
-        : "Safari et l\'app de l\'écran d\'accueil ne partagent pas leurs données : configure Notes dans l\'app, pas ici.") + '</p>' +
+        : "Safari et l\'app de l\'écran d\'accueil ne partagent pas leurs données : configure Sur6 dans l\'app, pas ici.") + '</p>' +
       '<p class="ob-fine ios-inst-parent">Parent d\'élève ? Installe d\'abord l\'app comme ton enfant, puis touche « Pour les parents ».</p>' +
       '<button type="button" class="link inst-skip ios-inst-later" id="inst-skip">Continuer ' + here + '</button></div>';
     document.body.appendChild(el);
@@ -661,7 +661,7 @@
         op.hidden = true; cp.hidden = false;
         if (isInsta && isIOS) {
           // Plan B : la démo montre ••• puis « Ouvrir dans le navigateur externe » ; « Copier le lien » reste dessous, en gris.
-          STEPS = [["igmore", "Ça ne s'est pas ouvert ? Touche ••• en haut à droite"], ["extbrowser", "Touche « Ouvrir dans le navigateur externe »"], ["safari", "Safari s'ouvre : suis les étapes pour installer Notes"]];
+          STEPS = [["igmore", "Ça ne s'est pas ouvert ? Touche ••• en haut à droite"], ["extbrowser", "Touche « Ouvrir dans le navigateur externe »"], ["safari", "Safari s'ouvre : suis les étapes pour installer Sur6"]];
           el.querySelector(".ios-inst-dots").innerHTML = STEPS.map(function () { return "<i></i>"; }).join("");
           dots = el.querySelectorAll(".ios-inst-dots i");
           cp.classList.add("ios-inst-alt"); window.dispatchEvent(new Event("resize"));
@@ -686,7 +686,7 @@
     // Installée pendant que la page est ouverte (Android) : on le dit à la place de la légende.
     if (andr) window.addEventListener("appinstalled", function () {
       gen++; if (go) go.hidden = true; state(STEPS.length - 1); dots.forEach(function (d, j) { d.classList.toggle("on", j === STEPS.length - 1); });
-      num.textContent = "C'est installé !"; cap.textContent = "Ouvre Notes depuis ton écran d'accueil";
+      num.textContent = "C'est installé !"; cap.textContent = "Ouvre Sur6 depuis ton écran d'accueil";
     });
   }
 
@@ -699,7 +699,7 @@
     el.className = "ob ob-install"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Installer l'app");
     el.innerHTML =
       '<div class="ob-body"><div class="ob-hero"><img src="icon-180.png" alt="" class="ob-icon"><h1>' + (inApp ? "Ouvre l\'app dans " + (isIOS ? "Safari" : "ton navigateur") : "Installe l\'app") + '</h1>' +
-      '<p>' + (inApp ? "Cette fenêtre" + (isMoodle ? " (l\'app Moodle)" : "") + " ne permet pas d\'installer l\'app. Ouvre le lien dans " + (isIOS ? "Safari" : "ton navigateur") + " puis installe-la depuis là : tu ne feras la configuration qu\'une fois." : "Ajoute Notes à ton écran d\'accueil avant de commencer : elle s\'ouvre en plein écran, marche sans connexion et peut envoyer des notifications. Tu ne feras la configuration qu\'une fois.") + '</p></div>' +
+      '<p>' + (inApp ? "Cette fenêtre" + (isMoodle ? " (l\'app Moodle)" : "") + " ne permet pas d\'installer l\'app. Ouvre le lien dans " + (isIOS ? "Safari" : "ton navigateur") + " puis installe-la depuis là : tu ne feras la configuration qu\'une fois." : "Ajoute Sur6 à ton écran d\'accueil avant de commencer : elle s\'ouvre en plein écran, marche sans connexion et peut envoyer des notifications. Tu ne feras la configuration qu\'une fois.") + '</p></div>' +
       '<ol class="inst-steps">' + steps().map(function (s, i) {
         return '<li><span class="inst-ic' + (s[0] === "!" ? " warn" : "") + '">' + (s[0] === "!" ? "!" : s[0]) + '</span><span class="ob-txt"><span class="ob-n">' + (steps().length > 1 ? (i + 1) + ". " : "") + esc(s[1]) + '</span><span class="ob-s">' + esc(s[2]) + '</span></span></li>';
       }).join("") + '</ol>' +
@@ -730,7 +730,7 @@
     });
     bindSkip(el);
     // Installée depuis Android pendant que la page est ouverte.
-    window.addEventListener("appinstalled", function () { var s = el.querySelector(".ob-hero p"); if (s) s.textContent = "C'est installé ! Ouvre Notes depuis ton écran d'accueil."; });
+    window.addEventListener("appinstalled", function () { var s = el.querySelector(".ob-hero p"); if (s) s.textContent = "C'est installé ! Ouvre Sur6 depuis ton écran d'accueil."; });
   }
 
   window.Onboard = { open: open, refresh: refreshSummary, detectInApp: detectInApp };

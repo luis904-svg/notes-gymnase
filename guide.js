@@ -36,11 +36,11 @@
       // Phase 3, point 2 (choix de l'utilisateur) : sur ordinateur, installation depuis Safari sur Mac ou Chrome.
       if (deskNow()) return "<div class='gd-flow'><div class='gd-tile pulse'>" + ic("doc") + "<b>Fichier</b></div><span class='gd-arrow'>›</span>" +
         "<div class='gd-tile'>" + ic("add") + "<b>Ajouter au Dock</b></div><span class='gd-arrow'>›</span>" +
-        "<div class='gd-tile'><img src='icon-180.png' alt=''><b>Notes</b></div></div>" +
+        "<div class='gd-tile'><img src='icon-180.png' alt=''><b>Sur6</b></div></div>" +
         "<p class='gd-cap'>Safari sur Mac, ou Chrome</p>";
       return "<div class='gd-flow'><div class='gd-tile pulse'>" + ic("share") + "<b>Partager</b></div><span class='gd-arrow'>›</span>" +
         "<div class='gd-tile'>" + ic("add") + "<b>Sur l'écran d'accueil</b></div><span class='gd-arrow'>›</span>" +
-        "<div class='gd-tile'><img src='icon-180.png' alt=''><b>Notes</b></div></div>" +
+        "<div class='gd-tile'><img src='icon-180.png' alt=''><b>Sur6</b></div></div>" +
         "<p class='gd-cap'>Dans Safari, pas dans Moodle</p>";
     },
     config: function () {
@@ -147,7 +147,7 @@
         "<div class='gd-tips'><div class='gd-tp'>" + ic("bell") + "<span>Réglages → Synchronisation → Activer les notifications</span></div></div>";
     },
     parents: function () {
-      return "<div class='gd-flow'><div class='gd-tile'><img src='icon-180.png' alt=''><b>Installer Notes</b></div><span class='gd-arrow'>›</span>" +
+      return "<div class='gd-flow'><div class='gd-tile'><img src='icon-180.png' alt=''><b>Installer Sur6</b></div><span class='gd-arrow'>›</span>" +
         "<div class='gd-tile pulse'>" + ic("people") + "<b>Entrer le code</b></div><span class='gd-arrow'>›</span>" +
         "<div class='gd-tile'>" + ic("bell") + "<b>Activer les notifications</b></div></div>" +
         "<p class='gd-cap'>Même app, même code que l'élève</p>";
@@ -179,9 +179,9 @@
     { t: "Prise en main", d: "4 min", s: [
       { t: "Installe l'app", v: "install", p: function () { return deskNow() ? [
         "Sur ordinateur, dans <b>Safari sur Mac</b> : menu <b>Fichier</b> → <b>Ajouter au Dock</b>. Dans <b>Chrome</b> : clique l'icône d'installation à droite de la barre d'adresse, puis <b>Installer</b>.",
-        "Ouvre ensuite toujours l'app par son icône <b>Notes</b>. Sur ton téléphone, installe-la depuis Safari (iPhone) ou Chrome (Android) : l'écran d'arrivée le montre en animation."] : [
+        "Ouvre ensuite toujours l'app par son icône <b>Sur6</b>. Sur ton téléphone, installe-la depuis Safari (iPhone) ou Chrome (Android) : l'écran d'arrivée le montre en animation.", "Ton icône s'appelle encore <b>Notes</b> ? C'est l'ancien nom de l'app : rien à faire, tout marche pareil."] : [
         "Ouvre le lien dans <b>Safari</b>, touche <b>Partager</b> (depuis iOS 26 : d'abord <b>•••</b> en bas à droite), puis <b>Sur l'écran d'accueil</b> et <b>Ajouter</b>. L'écran d'arrivée le montre en animation.",
-        "Ouvre ensuite toujours l'app par son icône <b>Notes</b> : ce que tu saisis dans Safari ne se retrouve pas dans l'app installée."]; } },
+        "Ouvre ensuite toujours l'app par son icône <b>Sur6</b> : ce que tu saisis dans Safari ne se retrouve pas dans l'app installée.", "Ton icône s'appelle encore <b>Notes</b> ? C'est l'ancien nom de l'app : rien à faire, tout marche pareil."]; } },
       { t: "Fais la configuration", v: "config", p: [
         "Choisis ton gymnase, ton année, tes langues, ton option spécifique, ton niveau de maths et ta discipline artistique (et l'option complémentaire en 3e).",
         "L'app crée tes branches avec leurs périodes. Un choix impossible est grisé, avec la raison. Tu pourras tout changer plus tard dans <b>Réglages → Profil</b>."] },
@@ -463,7 +463,7 @@
         "<p class='muted small'><b>Tes données.</b> Tes notes, tes TA et ton profil restent sur ton téléphone : l'app n'a pas de compte et ne collecte aucune donnée personnelle. Si tu supprimes l'icône, ils sont effacés, pense donc à exporter une sauvegarde.</p>" +
         "<p class='muted small'><b>Photos des tests.</b> Elles restent sur l'appareil qui les a prises : elles ne sont pas synchronisées, et partent dans la sauvegarde seulement avec « Inclure les photos ».</p>" +
         "<p class='muted small'><b>Synchronisation et notifications.</b> Elles sont facultatives. La synchronisation envoie une copie chiffrée avec ton code, que personne d'autre ne peut lire ; les notifications passent par le même serveur, chiffrées avec le même code, puis par le service de notifications d'Apple ou de Google. La copie est stockée chez Cloudflare. Le site est hébergé par GitHub, qui peut enregistrer des données techniques de connexion comme tout site web.</p>" +
-        "<p class='muted small'><b>Comptage anonyme.</b> Une fois par semaine, l'app dit au serveur « un appareil de plus utilise Notes », sans identifiant, sans note ni profil. Ça sert seulement à savoir combien d'élèves l'utilisent.</p>" +
+        "<p class='muted small'><b>Comptage anonyme.</b> Une fois par semaine, l'app dit au serveur « un appareil de plus utilise Sur6 », sans identifiant, sans note ni profil. Ça sert seulement à savoir combien d'élèves l'utilisent.</p>" +
         "<label class='ios-row ios-ab-count'><span class='ios-row-l'>Compter cet appareil</span><input type='checkbox' switch id='ab-count'" + (!window.NotesCount || NotesCount.on() ? " checked" : "") + "></label>" +
         "<p class='muted small'><b>Icônes.</b> Icônes Lucide (licence ISC).</p>" +
         "<p class='gd-copy'>©louis mutter</p>";

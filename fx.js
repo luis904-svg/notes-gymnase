@@ -229,7 +229,7 @@
   (function () {
     var r = document.createElement("div"); r.className = "ios-rotate"; r.setAttribute("role", "alert");
     r.innerHTML = window.Icons.svg("phone") +
-      '<p class="ios-rotate-t">Tourne ton téléphone</p><p class="ios-rotate-s">Notes s\'utilise à la verticale.</p>';
+      '<p class="ios-rotate-t">Tourne ton téléphone</p><p class="ios-rotate-s">Sur6 s\'utilise à la verticale.</p>';
     document.body.appendChild(r);
   })();
 
@@ -317,7 +317,7 @@
     var canShare = file && navigator.canShare && navigator.canShare({ files: [file] });
     function go() {
       if (canShare) {
-        navigator.share({ files: [file], title: "Sauvegarde Notes" }).then(function () { markBackup(); say("Sauvegarde partagée."); }, function () {});
+        navigator.share({ files: [file], title: "Sauvegarde Sur6" }).then(function () { markBackup(); say("Sauvegarde partagée."); }, function () {});
       } else {
         var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
         document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);

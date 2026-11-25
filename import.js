@@ -74,7 +74,7 @@
   function personalPrompt() {
     var pr = A.profile(); if (!pr) return genericPromptSync();
     var st = A.get();
-    return 'Tu es un assistant qui convertit un tableau de notes (Excel, Google Sheets, CSV, PDF, capture d\'écran ou texte collé) en un fichier JSON pour l\'application « Notes », qui suit les notes d\'élèves des écoles vaudoises (calcul des moyennes et de la promotion).\n\n' +
+    return 'Tu es un assistant qui convertit un tableau de notes (Excel, Google Sheets, CSV, PDF, capture d\'écran ou texte collé) en un fichier JSON pour l\'application « Sur6 », qui suit les notes d\'élèves des écoles vaudoises (calcul des moyennes et de la promotion).\n\n' +
       'PROFIL DÉJÀ CONFIGURÉ DANS L\'APP\n' + profileSummary(pr) + '\nFin du semestre 1 : ' + st.cfg.s1End + '\n\n' +
       'BRANCHES DE L\'APP (utilise EXACTEMENT ces identifiants dans le champ "branche")\nid | nom | périodes par semaine | remarques\n' + subjectTable() + '\n\n' +
       examLine(pr) + '\n' +
@@ -84,7 +84,7 @@
   function genericPromptSync(ecgReady) {
     var m = function (l) { return l.map(function (x) { return x.id + " = " + x.name; }).join(" ; "); };
     var ecgP = { voie: "ecg" }, ecg = G.ext(ecgP);
-    return 'Tu es un assistant qui convertit un tableau de notes (Excel, Google Sheets, CSV, PDF, capture d\'écran ou texte collé) en un fichier JSON pour l\'application « Notes », qui suit les notes d\'élèves des écoles vaudoises (calcul des moyennes et de la promotion). L\'app existe pour la maturité gymnasiale et pour l\'École de culture générale (ECG) ; l\'École de commerce n\'est pas encore prise en charge.\n\n' +
+    return 'Tu es un assistant qui convertit un tableau de notes (Excel, Google Sheets, CSV, PDF, capture d\'écran ou texte collé) en un fichier JSON pour l\'application « Sur6 », qui suit les notes d\'élèves des écoles vaudoises (calcul des moyennes et de la promotion). L\'app existe pour la maturité gymnasiale et pour l\'École de culture générale (ECG) ; l\'École de commerce n\'est pas encore prise en charge.\n\n' +
       'ÉTAPE 1 : PROFIL. Pose-moi les questions nécessaires (une par ligne) pour remplir le champ "profil" : voie, année, gymnase, classe, choix de langues, options. Valeurs possibles :\n' +
       '- "voie" : "mat" (maturité) ou "ecg" (culture générale). "annee" : 1, 2 ou 3. "classe" : texte libre (facultatif).\n' +
       '- "gymnase" : ' + m(G.GYMNASES) + '.\n' +
@@ -486,7 +486,7 @@
     if (a === "back") { screenStart(); return; }
     if (a === "copy-perso") { copy(personalPrompt()).then(function () { say("Prompt copié : colle-le dans ton IA, avec ton fichier.", false); hap("success"); }, function () { say("Impossible de copier automatiquement.", true); }); return; }
     if (a === "copy-gen") { genericPrompt().then(copy).then(function () { say("Prompt générique copié : colle-le dans ton IA, avec ton fichier.", false); hap("success"); }, function () { say("Impossible de copier automatiquement.", true); }); return; }
-    if (a === "share-gen") { genericPrompt().then(function (t) { return navigator.share({ title: "Prompt d'import Notes", text: t }); }).catch(function () {}); return; }
+    if (a === "share-gen") { genericPrompt().then(function (t) { return navigator.share({ title: "Prompt d'import Sur6", text: t }); }).catch(function () {}); return; }
     if (a === "paste") {
       if (!navigator.clipboard || !navigator.clipboard.readText) { say("Ton navigateur ne permet pas de coller automatiquement : colle dans le champ.", true); return; }
       navigator.clipboard.readText().then(function (t) { S.text = t; var ta = $("#imp-ta", S.root); if (ta) ta.value = t; var n = $(".ob-next", S.root); if (n) n.disabled = !t.trim(); }, function () { say("Colle la réponse directement dans le champ.", true); });
